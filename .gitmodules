@@ -1,0 +1,8 @@
+[submodule "build"]
+	path = build
+	url = https://github.com/jkrueger/nrm.git
+	branch = master
+[submodule "lib/momentum"]
+	path = lib/momentum
+	url = https://github.com/jkrueger/momentum.git
+	branch = develop
