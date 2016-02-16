@@ -22,7 +22,7 @@ namespace rev {
 
       template<typename T>
       inline T& pop(stack_t& s) {
-        auto& x = s.top(); s.top();
+        auto& x = s.top(); s.pop();
         return (T&) x;
       }
     }
@@ -37,14 +37,14 @@ namespace rev {
     }
 
     void brrel(stack_t& s, thread_t::iterator& ip) {
-      ip += priv::pop<uint64_t>(s);
+      ip += (uint64_t) *ip;
     }
 
     void brcond(stack_t& s, thread_t::iterator& ip) {
       auto cond = priv::pop<value_t::p>(s);
-      auto eoff = priv::pop<uint64_t>(s);
+      auto eoff = (uint64_t) *ip;
 
-      ip += is_truthy(cond) ? 0 : eoff;
+      ip += is_truthy(cond) ? 1 : eoff;
     }
   }
 

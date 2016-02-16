@@ -10,7 +10,7 @@
 
 namespace rev {
 
-  typedef void (*special_t)(const list_t::p&, const map_t::p&);
+  typedef void (*special_t)(const list_t::p&, const map_t::p&, thread_t&);
   typedef void (*instr_t)(stack_t&, thread_t::iterator&);
 
   const char* BUILTIN_NS = "torque.core.builtin";
@@ -128,7 +128,7 @@ namespace rev {
       auto sym  = as<sym_t>(head);
 
       if (auto s = specials::find(sym)) {
-        s(args, env);
+        s(args, env, rt.code);
       }
       else if (auto b = builtins::find(sym)) {
         compile_all(args, env);

@@ -71,10 +71,23 @@ void core_test_2() {
   assert(is_false(b));
 }
 
+void core_test_3() {
+  auto o = read("(if (torque.core.builtin/< 1 2) 8 5)");
+  auto n = eval(o);
+
+  assert(as<int_t>(n)->value = 8);
+
+  o = read("(if (torque.core.builtin/> 1 2) 8 5)");
+  n = eval(o);
+
+  assert(as<int_t>(n)->value = 5);
+}
+
 int main() {
   rev::boot();
   core_test_0();
   core_test_1();
   core_test_2();
+  core_test_3();
   std::cout << "All core tests completed" << std::endl;
 }
