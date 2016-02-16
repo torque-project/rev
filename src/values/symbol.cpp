@@ -7,6 +7,9 @@ namespace rev {
   template<>
   type_t value_base_t<sym_t>::prototype("Symbol.0");
 
+  sym_t::p sym_t::true_  = sym_t::intern("true");
+  sym_t::p sym_t::false_ = sym_t::intern("false");
+
   sym_t::sym_t(const std::string& fqn)
   {
     size_t i = fqn.find_first_of('/');

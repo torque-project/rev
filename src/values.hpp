@@ -1,7 +1,5 @@
 #pragma once
 
-#include "semantics.hpp"
-
 #include "momentum/core.hpp"
 #include "momentum/list.hpp"
 #include "momentum/vector.hpp"
@@ -28,7 +26,19 @@ namespace rev {
 
   struct value_t {
 
-    typedef std::shared_ptr<value_t> p;
+    template<typename T>
+    struct semantics {
+
+      typedef T* p;
+
+      template<typename... TS>
+      static inline p allocate(TS... args) {
+        // TODO: replace with garbage collector
+        return new T(args...);
+      }
+    };
+
+    typedef typename semantics<value_t>::p p;
 
     // runtime type information for this value
     const type_t* type;
@@ -50,10 +60,18 @@ namespace rev {
 
   struct var_t : public value_base_t<var_t> {
 
-    // handle to value
+    typedef typename semantics<var_t>::p p;
+
+    value_t::p _top;
+
+    inline value_t::p deref() const {
+      return _top;
+    }
   };
 
   struct dvar_t : public var_t {
+
+    typedef typename semantics<dvar_t>::p p;
 
     // binding stack
   };
@@ -102,6 +120,11 @@ namespace rev {
 
   struct sym_t : public value_base_t<sym_t> {
 
+    typedef typename semantics<sym_t>::p p;
+
+    static sym_t::p true_;
+    static sym_t::p false_;
+
     std::string _name;
     std::string _ns;
 
@@ -109,6 +132,10 @@ namespace rev {
 
     inline const std::string& ns() const {
       return _ns;
+    }
+
+    inline bool has_ns() const {
+      return !_ns.empty();
     }
 
     inline const std::string& name() const {
@@ -121,6 +148,17 @@ namespace rev {
   struct array_t : public value_base_t<array_t> {
 
     // array of values
+  };
+
+  struct ns_t : public value_base_t<ns_t> {
+
+    typedef typename semantics<ns_t>::p p;
+
+    typedef imu::ty::basic_array_map<sym_t::p, value_t::p> mappings_t;
+
+    mappings_t interned;
+    mappings_t mappings;
+    mappings_t aliases;
   };
 
   struct list_tag_t {};
@@ -144,13 +182,41 @@ namespace rev {
     >;
 
   template<typename T>
-  inline std::shared_ptr<T> as(const value_t::p& v) {
+  inline bool is(const value_t::p& x) {
+    return x && (x->type == &T::prototype);
+  }
 
-    if (!v) { return nullptr; }
+  template<typename T>
+  inline T* as_nt(const value_t::p& x) noexcept {
 
-    if (v->type == &T::prototype) {
-      return std::static_pointer_cast<T>(v);
+    if (!x) { return nullptr; }
+
+    if (is<T>(x)) {
+      return static_cast<T*>(x);
     }
+
+    return nullptr;
+  }
+
+
+  template<typename T>
+  inline T* as(const value_t::p& x) {
+
+    if (!x) { return nullptr; }
+
+    if (is<T>(x)) {
+      return static_cast<T*>(x);
+    }
+
     throw std::bad_cast();
+  }
+
+  template<typename T, typename S>
+  inline T* as(const maybe<S>& x) {
+    if (x) {
+      return as<T>(*x);
+    }
+    throw std::domain_error(
+      "Passed unset maybe instance to 'as'");
   }
 }

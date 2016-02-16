@@ -1,5 +1,7 @@
 #pragma once
 
+#include "momentum/semantics.hpp"
+
 namespace rev {
 
   /**
@@ -29,5 +31,26 @@ namespace rev {
     struct p<T, typename always<typename T::p>::type> {
       typedef typename T::p type;
     };
+  }
+
+  namespace imu {
+
+    namespace semantics {
+
+      template<>
+      struct p<list_t, void> {
+        typedef list_t* p;
+      };
+
+      template<>
+      struct p<vector_t, void> {
+        typedef vector_t* p;
+      };
+
+      template<>
+      struct p<map_t, void> {
+        typedef map_T_t* p;
+      };
+    }
   }
 }
