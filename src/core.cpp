@@ -103,7 +103,15 @@ namespace rev {
 
     instr_t find(const sym_t::p& sym) {
       if (sym->ns() == BUILTIN_NS) {
-        if (sym->name() == "+") { return builtins::add; }
+        if (sym->name() == "+")  { return builtins::add; }
+        if (sym->name() == "-")  { return builtins::sub; }
+        if (sym->name() == "*")  { return builtins::mul; }
+        if (sym->name() == "/")  { return builtins::div; }
+        if (sym->name() == "==") { return builtins::eq; }
+        if (sym->name() == "<=") { return builtins::lte; }
+        if (sym->name() == ">=") { return builtins::gte; }
+        if (sym->name() == "<")  { return builtins::lt; }
+        if (sym->name() == ">")  { return builtins::gt; }
       }
       return nullptr;
     }
