@@ -32,8 +32,12 @@ namespace rev {
       s.push((value_t::p) *(ip++));
     }
 
+    void pop(stack_t& s, thread_t::iterator& ip) {
+      s.pop();
+    }
+
     void br(stack_t& s, thread_t::iterator& ip) {
-      ip = jump(priv::pop<uint64_t>(s));
+      ip = jump((uint64_t) *ip);
     }
 
     void brrel(stack_t& s, thread_t::iterator& ip) {
@@ -46,13 +50,15 @@ namespace rev {
 
       ip += is_truthy(cond) ? 1 : eoff;
     }
-  }
 
-  namespace op {
+    void bind(stack_t& s, thread_t::iterator& ip) {
+      auto var = (var_t::p) *(ip++);
+      var->bind(priv::pop<value_t::p>(s));
+    }
 
-    void push(thread_t& t, const value_t::p& x) {
-      t << instr::push;
-      t << x;
+    void deref(stack_t& s, thread_t::iterator& ip) {
+      auto var = (var_t::p) *(ip++);
+      s.push(var->deref());
     }
   }
 }

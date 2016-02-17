@@ -1,16 +1,21 @@
 #include "core.hpp"
 #include "reader.hpp"
+#include "compiler.hpp"
 #include "instructions.hpp"
 #include "builtins/operators.hpp"
+#include "specials/def.hpp"
 #include "specials/if.hpp"
+#include "specials/do.hpp"
 #include "specials/fn.hpp"
+#include "specials/let.hpp"
+#include "specials/loop.hpp"
 
 #include <cassert>
 #include <vector>
 
 namespace rev {
 
-  typedef void (*special_t)(const list_t::p&, const map_t::p&, thread_t&);
+  typedef void (*special_t)(const list_t::p&, const ctx_t&, thread_t&);
   typedef void (*instr_t)(stack_t&, thread_t::iterator&);
 
   const char* BUILTIN_NS = "torque.core.builtin";
@@ -37,6 +42,13 @@ namespace rev {
 
   thread_t::iterator jump(uint64_t off) {
     return rt.code.begin() + off;
+  }
+
+  void intern(const sym_t::p& sym, const var_t::p& var) {
+    if (!rt.in_ns) {
+      throw std::runtime_error("No current namespace is bound");
+    }
+    rt.in_ns->intern(sym, var);
   }
 
   var_t::p resolve(const map_t::p& env, const sym_t::p& sym) {
@@ -91,9 +103,14 @@ namespace rev {
 
     special_t find(sym_t::p& sym) {
       if (sym) {
-        if (sym->name() == "if")  { return specials::if_; }
-        if (sym->name() == "fn*") { return specials::fn;  }
-        // TODO: more special forms like let*, etc.
+        if (sym->name() == "def")   { return specials::def;   }
+        if (sym->name() == "if")    { return specials::if_;   }
+        if (sym->name() == "fn*")   { return specials::fn;    }
+        if (sym->name() == "do")    { return specials::do_;   }
+        if (sym->name() == "let*")  { return specials::let_;  }
+        if (sym->name() == "loop*") { return specials::loop;  }
+        if (sym->name() == "recur") { return specials::recur; }
+        // TODO: implement all special forms
       }
       return nullptr;
     }
@@ -117,24 +134,22 @@ namespace rev {
     }
   }
 
-  void compile_all(const list_t::p& form, const map_t::p& env);
-
   namespace emit {
 
-    void invoke(const list_t::p& l, const map_t::p& env) {
+    void invoke(const list_t::p& l, const ctx_t& ctx) {
 
       auto head = *imu::first(l);
       auto args = imu::rest(l);
       auto sym  = as<sym_t>(head);
 
       if (auto s = specials::find(sym)) {
-        s(args, env, rt.code);
+        s(args, ctx, rt.code);
       }
       else if (auto b = builtins::find(sym)) {
-        compile_all(args, env);
+        compile_all(args, ctx);
         rt.code.push_back((void*) b);
       }
-      else if (auto f = resolve(env, sym)) {
+      else if (auto f = resolve(ctx.env(), sym)) {
         // 1) emit list as regular function call
         // 2) emit list as protocol call
         // 3) emit list as native call
@@ -142,22 +157,26 @@ namespace rev {
     }
   }
 
-  void compile(const value_t::p& form, const map_t::p& env) {
+  void compile(const value_t::p& form, const ctx_t& ctx) {
     if (auto lst = as_nt<list_t>(form)) {
       // TODO: auto expanded = macroexpand(lst)
-      emit::invoke(lst, env);
+      emit::invoke(lst, ctx);
+    }
+    else if (auto sym = as_nt<sym_t>(form)) {
+      auto var = resolve(ctx.env(), sym);
+      rt.code << instr::deref << var;
     }
     // TODO: handle other types of forms
     else {
       // emit form as operand into code
-      op::push(rt.code, form);
+      rt.code << instr::push << form;
     }
   }
 
-  void compile_all(const list_t::p& args, const map_t::p& env) {
+  void compile_all(const list_t::p& args, const ctx_t& ctx) {
     auto x = args;
     while (!imu::is_empty(x)) {
-      compile(*imu::first(x), env);
+      compile(*imu::first(x), ctx);
       x = imu::rest(x);
     }
   }
@@ -166,7 +185,7 @@ namespace rev {
 
     uint64_t off = rt.code.size();
 
-    compile(form, imu::nu<map_t>());
+    compile(form, ctx_t());
 
     auto ip = jump(off);
     while(ip != rt.code.end()) {
@@ -184,5 +203,7 @@ namespace rev {
   }
 
   void boot() {
+    rt.in_ns = imu::nu<ns_t>();
+    rt.ns    = imu::nu<dvar_t>(); rt.ns->bind(rt.in_ns);
   }
 }

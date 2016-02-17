@@ -10,7 +10,8 @@ namespace rev {
 
   value_t::p read(const std::string&);
   value_t::p eval(const value_t::p&);
-  void compile(const value_t::p& form, const map_t::p& env);
+
+  void intern(const sym_t::p& sym, const var_t::p& var);
 
   template<typename T>
   inline bool is_true(const T& x) {

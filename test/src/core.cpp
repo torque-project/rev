@@ -83,11 +83,49 @@ void core_test_3() {
   assert(as<int_t>(n)->value = 5);
 }
 
+void core_test_4() {
+  auto o = read("(do 1 2 3)");
+  auto n = eval(o);
+
+  assert(as<int_t>(n)->value = 3);
+}
+
+void core_test_5() {
+  auto o = read("(let* [x 1] (torque.core.builtin/+ x 1))");
+  auto n = eval(o);
+
+  assert(as<int_t>(n)->value = 2);
+}
+
+void core_test_6() {
+  auto o = read("(def x 5)");
+  auto p = read("(torque.core.builtin/+ x 6)");
+  eval(o);
+  auto n = eval(p);
+
+  assert(as<int_t>(n)->value = 6);
+}
+
+void core_test_7() {
+  auto o = read(
+    "(loop* [x 1]" \
+      "(if (torque.core.builtin/< x 5)" \
+        "(recur (torque.core.builtin/+ x 1))" \
+        "x)))");
+  auto n = eval(o);
+
+  assert(as<int_t>(n)->value = 5);
+}
+
 int main() {
   rev::boot();
   core_test_0();
   core_test_1();
   core_test_2();
   core_test_3();
+  core_test_4();
+  core_test_5();
+  core_test_6();
+  core_test_7();
   std::cout << "All core tests completed" << std::endl;
 }

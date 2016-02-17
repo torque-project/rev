@@ -64,6 +64,10 @@ namespace rev {
 
     value_t::p _top;
 
+    inline void bind(const value_t::p& v) {
+      _top = v;
+    }
+
     inline value_t::p deref() const {
       return _top;
     }
@@ -159,6 +163,10 @@ namespace rev {
     mappings_t interned;
     mappings_t mappings;
     mappings_t aliases;
+
+    inline void intern(const sym_t::p& s, const var_t::p& v) {
+      interned.assoc(s, v);
+    }
   };
 
   struct list_tag_t {};
@@ -180,6 +188,17 @@ namespace rev {
     , value_t::p
     , value_base_t<map_tag_t>
     >;
+
+  // c++ ADL requires that these functions be defined in the same
+  // namespace as their type
+  inline decltype(auto) seq(const map_t::p& m) {
+    return imu::seq(m);
+  }
+
+  inline decltype(auto) conj(const map_t::p& m, const map_t::value_type& x) {
+    return imu::conj(m, x);
+  }
+  // end ADL
 
   template<typename T>
   inline bool is(const value_t::p& x) {

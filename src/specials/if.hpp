@@ -6,21 +6,21 @@ namespace rev {
 
   namespace specials {
 
-    inline void if_(const list_t::p& forms, const map_t::p& e, thread_t& t) {
+    void if_(const list_t::p& forms, const ctx_t& ctx, thread_t& t) {
       auto cond  = imu::first(forms);
       auto then  = imu::second(forms);
       auto else_ = imu::first(imu::drop(2, forms));
 
-      compile(*cond, e);
+      compile(*cond, ctx);
       t << instr::brcond;
       auto eip = t.insert(t.end(), nullptr);
 
-      compile(*then, e);
+      compile(*then, ctx);
       t << instr::brrel;
       auto cont = t.insert(t.end(), nullptr);
 
       *eip = (void*) (t.end() - eip);
-      compile(*else_, e);
+      compile(*else_, ctx);
 
       *cont = (void*) (t.end() - cont);
     }
