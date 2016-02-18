@@ -11,18 +11,18 @@ namespace rev {
       auto then  = imu::second(forms);
       auto else_ = imu::first(imu::drop(2, forms));
 
-      compile(*cond, ctx);
-      t << instr::brcond;
-      auto eip = t.insert(t.end(), nullptr);
+      compile(*cond, ctx, t);
+      t << instr::brcond << 0;
+      auto eip = t.size();
 
-      compile(*then, ctx);
-      t << instr::brrel;
-      auto cont = t.insert(t.end(), nullptr);
+      compile(*then, ctx, t);
+      t << instr::br << 0;
+      auto cont = t.size();
 
-      *eip = (void*) (t.end() - eip);
-      compile(*else_, ctx);
+      t[eip-1] = (t.size() - eip);
+      compile(*else_, ctx, t);
 
-      *cont = (void*) (t.end() - cont);
+      t[cont-1] = (t.size() - cont) + 1;
     }
   }
 }

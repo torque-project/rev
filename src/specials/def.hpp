@@ -15,7 +15,8 @@ namespace rev {
       auto var = imu::nu<var_t>();
       intern(name, var);
 
-      compile(*init, ctx);
+      compile(*init, ctx, t);
+
       t << instr::bind << var;
       t << instr::push << var;
     }

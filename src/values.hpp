@@ -30,6 +30,7 @@ namespace rev {
     struct semantics {
 
       typedef T* p;
+      typedef T const* cp;
 
       template<typename... TS>
       static inline p allocate(TS... args) {
@@ -82,8 +83,44 @@ namespace rev {
 
   struct fn_t : public value_base_t<fn_t> {
 
-    void* arities[8];
-    // locals
+    typedef typename semantics<fn_t>::p p;
+
+    struct meth_t {
+
+      int64_t address;
+      uint8_t arity;
+
+      inline meth_t()
+        : address(-1) {}
+
+      inline meth_t(uint64_t a, int8_t ar)
+        : address(a), arity(ar)
+      {}
+
+      inline operator bool() const {
+        return address >= 0;
+      }
+    };
+
+    // this stores function pointer to call the fn directly
+    void*       _native[8];
+    meth_t      _arities[8];
+    std::string _name;
+
+    template<typename S>
+    fn_t(const std::string& name, const S& meths)
+      : _name(name) {
+      auto head=meths;
+      while(!is_empty(head)) {
+        auto meth = imu::first<meth_t>(head);
+        _arities[meth->arity] = *meth;
+        head = imu::rest(meths);
+      }
+    }
+
+    inline const meth_t& arity(uint8_t arity) {
+      return _arities[arity];
+    }
   };
 
   template<typename T>
@@ -124,7 +161,8 @@ namespace rev {
 
   struct sym_t : public value_base_t<sym_t> {
 
-    typedef typename semantics<sym_t>::p p;
+    typedef typename semantics<sym_t>::p  p;
+    typedef typename semantics<sym_t>::cp cp;
 
     static sym_t::p true_;
     static sym_t::p false_;
@@ -203,6 +241,11 @@ namespace rev {
   template<typename T>
   inline bool is(const value_t::p& x) {
     return x && (x->type == &T::prototype);
+  }
+
+  template<typename T>
+  inline bool is(const maybe<value_t::p>& x) {
+    return x && *x && ((*x)->type == &T::prototype);
   }
 
   template<typename T>

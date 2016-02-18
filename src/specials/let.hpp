@@ -11,11 +11,12 @@ namespace rev {
         const value_t::p& bs, const map_t::p& e, thread_t& t) {
 
         return imu::reduce([&](const map_t::p& e, const imu::ty::cons& b) {
+
             auto sym = imu::first<value_t::p>(b);
             auto val = imu::second<value_t::p>(b);
             auto var = imu::nu<var_t>();
 
-            compile(*val, e);
+            compile(*val, e, t);
             t << instr::bind << var;
 
             return imu::assoc(e, *sym, var);

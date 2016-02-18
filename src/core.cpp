@@ -16,7 +16,7 @@
 namespace rev {
 
   typedef void (*special_t)(const list_t::p&, const ctx_t&, thread_t&);
-  typedef void (*instr_t)(stack_t&, thread_t::iterator&);
+  typedef void (*instr_t)(stack_t&, int64_t*&);
 
   const char* BUILTIN_NS = "torque.core.builtin";
 
@@ -26,22 +26,27 @@ namespace rev {
    */
   struct runtime_t {
 
-    map_t    namespaces;
-    thread_t code;
-    stack_t  stack;
-    // exception stack
+    map_t     namespaces;
+    thread_t  code;
+    stack_t   stack;
 
-    ns_t::p   in_ns;
-    dvar_t::p ns;
+    ns_t::p    in_ns;
+    dvar_t::p  ns;
 
     // static symbols
-    sym_t::p _ns_;
+    sym_t::p  _ns_;
 
   } rt;
 
+  thread_t& main_thread() {
+    return rt.code;
+  }
 
-  thread_t::iterator jump(uint64_t off) {
-    return rt.code.begin() + off;
+  int64_t finalize_thread(thread_t& t) {
+    auto pos = rt.code.size();
+    rt.code.reserve(rt.code.size() + t.size());
+    rt.code.insert(rt.code.end(), t.begin(), t.end());
+    return pos;
   }
 
   void intern(const sym_t::p& sym, const var_t::p& var) {
@@ -136,65 +141,96 @@ namespace rev {
 
   namespace emit {
 
-    void invoke(const list_t::p& l, const ctx_t& ctx) {
+    void dispatch(const fn_t::p& f, uint8_t arity) {
+      if (auto meth = f->arity(arity)) {
+        rt.code
+          << instr::return_here
+          << instr::br << meth.address
+          << instr::pop;
+      }
+      else {
+        throw std::runtime_error("Arity mismatch when calling fn");
+      }
+    }
+
+    void invoke(const list_t::p& l, const ctx_t& ctx, thread_t& t) {
 
       auto head = *imu::first(l);
       auto args = imu::rest(l);
       auto sym  = as<sym_t>(head);
 
       if (auto s = specials::find(sym)) {
-        s(args, ctx, rt.code);
+        s(args, ctx, t);
       }
       else if (auto b = builtins::find(sym)) {
-        compile_all(args, ctx);
-        rt.code.push_back((void*) b);
+        compile_all(args, ctx, t);
+        t << b;
       }
       else if (auto f = resolve(ctx.env(), sym)) {
-        // 1) emit list as regular function call
+        if (auto fn = as_nt<fn_t>(f->deref())) {
+          compile_all(args, ctx, t);
+          dispatch(fn, imu::count(args));
+        }
         // 2) emit list as protocol call
         // 3) emit list as native call
       }
     }
   }
 
-  void compile(const value_t::p& form, const ctx_t& ctx) {
+  void compile(const value_t::p& form, const ctx_t& ctx, thread_t& t) {
     if (auto lst = as_nt<list_t>(form)) {
       // TODO: auto expanded = macroexpand(lst)
-      emit::invoke(lst, ctx);
+      emit::invoke(lst, ctx, t);
     }
     else if (auto sym = as_nt<sym_t>(form)) {
       auto var = resolve(ctx.env(), sym);
-      rt.code << instr::deref << var;
+      t << instr::deref << var;
     }
     // TODO: handle other types of forms
     else {
       // emit form as operand into code
-      rt.code << instr::push << form;
+      t << instr::push << form;
     }
   }
 
-  void compile_all(const list_t::p& args, const ctx_t& ctx) {
-    auto x = args;
+  void compile(const value_t::p& form, const ctx_t& ctx) {
+    compile(form, ctx, rt.code);
+  }
+
+  void compile_all(const list_t::p& forms, const ctx_t& ctx, thread_t& t) {
+    auto x = forms;
     while (!imu::is_empty(x)) {
-      compile(*imu::first(x), ctx);
+      compile(*imu::first(x), ctx, t);
       x = imu::rest(x);
     }
   }
 
+  void compile_all(const list_t::p& forms, const ctx_t& ctx) {
+    compile_all(forms, ctx, rt.code);
+  }
+
   value_t::p eval(const value_t::p& form) {
 
-    uint64_t off = rt.code.size();
+    thread_t thread;
+    compile(form, ctx_t(), thread);
 
-    compile(form, ctx_t());
+    auto address = finalize_thread(thread);
 
-    auto ip = jump(off);
-    while(ip != rt.code.end()) {
-      ((instr_t) *ip)(rt.stack, ++ip);
+    // get pointer to last instruction, which is a call to code
+    // we want to eval
+    auto ip  = rt.code.data() + address;
+    auto end = rt.code.data() + rt.code.size();
+
+    while(ip != end) {
+      auto op = *(ip++);
+      ((instr_t) op)(rt.stack, ip);
     }
 
-    auto ret = rt.stack.top(); rt.stack.pop();
-
+    auto ret = instr::stack::pop<value_t::p>(rt.stack);
     assert(rt.stack.empty());
+
+    // TODO: delete eval code from vm ?
+
     return ret;
   }
 

@@ -72,6 +72,7 @@ void core_test_2() {
 }
 
 void core_test_3() {
+
   auto o = read("(if (torque.core.builtin/< 1 2) 8 5)");
   auto n = eval(o);
 
@@ -117,6 +118,15 @@ void core_test_7() {
   assert(as<int_t>(n)->value = 5);
 }
 
+void core_test_8() {
+  auto o = read("(def inc (fn* [x] (torque.core.builtin/+ x 1)))");
+  auto p = read("(inc 1)");
+  eval(o);
+  auto n = eval(p);
+
+  assert(as<int_t>(n)->value = 2);
+}
+
 int main() {
   rev::boot();
   core_test_0();
@@ -127,5 +137,6 @@ int main() {
   core_test_5();
   core_test_6();
   core_test_7();
+  core_test_8();
   std::cout << "All core tests completed" << std::endl;
 }

@@ -1,14 +1,6 @@
 #pragma once
 
-#include <stack>
-#include <vector>
-
 namespace rev {
-
-  typedef std::vector<void*>     thread_t;
-  typedef std::stack<value_t::p> stack_t;
-
-  thread_t::iterator jump(uint64_t off);
 
   template<typename T>
   inline thread_t& operator<<(thread_t& t, const T& x) {
@@ -18,47 +10,50 @@ namespace rev {
 
   namespace instr {
 
-    namespace priv {
+    namespace stack {
 
       template<typename T>
-      inline T& pop(stack_t& s) {
-        auto& x = s.top(); s.pop();
-        return (T&) x;
+      inline T pop(stack_t& s) {
+        auto& x = s.back(); s.pop_back();
+        return (T) x;
       }
     }
 
-    // runtime instructions of the vm
-    void push(stack_t& s, thread_t::iterator& ip) {
-      s.push((value_t::p) *(ip++));
+    void push(stack_t& s, int64_t* &ip) {
+      s.push_back(*(ip++));
     }
 
-    void pop(stack_t& s, thread_t::iterator& ip) {
-      s.pop();
+    void return_here(stack_t& s, int64_t* &ip) {
+      s.push_back((int64_t) ip);
     }
 
-    void br(stack_t& s, thread_t::iterator& ip) {
-      ip = jump((uint64_t) *ip);
+    void return_to(stack_t& s, int64_t* &ip) {
+      ip = (int64_t*) *(s.rbegin() + 1);
     }
 
-    void brrel(stack_t& s, thread_t::iterator& ip) {
-      ip += (uint64_t) *ip;
+    void pop(stack_t& s, int64_t* &ip) {
+      s.pop_back();
     }
 
-    void brcond(stack_t& s, thread_t::iterator& ip) {
-      auto cond = priv::pop<value_t::p>(s);
-      auto eoff = (uint64_t) *ip;
-
-      ip += is_truthy(cond) ? 1 : eoff;
+    void br(stack_t& s, int64_t* &ip) {
+      ip += *ip;
     }
 
-    void bind(stack_t& s, thread_t::iterator& ip) {
+    void brcond(stack_t& s, int64_t* &ip) {
+      auto cond = stack::pop<value_t::p>(s);
+      auto eoff = *(ip++);
+
+      ip += is_truthy(cond) ? 0 : eoff;
+    }
+
+    void bind(stack_t& s, int64_t* &ip) {
       auto var = (var_t::p) *(ip++);
-      var->bind(priv::pop<value_t::p>(s));
+      var->bind(stack::pop<value_t::p>(s));
     }
 
-    void deref(stack_t& s, thread_t::iterator& ip) {
+    void deref(stack_t& s, int64_t* &ip) {
       auto var = (var_t::p) *(ip++);
-      s.push(var->deref());
+      s.push_back((int64_t) var->deref());
     }
   }
 }

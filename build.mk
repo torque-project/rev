@@ -12,7 +12,8 @@ libvm.so_sources_$(d) += \
 	  values/map.cpp \
 		values/var.cpp \
     values/ns.cpp \
-	  values/string.cpp
+	  values/string.cpp \
+	  values/fn.cpp
 
 libvm.so_precompiled_header_$(d) := 
 libvm.so_target_dir_$(d) := lib

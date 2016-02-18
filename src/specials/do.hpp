@@ -16,7 +16,7 @@ namespace rev {
         auto rest = imu::rest(forms);
 
         while (!imu::is_empty(rest)) {
-          compile(*form, ctx);
+          compile(*form, ctx, t);
           t << instr::pop;
 
           form = imu::first(rest);
@@ -24,7 +24,7 @@ namespace rev {
         }
 
         assert(form && "Expect do to have a return form");
-        compile(*form, ctx);
+        compile(*form, ctx, t);
       }
     }
   }
