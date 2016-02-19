@@ -12,6 +12,7 @@ namespace rev {
     typedef typename map_t::key_seq::p key_seq_t;
 
     map_t::p  _env;
+    map_t::p  _locals;
 
     int64_t   _recur_point;
     key_seq_t _recur_syms;

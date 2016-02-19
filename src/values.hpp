@@ -118,6 +118,10 @@ namespace rev {
       }
     }
 
+    inline std::string name() const {
+      return _name;
+    }
+
     inline const meth_t& arity(uint8_t arity) {
       return _arities[arity];
     }

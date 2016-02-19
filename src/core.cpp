@@ -42,10 +42,17 @@ namespace rev {
     return rt.code;
   }
 
+  int64_t* jump(int64_t off) {
+    return rt.code.data() + off;
+  }
+
   int64_t finalize_thread(thread_t& t) {
+
     auto pos = rt.code.size();
+
     rt.code.reserve(rt.code.size() + t.size());
     rt.code.insert(rt.code.end(), t.begin(), t.end());
+
     return pos;
   }
 
@@ -124,7 +131,7 @@ namespace rev {
   namespace builtins {
 
     instr_t find(const sym_t::p& sym) {
-      if (sym->ns() == BUILTIN_NS) {
+      if (sym && sym->ns() == BUILTIN_NS) {
         if (sym->name() == "+")  { return builtins::add; }
         if (sym->name() == "-")  { return builtins::sub; }
         if (sym->name() == "*")  { return builtins::mul; }
@@ -157,7 +164,7 @@ namespace rev {
 
       auto head = *imu::first(l);
       auto args = imu::rest(l);
-      auto sym  = as<sym_t>(head);
+      auto sym  = as_nt<sym_t>(head);
 
       if (auto s = specials::find(sym)) {
         s(args, ctx, t);
@@ -165,7 +172,8 @@ namespace rev {
       else if (auto b = builtins::find(sym)) {
         compile_all(args, ctx, t);
         t << b;
-      }
+      }/* TODO: could implement a direct jump for global fns. this would
+          have the benefit of compile time arity errors
       else if (auto f = resolve(ctx.env(), sym)) {
         if (auto fn = as_nt<fn_t>(f->deref())) {
           compile_all(args, ctx, t);
@@ -173,6 +181,23 @@ namespace rev {
         }
         // 2) emit list as protocol call
         // 3) emit list as native call
+      }*/
+      else {
+
+        // FIXME: this isn't really pretty. maybe it's better to
+        // store the return address at the top of the stack, which
+        // wouldn't require this hack to patch up the return address
+        // after emitting all the arguments. on the other hand binding
+        // the parameter in the function becomes more complicated
+        // if the return address rests on top of the stack
+        t << instr::return_here << 0;
+        auto return_addr = t.size();
+
+        compile_all(args, ctx, t);
+        compile(head, ctx, t);
+
+        t << instr::dispatch << imu::count(args);
+        t[return_addr-1] = (t.size() - return_addr);
       }
     }
   }
@@ -222,6 +247,9 @@ namespace rev {
     auto end = rt.code.data() + rt.code.size();
 
     while(ip != end) {
+#ifdef _TRACE
+      std::cout << "op(" << (ip - rt.code.data()) << "): ";
+#endif
       auto op = *(ip++);
       ((instr_t) op)(rt.stack, ip);
     }
