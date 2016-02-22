@@ -157,7 +157,7 @@ void core_test_8() {
            "y (b 2)]"
       "x)");
   n = eval(o);
-  std::cout << as<int_t>(n)->value << std::endl;
+
   assert(as<int_t>(n)->value == 2);
 }
 
