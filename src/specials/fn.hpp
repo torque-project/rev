@@ -6,10 +6,19 @@ namespace rev {
 
   namespace specials {
 
-    fn_t::meth_t body(const list_t::p& meth, const ctx_t& ctx, thread_t& t) {
+    namespace priv {
+
+      typedef std::tuple<uint8_t, int64_t> meth_t;
+    }
+
+    priv::meth_t body(const list_t::p& meth, ctx_t& ctx, thread_t& t) {
+
+      using namespace priv;
 
       uint64_t address = t.size();
+
       auto args = as<vector_t>(imu::first(meth));
+      auto body = imu::rest(meth);
 
       auto locals = imu::reduce(
         [&](const map_t::p& m, const sym_t::p& x) {
@@ -23,17 +32,20 @@ namespace rev {
         args);
 
       // compile body
-      do_(imu::rest(meth), ctx_t(ctx, locals, address), t);
-      // jump to return address
+      auto body_ctx = ctx.recur(locals, address);
+      do_(body, body_ctx, t);
       t << instr::return_to;
 
-      // return jump point to begin of body
-      return fn_t::meth_t(address, imu::count(args));
+      // return jump point to beginning of body
+      return meth_t(imu::count(args), address);
     }
 
-    void fn(const list_t::p& forms, const ctx_t& ctx, thread_t& t) {
+    void fn(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
 
-      thread_t thread;
+      using namespace priv;
+
+      thread_t thread(8, -1);
+      ctx_t    fn_ctx = ctx.fn();
 
       auto name   = as_nt<sym_t>(*imu::first(forms));
       auto fnspec = imu::rest(forms);
@@ -47,20 +59,19 @@ namespace rev {
         fnspec = list_t::factory(fnspec);
       }
 
-      auto meths = imu::map([&](const list_t::p& meth) {
-        return body(meth, ctx, thread);
-      }, fnspec);
+      uint8_t arity;
+      int64_t off;
 
-      // copy function to main thread and obtain final code address
-      auto final_address = finalize_thread(thread);
+      imu::for_each([&](const list_t::p& meth) {
+        std::tie(arity, off) = body(meth, fn_ctx, thread);
+        thread[arity] = off;
+      },
+      fnspec);
 
-      // update jump addresses with final positions in main thread
-      meths = imu::map([&](const fn_t::meth_t& meth) {
-        return fn_t::meth_t(final_address + meth.address, meth.arity);
-      }, meths);
+      auto address   = finalize_thread(thread);
+      auto nenclosed = compile_all(fn_ctx.closed_overs(), ctx, t);
 
-      // push fn onto stack in calling thread
-      t << instr::push << imu::nu<fn_t>(name->name(), meths);
+      t << instr::closure << address << nenclosed;
     }
   }
 }

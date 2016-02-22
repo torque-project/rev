@@ -7,13 +7,14 @@ namespace rev {
 
   namespace specials {
 
-    void loop(const list_t::p& forms, const ctx_t& ctx, thread_t& t) {
-      auto locals = let::bindings(*imu::first(forms), ctx.env(), t);
+    void loop(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
+      auto locals = let::bindings(*imu::first(forms), ctx, t);
       auto point  = (int64_t) t.size();
-      do_(imu::rest(forms), ctx_t(ctx, locals, point), t);
+      auto recur  = ctx.recur(locals, point);
+      do_(imu::rest(forms), recur, t);
     }
 
-    void recur(const list_t::p& forms, const ctx_t& ctx, thread_t& t) {
+    void recur(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
 
       compile_all(forms, ctx, t);
 

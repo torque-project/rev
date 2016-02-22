@@ -84,51 +84,26 @@ namespace rev {
   struct fn_t : public value_base_t<fn_t> {
 
     typedef typename semantics<fn_t>::p p;
-
-    struct meth_t {
-
-      int64_t address;
-      uint8_t arity;
-
-      inline meth_t()
-        : address(-1) {}
-
-      inline meth_t(uint64_t a, int8_t ar)
-        : address(a), arity(ar)
-      {}
-
-      inline operator bool() const {
-        return address >= 0;
-      }
-    };
+    typedef typename std::vector<value_t::p> values_t;
 
     // this stores function pointer to call the fn directly
     void*       _native[8];
-    meth_t      _arities[8];
-    std::string _name;
+    int64_t     _code;
+    values_t    _closed_overs;
 
-    template<typename S>
-    fn_t(const std::string& name, const S& meths)
-      : _name(name) {
-      auto head=meths;
-      while(!is_empty(head)) {
-        auto meth = imu::first<meth_t>(head);
-        _arities[meth->arity] = *meth;
-        head = imu::rest(meths);
-      }
-    }
+    fn_t(int64_t code)
+      : _code(code)
+    {}
 
-    inline std::string name() const {
-      return _name;
-    }
-
-    inline const meth_t& arity(uint8_t arity) {
-      return _arities[arity];
+    inline void enclose(const value_t::p& v) {
+      _closed_overs.push_back(v);
     }
   };
 
   template<typename T>
   struct box_t : public value_base_t<box_t<T>> {
+
+    typedef typename value_t::semantics<box_t>::p p;
 
     T value; // the boxed value type
 

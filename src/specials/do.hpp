@@ -6,7 +6,7 @@ namespace rev {
 
   namespace specials {
 
-    void do_(const list_t::p& forms, const ctx_t& ctx, thread_t& t) {
+    void do_(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
 
       if (imu::is_empty(forms)) {
         t << instr::push << nullptr;

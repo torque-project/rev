@@ -15,8 +15,8 @@
 
 namespace rev {
 
-  typedef void (*special_t)(const list_t::p&, const ctx_t&, thread_t&);
-  typedef void (*instr_t)(stack_t&, int64_t*&);
+  typedef void (*special_t)(const list_t::p&, ctx_t&, thread_t&);
+  typedef void (*instr_t)(stack_t&, int64_t&, int64_t*&);
 
   const char* BUILTIN_NS = "torque.core.builtin";
 
@@ -63,10 +63,11 @@ namespace rev {
     rt.in_ns->intern(sym, var);
   }
 
-  var_t::p resolve(const map_t::p& env, const sym_t::p& sym) {
+  ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym) {
 
     auto ns = as<ns_t>(rt.ns->deref());
     maybe<value_t::p> resolved;
+    ctx_t::scope_t    scope;
 
     if (sym->has_ns()) {
 
@@ -81,15 +82,22 @@ namespace rev {
         std::runtime_error(sym->ns() + " does not resolve to a namespace");
       }
 
+      scope    = ctx_t::scope_t::global;
       resolved = imu::get(&(as<ns_t>(the_ns)->interned), sym);
     }
     else {
 
-      resolved = imu::get(env, sym);
+      scope    = ctx_t::scope_t::local;
+      resolved = imu::get(ctx.local(), sym);
       if (!resolved) {
-        resolved = imu::get(&ns->interned, sym);
+        scope    = ctx_t::scope_t::env;
+        resolved = imu::get(ctx.env(), sym);
         if (!resolved) {
-          resolved = imu::get(&ns->mappings, sym);
+          scope    = ctx_t::scope_t::global;
+          resolved = imu::get(&ns->interned, sym);
+          if (!resolved) {
+            resolved = imu::get(&ns->mappings, sym);
+          }
         }
       }
     }
@@ -98,7 +106,7 @@ namespace rev {
       throw std::runtime_error(sym->name() + " is not bound");
     }
 
-    return as<var_t>(*resolved);
+    return {scope, as<var_t>(*resolved)};
   }
 
   value_t::p macroexpand1(const value_t::p& form) {
@@ -147,7 +155,7 @@ namespace rev {
   }
 
   namespace emit {
-
+    /*
     void dispatch(const fn_t::p& f, uint8_t arity) {
       if (auto meth = f->arity(arity)) {
         rt.code
@@ -159,8 +167,8 @@ namespace rev {
         throw std::runtime_error("Arity mismatch when calling fn");
       }
     }
-
-    void invoke(const list_t::p& l, const ctx_t& ctx, thread_t& t) {
+    */
+    void invoke(const list_t::p& l, ctx_t& ctx, thread_t& t) {
 
       auto head = *imu::first(l);
       auto args = imu::rest(l);
@@ -193,8 +201,8 @@ namespace rev {
         t << instr::return_here << 0;
         auto return_addr = t.size();
 
-        compile_all(args, ctx, t);
         compile(head, ctx, t);
+        compile_all(args, ctx, t);
 
         t << instr::dispatch << imu::count(args);
         t[return_addr-1] = (t.size() - return_addr);
@@ -202,56 +210,65 @@ namespace rev {
     }
   }
 
-  void compile(const value_t::p& form, const ctx_t& ctx, thread_t& t) {
+  void compile(const value_t::p& form, ctx_t& ctx, thread_t& t) {
+
     if (auto lst = as_nt<list_t>(form)) {
       // TODO: auto expanded = macroexpand(lst)
       emit::invoke(lst, ctx, t);
     }
     else if (auto sym = as_nt<sym_t>(form)) {
-      auto var = resolve(ctx.env(), sym);
-      t << instr::deref << var;
+      auto lookup = resolve(ctx, sym);
+      assert(lookup && "symbol resolved to nil instead of var");
+      if (lookup.is_local() || lookup.is_global()) {
+        // this is a local variable of global from a name space
+        // in both cases we just put the contents of the var onto
+        // the stack
+        t << instr::deref << *lookup;
+      }
+      else {
+        // add lookup result to the list of closed over vars
+        t << instr::enclosed << ctx.close_over(sym);
+      }
     }
     // TODO: handle other types of forms
     else {
-      // emit form as operand into code
+      // push literals onto the stack
       t << instr::push << form;
     }
   }
 
-  void compile(const value_t::p& form, const ctx_t& ctx) {
+  void compile(const value_t::p& form, ctx_t& ctx) {
     compile(form, ctx, rt.code);
   }
 
-  void compile_all(const list_t::p& forms, const ctx_t& ctx, thread_t& t) {
-    auto x = forms;
-    while (!imu::is_empty(x)) {
-      compile(*imu::first(x), ctx, t);
-      x = imu::rest(x);
-    }
-  }
-
-  void compile_all(const list_t::p& forms, const ctx_t& ctx) {
-    compile_all(forms, ctx, rt.code);
+  uint32_t compile_all(const list_t::p& forms, ctx_t& ctx) {
+    return compile_all(forms, ctx, rt.code);
   }
 
   value_t::p eval(const value_t::p& form) {
-
+#ifdef _TRACE
+    std::cout << "eval" << std::endl;
+#endif
     thread_t thread;
-    compile(form, ctx_t(), thread);
+    ctx_t    ctx;
+    compile(form, ctx, thread);
 
     auto address = finalize_thread(thread);
 
     // get pointer to last instruction, which is a call to code
     // we want to eval
-    auto ip  = rt.code.data() + address;
-    auto end = rt.code.data() + rt.code.size();
+    int64_t fp = 0;
+    auto ip    = rt.code.data() + address;
+    auto end   = rt.code.data() + rt.code.size();
 
     while(ip != end) {
-#ifdef _TRACE
-      std::cout << "op(" << (ip - rt.code.data()) << "): ";
-#endif
       auto op = *(ip++);
-      ((instr_t) op)(rt.stack, ip);
+#ifdef _TRACE
+      std::cout
+        << "op(" << (ip - rt.code.data() - 1) << " / " << op << "): "
+        << std::flush;
+#endif
+      ((instr_t) op)(rt.stack, fp, ip);
     }
 
     auto ret = instr::stack::pop<value_t::p>(rt.stack);

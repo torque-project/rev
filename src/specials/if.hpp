@@ -6,7 +6,7 @@ namespace rev {
 
   namespace specials {
 
-    void if_(const list_t::p& forms, const ctx_t& ctx, thread_t& t) {
+    void if_(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
       auto cond  = imu::first(forms);
       auto then  = imu::second(forms);
       auto else_ = imu::first(imu::drop(2, forms));

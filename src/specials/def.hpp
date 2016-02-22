@@ -4,7 +4,8 @@ namespace rev {
 
   namespace specials {
 
-    void def(const list_t::p& forms, const ctx_t& ctx, thread_t& t) {
+    void def(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
+
       auto name = as<sym_t>(imu::first(forms));
       auto init = imu::second(forms);
 

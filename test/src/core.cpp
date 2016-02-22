@@ -157,8 +157,17 @@ void core_test_8() {
            "y (b 2)]"
       "x)");
   n = eval(o);
-  std::cout << as<int_t>(n)->value << std::endl;
+
   assert(as<int_t>(n)->value == 2);
+
+  o = read(
+    "(let* [f (fn* [x] (fn* [y] (fn* [] (torque.core.builtin/+ x y))))" \
+           "g (f 7)"
+           "h (g 6)]" \
+      "(h))");
+  n = eval(o);
+
+  assert(as<int_t>(n)->value == 13);
 }
 
 int main() {
