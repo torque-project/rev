@@ -68,19 +68,8 @@ namespace rev {
       },
       fnspec);
 
-      auto address = finalize_thread(thread);
-
-      // push closed overs onto the stack by compiling their
-      // symbol in this fns parent context (i.e. the enclosing fn).
-      // this will also propagate the closure to the parent fn if
-      // neccessary
-      auto nenclosed =
-        imu::reduce([&](int n, const sym_t::p& sym) {
-          compile(sym, ctx, t);
-          return n + 1;
-        },
-        0,
-        fn_ctx.closed_overs());
+      auto address   = finalize_thread(thread);
+      auto nenclosed = compile_all(fn_ctx.closed_overs(), ctx, t);
 
       t << instr::closure << address << nenclosed;
     }

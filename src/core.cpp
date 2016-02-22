@@ -241,16 +241,8 @@ namespace rev {
     compile(form, ctx, rt.code);
   }
 
-  void compile_all(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
-    auto x = forms;
-    while (!imu::is_empty(x)) {
-      compile(*imu::first(x), ctx, t);
-      x = imu::rest(x);
-    }
-  }
-
-  void compile_all(const list_t::p& forms, ctx_t& ctx) {
-    compile_all(forms, ctx, rt.code);
+  uint32_t compile_all(const list_t::p& forms, ctx_t& ctx) {
+    return compile_all(forms, ctx, rt.code);
   }
 
   value_t::p eval(const value_t::p& form) {
