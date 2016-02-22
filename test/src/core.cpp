@@ -171,7 +171,7 @@ void core_test_8() {
 }
 
 int main() {
-  rev::boot();
+  rev::boot(1 << 16);
   core_test_0();
   core_test_1();
   core_test_2();

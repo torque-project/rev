@@ -123,7 +123,7 @@ namespace rev {
   };
 
   typedef std::vector<int64_t> thread_t;
-  typedef std::vector<int64_t> stack_t;
+  typedef int64_t*             stack_t;
 
   void     compile(const value_t::p& form, ctx_t& ctx);
   void     compile(const value_t::p& form, ctx_t& ctx, thread_t& t);

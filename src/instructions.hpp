@@ -16,40 +16,39 @@ namespace rev {
 
       template<typename T = int64_t>
       inline T pop(stack_t& s) {
-        auto& x = s.back(); s.pop_back();
-        return (T) x;
+        return (T) *(--s);
       }
 
       template<typename T>
       inline void push(stack_t& s, const T& x) {
-        s.push_back((int64_t) x);
+        *s++ = reinterpret_cast<int64_t>(x);
       }
     }
 
-    void push(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void push(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
-      std::cout << "push" << std::endl;
+      std::cout << "push: " << *ip << std::endl;
 #endif
-      stack::push(s, *(ip++));
+      stack::push(s, *ip++);
     }
 
-    void return_here(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void return_here(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "return_here: " << *ip << std::endl;
 #endif
-      fp = s.size();
       auto off = *(ip++);
       stack::push(s, (int64_t) (ip + off));
+      fp = s;
     }
 
-    void return_to(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void return_to(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "return_to" << std::endl;
 #endif
       auto ret  = stack::pop<>(s);
 
       // reset stack to calling function
-      s.erase(s.begin() + fp + 1, s.end());
+      s = fp;
       auto addr = stack::pop<int64_t*>(s);
 
       // set instruction pointer to return address
@@ -58,21 +57,21 @@ namespace rev {
       stack::push(s, ret);
     }
 
-    void pop(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void pop(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "pop" << std::endl;
 #endif
-      s.pop_back();
+      stack::pop(s);
     }
 
-    void br(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void br(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "br" << std::endl;
 #endif
       ip += *ip;
     }
 
-    void brcond(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void brcond(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "brcond" << std::endl;
 #endif
@@ -82,7 +81,7 @@ namespace rev {
       ip += is_truthy(cond) ? 0 : eoff;
     }
 
-    void bind(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void bind(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "bind" << std::endl;
 #endif
@@ -90,7 +89,7 @@ namespace rev {
       var->bind(stack::pop<value_t::p>(s));
     }
 
-    void deref(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void deref(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "deref" << std::endl;
 #endif
@@ -98,15 +97,15 @@ namespace rev {
       stack::push(s, (int64_t) var->deref());
     }
 
-    void enclosed(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void enclosed(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "enclosed" << std::endl;
 #endif
-      auto fn = as<fn_t>((value_t::p) s[fp+1]);
+      auto fn = as<fn_t>((value_t::p) *fp);
       stack::push(s, fn->_closed_overs[*ip++]);
     }
 
-    void closure(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void closure(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "closure" << std::endl;
 #endif
@@ -121,11 +120,11 @@ namespace rev {
       stack::push(s, fn);
     }
 
-    void dispatch(stack_t& s, int64_t &fp, int64_t* &ip) {
+    void dispatch(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "dispatch" << std::endl;
 #endif
-      auto f     = as<fn_t>((value_t::p)(s[fp+1]));
+      auto f     = as<fn_t>((value_t::p) *fp);
       auto arity = *(ip++);
 
       // FIXME: it's quite ugly to obtain the jump address this way,

@@ -16,7 +16,7 @@
 namespace rev {
 
   typedef void (*special_t)(const list_t::p&, ctx_t&, thread_t&);
-  typedef void (*instr_t)(stack_t&, int64_t&, int64_t*&);
+  typedef void (*instr_t)(stack_t&, stack_t&, int64_t*&);
 
   const char* BUILTIN_NS = "torque.core.builtin";
 
@@ -257,7 +257,8 @@ namespace rev {
 
     // get pointer to last instruction, which is a call to code
     // we want to eval
-    int64_t fp = 0;
+    stack_t sp = rt.stack;
+    stack_t fp = sp;
     auto ip    = rt.code.data() + address;
     auto end   = rt.code.data() + rt.code.size();
 
@@ -268,11 +269,11 @@ namespace rev {
         << "op(" << (ip - rt.code.data() - 1) << " / " << op << "): "
         << std::flush;
 #endif
-      ((instr_t) op)(rt.stack, fp, ip);
+      ((instr_t) op)(sp, fp, ip);
     }
 
-    auto ret = instr::stack::pop<value_t::p>(rt.stack);
-    assert(rt.stack.empty());
+    auto ret = instr::stack::pop<value_t::p>(sp);
+    assert(rt.stack == sp);
 
     // TODO: delete eval code from vm ?
 
@@ -283,7 +284,8 @@ namespace rev {
     return rdr::read(s);
   }
 
-  void boot() {
+  void boot(uint64_t stack) {
+    rt.stack = new int64_t[stack];
     rt.in_ns = imu::nu<ns_t>();
     rt.ns    = imu::nu<dvar_t>(); rt.ns->bind(rt.in_ns);
   }
