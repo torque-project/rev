@@ -172,6 +172,16 @@ void core_test_8() {
 
 void core_test_9() {
 
+  auto o = read("((fn* [& rest] rest) 1 2 3)");
+  auto n = as<list_t>(eval(o));
+
+  assert(as<int_t>(imu::first(n))->value == 1);
+  assert(as<int_t>(imu::second(n))->value == 2);
+  assert(as<int_t>(imu::first(imu::drop(2, n)))->value == 3);
+}
+
+void core_test_10() {
+
   auto o = read("(def ^:macro reverse (fn* [a b c] '(~c ~b ~a)))");
   auto p = read("(reverse 5 8 torque.core.builtin/-)");
   eval(o);

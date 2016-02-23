@@ -121,14 +121,13 @@ namespace rev {
   }
 
   value_t::p macroexpand1(const value_t::p& form, ctx_t& ctx) {
-    if (auto lst = as_nt<list_t>(form)) {
-      if (auto sym = as_nt<sym_t>(*imu::first(lst))) {
-        if (auto lookup = resolve(ctx, sym)) {
-          if (lookup.is_global()) {
-            auto mac = as<fn_t>(lookup->deref());
-            if (mac && mac->is_macro()) {
-              return call(mac, imu::rest(lst));
-            }
+    auto lst = as_nt<list_t>(form);
+    if (auto sym = as_nt<sym_t>(imu::first(lst))) {
+      if (auto lookup = resolve(ctx, sym)) {
+        if (lookup.is_global()) {
+          auto mac = as<fn_t>(lookup->deref());
+          if (mac && mac->is_macro()) {
+            return call(mac, imu::rest(lst));
           }
         }
       }

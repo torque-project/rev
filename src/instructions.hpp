@@ -109,10 +109,10 @@ namespace rev {
 #ifdef _TRACE
       std::cout << "closure" << std::endl;
 #endif
-      auto address  = *ip++;
-      auto enclosed = *ip++;
-      auto is_macro = (value_t::p) *ip++;
-      auto fn       = imu::nu<fn_t>(address, is_truthy(is_macro));
+      auto address   = *ip++;
+      auto enclosed  = *ip++;
+      auto max_arity = (uint8_t) *ip++;
+      auto fn        = imu::nu<fn_t>(address, max_arity);
 
       for (auto i=0; i<enclosed; ++i) {
         fn->enclose(stack::pop<value_t::p>(s));
@@ -137,6 +137,17 @@ namespace rev {
       // addresses can't be obtained while building the code, since
       // compiling may invalidate existing addresses at any time.
       ip = jump(f->_code);
+
+      if (arity > f->max_arity() && *(ip + f->max_arity() + 1) != -1) {
+
+        auto rest = imu::nu<list_t>();
+        while(arity-- > f->max_arity()) {
+          rest = imu::conj(rest, stack::pop<value_t::p>(s));
+        }
+        stack::push(s, rest);
+
+        arity = f->max_arity() + 1;
+      }
 
       auto off = ip + arity;
       if (*off != -1) {
