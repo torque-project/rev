@@ -43,6 +43,7 @@ namespace rev {
     void fn(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
 
       using namespace priv;
+      static const auto macro = sym_t::intern("macro");
 
       thread_t thread(8, -1);
       ctx_t    fn_ctx = ctx.fn();
@@ -70,8 +71,9 @@ namespace rev {
 
       auto address   = finalize_thread(thread);
       auto nenclosed = compile_all(fn_ctx.closed_overs(), ctx, t);
+      auto is_macro  = imu::get(as<map_t>(name->meta), macro, sym_t::false_);
 
-      t << instr::closure << address << nenclosed;
+      t << instr::closure << address << nenclosed << is_macro;
     }
   }
 }

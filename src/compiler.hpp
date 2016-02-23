@@ -31,6 +31,10 @@ namespace rev {
         return _var;
       }
 
+      inline var_t::p operator-> () const {
+        return _var;
+      }
+
       inline bool is_local() const {
         return _scope == scope_t::local;
       }
@@ -138,8 +142,6 @@ namespace rev {
       0,
       forms);
   }
-
-  thread_t& main_thread();
 
   /**
    * Commits a thread to the main code area. This is used to build

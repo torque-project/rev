@@ -170,6 +170,16 @@ void core_test_8() {
   assert(as<int_t>(n)->value == 13);
 }
 
+void core_test_9() {
+
+  auto o = read("(def ^:macro reverse (fn* [a b c] '(~c ~b ~a)))");
+  auto p = read("(reverse 5 8 torque.core.builtin/-)");
+  eval(o);
+  auto n = eval(p);
+
+  assert(as<int_t>(n)->value == 3);
+}
+
 int main() {
   rev::boot(1 << 16);
   core_test_0();
@@ -181,5 +191,6 @@ int main() {
   core_test_6();
   core_test_7();
   core_test_8();
+  core_test_9();
   std::cout << "All core tests completed" << std::endl;
 }

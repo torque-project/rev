@@ -111,7 +111,8 @@ namespace rev {
 #endif
       auto address  = *ip++;
       auto enclosed = *ip++;
-      auto fn       = imu::nu<fn_t>(address);
+      auto is_macro = (value_t::p) *ip++;
+      auto fn       = imu::nu<fn_t>(address, is_truthy(is_macro));
 
       for (auto i=0; i<enclosed; ++i) {
         fn->enclose(stack::pop<value_t::p>(s));
@@ -126,6 +127,10 @@ namespace rev {
 #endif
       auto f     = as<fn_t>((value_t::p) *fp);
       auto arity = *(ip++);
+
+#ifdef _DEBUG
+      assert(!f->is_macro());
+#endif
 
       // FIXME: it's quite ugly to obtain the jump address this way,
       // but for now i can't think of anything better. real memory
