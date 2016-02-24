@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <iostream>
+#include <list>
 #include <map>
 #include <sstream>
 #include <vector>
@@ -42,6 +43,8 @@ macro_t  expand(const macro_t& m);
 macro_t  wrap(const char*);
 result_t read_or_skip(std::istream& in);
 result_t drop(std::istream& in);
+result_t meta(std::istream& in);
+result_t syntax_quote(std::istream& in);
 result_t unquote(std::istream& in);
 result_t unbalanced_error(std::istream& in);
 result_t read_string(std::istream& in);
@@ -49,6 +52,12 @@ result_t read_symbol(std::istream& in);
 result_t consult_table(std::istream& in);
 void     skip_white_space(std::istream& in);
 void     skip_comment(std::istream& in);
+
+static sym_t::p QUOTE   = sym_t::intern("quote");
+static sym_t::p UNQUOTE = sym_t::intern("unquote");
+static sym_t::p SPLICE  = sym_t::intern("unquote-splicing");
+static sym_t::p LIST    = sym_t::intern("list");
+static sym_t::p CONCAT  = sym_t::intern("concat");
 
 static macros_t extensions(
   {{'_', drop}});
@@ -64,9 +73,9 @@ static macros_t macros(
    {':',  read_symbol},
    {'@',  wrap("deref")},
    {'\'', wrap("quote")},
-   {'`',  wrap("syntax-quote")},
+   {'`',  syntax_quote},
    {'~',  unquote},
-   {'^',  drop},
+   {'^',  meta},
    {'#',  consult_table},
    {')',  unbalanced_error},
    {']',  unbalanced_error}});
@@ -140,6 +149,79 @@ result_t drop(std::istream& in) {
   // read two forms and return the second
   read(in);
   return std::make_tuple(parse_state_t::skip, nullptr);
+}
+
+result_t meta(std::istream& in) {
+  // read two forms and return the second
+  auto meta = read(in);
+  auto form = read(in);
+
+  // TODO: use keywords here once they are implemented
+  if (auto sym = as_nt<sym_t>(form)) {
+    form->alter_meta([&](const value_t::p& v) {
+      auto m = as<map_t>(v);
+      return imu::assoc(m ? m : imu::nu<map_t>(), sym, sym_t::true_);
+    });
+  }
+  else if (auto m = as_nt<map_t>(form)) {
+    form->set_meta(m);
+  }
+
+  return pass(form);
+}
+
+value_t::p do_syntax_quote(const value_t::p& form);
+
+template<typename S>
+list_t::p expand_seq(const S& s) {
+
+  std::vector<value_t::p> out(imu::count(s));
+
+  imu::for_each([&](const value_t::p& v) {
+    auto lst = as_nt<list_t>(v);
+    auto sym = as_nt<sym_t>(imu::first(lst));
+    if (sym && sym == UNQUOTE) {
+      out.push_back(list_t::factory(LIST, *imu::second(lst)));
+    }
+    else if (sym && sym == SPLICE) {
+      out.push_back(*imu::second(lst));
+    }
+    else {
+      out.push_back(list_t::factory(LIST, do_syntax_quote(v)));
+    }
+  }, s);
+
+  return list_t::from_std(out);
+}
+
+value_t::p do_syntax_quote(const value_t::p& form) {
+  if (auto sym = as_nt<sym_t>(form)) {
+    // TODO: handle # symbols
+    return list_t::factory(QUOTE, sym);
+  }
+  else if (auto lst = as_nt<list_t>(form)) {
+    if (auto s = imu::seq(lst)) {
+      return list_t::factory(LIST, imu::conj(expand_seq(s), CONCAT));
+    }
+    else {
+      return imu::nu<list_t>();
+    }
+  }
+  else if (auto vec = as_nt<vector_t>(form)) {
+    // TODO: create vector at runtime
+  }
+  else if (auto map = as_nt<map_t>(form)) {
+    // TODO: create map at runtime
+  }
+  else if (is<int_t>(form) || is<string_t>(form)) {
+    return form;
+  }
+
+  return list_t::factory(QUOTE, form);
+}
+
+result_t syntax_quote(std::istream& in) {
+  return pass(do_syntax_quote(read(in)));
 }
 
 result_t unquote(std::istream& in) {

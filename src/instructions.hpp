@@ -109,9 +109,10 @@ namespace rev {
 #ifdef _TRACE
       std::cout << "closure" << std::endl;
 #endif
-      auto address  = *ip++;
-      auto enclosed = *ip++;
-      auto fn       = imu::nu<fn_t>(address);
+      auto address   = *ip++;
+      auto enclosed  = *ip++;
+      auto max_arity = (uint8_t) *ip++;
+      auto fn        = imu::nu<fn_t>(address, max_arity);
 
       for (auto i=0; i<enclosed; ++i) {
         fn->enclose(stack::pop<value_t::p>(s));
@@ -127,11 +128,26 @@ namespace rev {
       auto f     = as<fn_t>((value_t::p) *fp);
       auto arity = *(ip++);
 
+#ifdef _DEBUG
+      assert(!f->is_macro());
+#endif
+
       // FIXME: it's quite ugly to obtain the jump address this way,
       // but for now i can't think of anything better. real memory
       // addresses can't be obtained while building the code, since
       // compiling may invalidate existing addresses at any time.
       ip = jump(f->_code);
+
+      if (arity > f->max_arity() && *(ip + f->max_arity() + 1) != -1) {
+
+        auto rest = imu::nu<list_t>();
+        while(arity-- > f->max_arity()) {
+          rest = imu::conj(rest, stack::pop<value_t::p>(s));
+        }
+        stack::push(s, rest);
+
+        arity = f->max_arity() + 1;
+      }
 
       auto off = ip + arity;
       if (*off != -1) {

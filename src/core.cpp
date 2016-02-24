@@ -9,6 +9,7 @@
 #include "specials/fn.hpp"
 #include "specials/let.hpp"
 #include "specials/loop.hpp"
+#include "specials/quote.hpp"
 
 #include <cassert>
 #include <vector>
@@ -38,9 +39,7 @@ namespace rev {
 
   } rt;
 
-  thread_t& main_thread() {
-    return rt.code;
-  }
+  value_t::p run(int64_t address, stack_t stack);
 
   int64_t* jump(int64_t off) {
     return rt.code.data() + off;
@@ -109,14 +108,46 @@ namespace rev {
     return {scope, as<var_t>(*resolved)};
   }
 
-  value_t::p macroexpand1(const value_t::p& form) {
-    // expand form if it is a macro
+  value_t::p call(const fn_t::p& f, const list_t::p& args) {
+
+    auto stack = rt.stack;
+
+    imu::for_each([&](const value_t::p& v) {
+      instr::stack::push(stack, v);
+    },
+    args);
+
+    return run(f->code(), stack);
+  }
+
+  value_t::p macroexpand1(const value_t::p& form, ctx_t& ctx) {
+    auto lst = as_nt<list_t>(form);
+    if (auto sym = as_nt<sym_t>(imu::first(lst))) {
+      if (auto lookup = resolve(ctx, sym)) {
+        if (lookup.is_global()) {
+          auto mac = as<fn_t>(lookup->deref());
+          if (mac && mac->is_macro()) {
+            return call(mac, imu::rest(lst));
+          }
+        }
+      }
+    }
     return form;
   }
 
-  value_t::p macroexpand(const value_t::p& form) {
-    // expand form as long as it is a macro
-    return form;
+  value_t::p macroexpand(const value_t::p& form, ctx_t& ctx) {
+
+    value_t::p result = form;
+    value_t::p prev;
+
+    do {
+
+      prev   = result;
+      result = macroexpand1(result, ctx);
+
+    } while(result != prev);
+
+    return result;
   }
 
   namespace specials {
@@ -130,6 +161,7 @@ namespace rev {
         if (sym->name() == "let*")  { return specials::let_;  }
         if (sym->name() == "loop*") { return specials::loop;  }
         if (sym->name() == "recur") { return specials::recur; }
+        if (sym->name() == "quote") { return specials::quote; }
         // TODO: implement all special forms
       }
       return nullptr;
@@ -138,17 +170,24 @@ namespace rev {
 
   namespace builtins {
 
+    void read(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto str = as<string_t>(instr::stack::pop<value_t::p>(s));
+      instr::stack::push(s, rev::read(str->_data));
+    }
+
     instr_t find(const sym_t::p& sym) {
       if (sym && sym->ns() == BUILTIN_NS) {
-        if (sym->name() == "+")  { return builtins::add; }
-        if (sym->name() == "-")  { return builtins::sub; }
-        if (sym->name() == "*")  { return builtins::mul; }
-        if (sym->name() == "/")  { return builtins::div; }
-        if (sym->name() == "==") { return builtins::eq; }
-        if (sym->name() == "<=") { return builtins::lte; }
-        if (sym->name() == ">=") { return builtins::gte; }
-        if (sym->name() == "<")  { return builtins::lt; }
-        if (sym->name() == ">")  { return builtins::gt; }
+        if (sym->name() == "+")    { return builtins::add; }
+        if (sym->name() == "-")    { return builtins::sub; }
+        if (sym->name() == "*")    { return builtins::mul; }
+        if (sym->name() == "/")    { return builtins::div; }
+        if (sym->name() == "==")   { return builtins::eq; }
+        if (sym->name() == "<=")   { return builtins::lte; }
+        if (sym->name() == ">=")   { return builtins::gte; }
+        if (sym->name() == "<")    { return builtins::lt; }
+        if (sym->name() == ">")    { return builtins::gt; }
+
+        if (sym->name() == "read") { return builtins::read; }
       }
       return nullptr;
     }
@@ -191,7 +230,6 @@ namespace rev {
         // 3) emit list as native call
       }*/
       else {
-
         // FIXME: this isn't really pretty. maybe it's better to
         // store the return address at the top of the stack, which
         // wouldn't require this hack to patch up the return address
@@ -213,8 +251,8 @@ namespace rev {
   void compile(const value_t::p& form, ctx_t& ctx, thread_t& t) {
 
     if (auto lst = as_nt<list_t>(form)) {
-      // TODO: auto expanded = macroexpand(lst)
-      emit::invoke(lst, ctx, t);
+      //      auto expanded = as<list_t>(macroexpand(lst, ctx));
+      emit::invoke(/*expanded*/lst, ctx, t);
     }
     else if (auto sym = as_nt<sym_t>(form)) {
       auto lookup = resolve(ctx, sym);
@@ -245,19 +283,10 @@ namespace rev {
     return compile_all(forms, ctx, rt.code);
   }
 
-  value_t::p eval(const value_t::p& form) {
-#ifdef _TRACE
-    std::cout << "eval" << std::endl;
-#endif
-    thread_t thread;
-    ctx_t    ctx;
-    compile(form, ctx, thread);
-
-    auto address = finalize_thread(thread);
-
+  value_t::p run(int64_t address, stack_t stack) {
     // get pointer to last instruction, which is a call to code
     // we want to eval
-    stack_t sp = rt.stack;
+    stack_t sp = stack;
     stack_t fp = sp;
     auto ip    = rt.code.data() + address;
     auto end   = rt.code.data() + rt.code.size();
@@ -278,6 +307,17 @@ namespace rev {
     // TODO: delete eval code from vm ?
 
     return ret;
+  }
+
+  value_t::p eval(const value_t::p& form) {
+#ifdef _TRACE
+    std::cout << "eval" << std::endl;
+#endif
+    thread_t thread;
+    ctx_t    ctx;
+    compile(form, ctx, thread);
+
+    return run(finalize_thread(thread), rt.stack);
   }
 
   value_t::p read(const std::string& s) {

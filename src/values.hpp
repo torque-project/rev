@@ -43,10 +43,20 @@ namespace rev {
 
     // runtime type information for this value
     const type_t* type;
+    value_t::p    meta;
 
     inline value_t(const type_t* t)
-      : type(t)
+      : type(t), meta(nullptr)
     {}
+
+    inline void set_meta(const value_t::p& m) {
+      meta = m;
+    }
+
+    template<typename F>
+    inline void alter_meta(const F& f) {
+      set_meta(f(meta));
+    }
   };
 
   template<typename T>
@@ -87,16 +97,30 @@ namespace rev {
     typedef typename std::vector<value_t::p> values_t;
 
     // this stores function pointer to call the fn directly
-    void*       _native[8];
-    int64_t     _code;
-    values_t    _closed_overs;
+    void*    _native[8];
+    int64_t  _code;
+    values_t _closed_overs;
+    uint8_t  _max_arity;
+    bool     _is_macro;
 
-    fn_t(int64_t code)
-      : _code(code)
+    fn_t(int64_t code, uint8_t max_arity)
+      : _code(code), _max_arity(max_arity), _is_macro(false)
     {}
 
     inline void enclose(const value_t::p& v) {
       _closed_overs.push_back(v);
+    }
+
+    inline int64_t code() const {
+      return _code;
+    }
+
+    inline bool is_macro() const {
+      return _is_macro;
+    }
+
+    inline uint8_t max_arity() const {
+      return _max_arity;
     }
   };
 
@@ -223,7 +247,7 @@ namespace rev {
   }
 
   template<typename T>
-  inline bool is(const maybe<value_t::p>& x) {
+  inline bool is(const maybe<value_t* const&>& x) {
     return x && *x && ((*x)->type == &T::prototype);
   }
 
@@ -259,5 +283,13 @@ namespace rev {
     }
     throw std::domain_error(
       "Passed unset maybe instance to 'as'");
+  }
+
+  template<typename T, typename S>
+  inline T* as_nt(const maybe<S>& x) {
+    if (x) {
+      return as<T>(*x);
+    }
+    return nullptr;
   }
 }
