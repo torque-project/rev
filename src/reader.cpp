@@ -181,7 +181,7 @@ list_t::p expand_seq(const S& s) {
     auto lst = as_nt<list_t>(v);
     auto sym = as_nt<sym_t>(imu::first(lst));
     if (sym && sym == UNQUOTE) {
-      out.push_back(*imu::second(lst));
+      out.push_back(list_t::factory(LIST, *imu::second(lst)));
     }
     else if (sym && sym == SPLICE) {
       out.push_back(*imu::second(lst));
@@ -197,7 +197,7 @@ list_t::p expand_seq(const S& s) {
 value_t::p do_syntax_quote(const value_t::p& form) {
   if (auto sym = as_nt<sym_t>(form)) {
     // TODO: handle # symbols
-    return sym;
+    return list_t::factory(QUOTE, sym);
   }
   else if (auto lst = as_nt<list_t>(form)) {
     if (auto s = imu::seq(lst)) {

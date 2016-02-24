@@ -186,6 +186,7 @@ namespace rev {
         if (sym->name() == ">=")   { return builtins::gte; }
         if (sym->name() == "<")    { return builtins::lt; }
         if (sym->name() == ">")    { return builtins::gt; }
+
         if (sym->name() == "read") { return builtins::read; }
       }
       return nullptr;
