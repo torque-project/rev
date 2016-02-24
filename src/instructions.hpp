@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 namespace rev {
 
   int64_t* jump(int64_t off);
@@ -17,6 +19,11 @@ namespace rev {
       template<typename T = int64_t>
       inline T pop(stack_t& s) {
         return (T) *(--s);
+      }
+
+      template<typename T = int64_t>
+      inline T top(stack_t& s) {
+        return (T) *(s - 1);
       }
 
       template<typename T>
@@ -89,12 +96,50 @@ namespace rev {
       var->bind(stack::pop<value_t::p>(s));
     }
 
+    void make(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "make" << std::endl;
+#endif
+      auto type = (type_value_t::p) *(ip++);
+
+      std::list<value_t::p> tmp;
+      for (auto i=0; i<imu::count(type->fields()); ++i) {
+        std::cout << "pop arg" << std::endl;
+        tmp.push_front(stack::pop<value_t::p>(s));
+      }
+
+      // TODO: adapt runtime types
+
+      auto val = imu::nu<rt_value_t>(type, vector_t::from_std(tmp));
+      stack::push(s, val);
+    }
+
+    void set(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "poke" << std::endl;
+#endif
+      auto x   = stack::pop<rt_value_t::p>(s);
+      auto val = stack::top<value_t::p>(s);
+      auto sym = as<sym_t>((value_t::p) *ip++);
+
+      x->set(sym, val);
+    }
+
     void deref(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "deref" << std::endl;
 #endif
       auto var = (var_t::p) *(ip++);
       stack::push(s, (int64_t) var->deref());
+    }
+
+    void poke(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "poke" << std::endl;
+#endif
+      auto x   = stack::pop<rt_value_t::p>(s);
+      auto sym = as<sym_t>((value_t::p) *ip++);
+      stack::push(s, x->field(sym));
     }
 
     void enclosed(stack_t& s, stack_t& fp, int64_t* &ip) {

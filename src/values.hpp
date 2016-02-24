@@ -12,14 +12,15 @@ namespace rev {
   struct type_t {
 
     typedef type_t* p;
+    typedef type_t const* cp;
 
     // protocol implementations
-    const char* name;
+    const std::string name;
 
     inline type_t()
     {}
 
-    inline type_t(const char* n)
+    inline type_t(const std::string& n)
       : name(n)
     {}
   };
@@ -42,10 +43,10 @@ namespace rev {
     typedef typename semantics<value_t>::p p;
 
     // runtime type information for this value
-    const type_t* type;
-    value_t::p    meta;
+    type_t::cp type;
+    value_t::p meta;
 
-    inline value_t(const type_t* t)
+    inline value_t(type_t::cp t)
       : type(t), meta(nullptr)
     {}
 
@@ -82,6 +83,9 @@ namespace rev {
     inline value_t::p deref() const {
       return _top;
     }
+
+    template<typename T>
+    inline typename T::p deref() const;
   };
 
   struct dvar_t : public var_t {
@@ -230,6 +234,74 @@ namespace rev {
     , value_base_t<map_tag_t>
     >;
 
+  /**
+   * Wraps a type_t as a runtime type, so we can return it
+   * as a value in the VM
+   *
+   */
+  struct type_value_t : public value_base_t<type_value_t> {
+
+    typedef typename value_t::semantics<type_value_t>::p p;
+
+    type_t   _type;
+    map_t::p _fields;
+
+    inline type_value_t(const std::string& name, const vector_t::p& fields)
+      : _type(name), _fields(imu::nu<map_t>())
+    {
+      _fields = imu::reduce(
+        [](const map_t::p& m, const value_t::p& field) {
+          return imu::assoc(m, field, field);
+        }, _fields, fields);
+    }
+
+    inline map_t::p fields() const {
+      return _fields;
+    }
+
+    inline decltype(auto) field(const sym_t::p& sym) {
+      return _fields->find(sym);
+    }
+
+    inline type_t::cp type() const {
+      return &_type;
+    }
+  };
+
+  /**
+   * A value of a type defined by user code (i.e. through deftype)
+   *
+   */
+  struct rt_value_t : public value_t {
+
+    typedef typename value_t::semantics<rt_value_t>::p p;
+
+    type_value_t::p _type;
+    vector_t::p     _fields;
+
+    inline rt_value_t(const type_value_t::p& t, const vector_t::p& fields)
+      : value_t(t->type()),
+        _type(t),
+        _fields(fields)
+    {}
+
+    inline const value_t::p& field(const sym_t::p& sym) {
+      auto idx = _type->field(sym);
+      if (idx == -1) {
+        throw std::runtime_error("Value doesn't have field: " + sym->name());
+      }
+      return imu::nth(_fields, idx);
+    }
+
+    inline void set(const sym_t::p& sym, const value_t::p& v) {
+      auto idx = _type->field(sym);
+      if (idx == -1) {
+        throw std::runtime_error("Value doesn't have field: " + sym->name());
+      }
+      _fields = imu::assoc(_fields, idx, v);
+    }
+  };
+
   // c++ ADL requires that these functions be defined in the same
   // namespace as their type
   inline decltype(auto) seq(const map_t::p& m) {
@@ -291,5 +363,10 @@ namespace rev {
       return as<T>(*x);
     }
     return nullptr;
+  }
+
+  template<typename T>
+  inline typename T::p var_t::deref() const {
+    return as<T>(_top);
   }
 }

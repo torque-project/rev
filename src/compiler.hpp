@@ -143,6 +143,8 @@ namespace rev {
       forms);
   }
 
+  ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym);
+
   /**
    * Commits a thread to the main code area. This is used to build
    * function coee before writing it to the final code area. This allows

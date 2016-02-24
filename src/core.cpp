@@ -4,6 +4,7 @@
 #include "instructions.hpp"
 #include "builtins/operators.hpp"
 #include "specials/def.hpp"
+#include "specials/deftype.hpp"
 #include "specials/if.hpp"
 #include "specials/do.hpp"
 #include "specials/fn.hpp"
@@ -154,14 +155,18 @@ namespace rev {
 
     special_t find(sym_t::p& sym) {
       if (sym) {
-        if (sym->name() == "def")   { return specials::def;   }
-        if (sym->name() == "if")    { return specials::if_;   }
-        if (sym->name() == "fn*")   { return specials::fn;    }
-        if (sym->name() == "do")    { return specials::do_;   }
-        if (sym->name() == "let*")  { return specials::let_;  }
-        if (sym->name() == "loop*") { return specials::loop;  }
-        if (sym->name() == "recur") { return specials::recur; }
-        if (sym->name() == "quote") { return specials::quote; }
+        if (sym->name() == "def")     { return specials::def;     }
+        if (sym->name() == "deftype") { return specials::deftype; }
+        if (sym->name() == "if")      { return specials::if_;     }
+        if (sym->name() == "fn*")     { return specials::fn;      }
+        if (sym->name() == "do")      { return specials::do_;     }
+        if (sym->name() == "let*")    { return specials::let_;    }
+        if (sym->name() == "loop*")   { return specials::loop;    }
+        if (sym->name() == "recur")   { return specials::recur;   }
+        if (sym->name() == "quote")   { return specials::quote;   }
+        if (sym->name() == "new")     { return specials::new_;    }
+        if (sym->name() == ".")       { return specials::dot;     }
+        if (sym->name() == "set!")    { return specials::set;     }
         // TODO: implement all special forms
       }
       return nullptr;
