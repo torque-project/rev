@@ -52,8 +52,8 @@ namespace rev {
     key_seq_t _recur_syms;
 
     inline ctx_t()
-      : _env(imu::nu<map_t>()),
-        _locals(imu::nu<map_t>())
+      : _env(imu::nu<map_t>())
+      , _locals(imu::nu<map_t>())
     {}
 
     inline ctx_t(
@@ -61,22 +61,22 @@ namespace rev {
       const map_t::p& e,
       const map_t::p& l,
       const map_t::p& c)
-      : _env(e),
-        _locals(l),
-        _closed_overs(c),
-        _recur_point(parent._recur_point),
-        _recur_syms(parent._recur_syms)
+      : _env(e)
+      , _locals(l)
+      , _closed_overs(c)
+      , _recur_point(parent._recur_point)
+      , _recur_syms(parent._recur_syms)
     {}
 
     inline ctx_t(
       const ctx_t& parent,
       int64_t rp,
       const key_seq_t& rs)
-      : _env(parent._env),
-        _locals(parent._locals),
-        _closed_overs(parent._closed_overs),
-        _recur_point(rp),
-        _recur_syms(rs)
+      : _env(parent._env)
+      , _locals(parent._locals)
+      , _closed_overs(parent._closed_overs)
+      , _recur_point(rp)
+      , _recur_syms(rs)
     {}
 
     inline ctx_t closure() const {

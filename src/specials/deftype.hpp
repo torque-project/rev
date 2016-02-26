@@ -124,6 +124,10 @@ namespace rev {
 
       auto type_ctx = ctx.local(closed).closure();
 
+      imu::for_each([&](const sym_t::p& sym) {
+          type_ctx.close_over(sym);
+        }, fields);
+
       emit_type_impls(type->type(), impls, type_ctx);
 
       var->bind(type);
