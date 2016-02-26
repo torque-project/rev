@@ -27,4 +27,8 @@ namespace rev {
   inline bool is_truthy(const T& x) {
     return x && as_nt<sym_t>(x) != sym_t::false_;
   }
+
+  inline bool is_symbol(const value_t::p& x) {
+    return is<sym_t>(x);
+  }
 }

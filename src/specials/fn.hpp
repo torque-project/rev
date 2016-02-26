@@ -60,7 +60,7 @@ namespace rev {
       static const auto macro = sym_t::intern("macro");
 
       thread_t thread(8, -1);
-      ctx_t    fn_ctx = ctx.fn();
+      ctx_t    fn_ctx = ctx.closure();
 
       auto name   = as_nt<sym_t>(*imu::first(forms));
       auto fnspec = imu::rest(forms);

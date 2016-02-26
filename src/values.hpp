@@ -14,15 +14,46 @@ namespace rev {
     typedef type_t* p;
     typedef type_t const* cp;
 
-    // protocol implementations
-    const std::string name;
+    struct impl_t {
+      intptr_t arities[8];
+    };
+
+    struct ext_t {
+      uint32_t id;
+      impl_t*  impls;
+    };
+
+    struct native_handle_t;
+
+    // runtime callable function pointers to the protocol
+    // implementations. this can be used to call the protocol
+    // implementations directly
+    uint64_t _num_ext;
+    ext_t*   _methods;
+
+    const std::string _name;  // protocol implementations
+    int64_t           _code; // start of the protocol code
+
+    std::vector<native_handle_t*> _handles;
 
     inline type_t()
     {}
 
     inline type_t(const std::string& n)
-      : name(n)
+      : _name(n)
     {}
+
+    ~type_t();
+
+    inline std::string name() const {
+      return _name;
+    }
+
+    inline int64_t code() const {
+      return _code;
+    }
+
+    intptr_t prepare_closure(uint8_t arity, int64_t off);
   };
 
   struct value_t {
@@ -234,6 +265,25 @@ namespace rev {
     , value_base_t<map_tag_t>
     >;
 
+  struct protocol_t : public value_base_t<protocol_t> {
+
+    typedef typename semantics<protocol_t>::p p;
+
+    static uint64_t id;
+
+    uint64_t    _id;
+    std::string _name;
+    list_t::p   _meths;
+
+    inline protocol_t(const std::string& name, const list_t::p& meths)
+      : _id(id++), _name(name), _meths(meths)
+    {}
+
+    inline list_t::p meths() const {
+      return _meths;
+    }
+  };
+
   /**
    * Wraps a type_t as a runtime type, so we can return it
    * as a value in the VM
@@ -261,6 +311,10 @@ namespace rev {
 
     inline decltype(auto) field(const sym_t::p& sym) {
       return _fields->find(sym);
+    }
+
+    inline type_t::p type() {
+      return &_type;
     }
 
     inline type_t::cp type() const {
@@ -293,6 +347,10 @@ namespace rev {
       return imu::nth(_fields, idx);
     }
 
+    inline const value_t::p& field(uint64_t idx) {
+      return imu::nth(_fields, idx);
+    }
+
     inline void set(const sym_t::p& sym, const value_t::p& v) {
       auto idx = _type->field(sym);
       if (idx == -1) {
@@ -306,6 +364,10 @@ namespace rev {
   // namespace as their type
   inline decltype(auto) seq(const map_t::p& m) {
     return imu::seq(m);
+  }
+
+  inline decltype(auto) conj(const list_t::p& l, const value_t::p& x) {
+    return imu::conj(l, x);
   }
 
   inline decltype(auto) conj(const map_t::p& m, const map_t::value_type& x) {
@@ -368,5 +430,14 @@ namespace rev {
   template<typename T>
   inline typename T::p var_t::deref() const {
     return as<T>(_top);
+  }
+}
+
+namespace imu {
+
+  template<typename T>
+  inline typename T::p value_cast(const rev::value_t*& v) {
+    std::cout << "value cast" << std::endl;
+    return rev::as<T>(v);
   }
 }

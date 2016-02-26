@@ -2,6 +2,8 @@
 
 #include <list>
 
+#include <ffi.h>
+
 namespace rev {
 
   int64_t* jump(int64_t off);
@@ -45,6 +47,7 @@ namespace rev {
 #endif
       auto off = *(ip++);
       stack::push(s, (int64_t) (ip + off));
+      stack::push(s, (int64_t) fp);
       fp = s;
     }
 
@@ -55,9 +58,9 @@ namespace rev {
       auto ret  = stack::pop<>(s);
 
       // reset stack to calling function
-      s = fp;
+      s         = fp;
+      fp        = stack::pop<stack_t>(s);
       auto addr = stack::pop<int64_t*>(s);
-
       // set instruction pointer to return address
       ip = addr;
 
@@ -104,7 +107,6 @@ namespace rev {
 
       std::list<value_t::p> tmp;
       for (auto i=0; i<imu::count(type->fields()); ++i) {
-        std::cout << "pop arg" << std::endl;
         tmp.push_front(stack::pop<value_t::p>(s));
       }
 
@@ -146,8 +148,15 @@ namespace rev {
 #ifdef _TRACE
       std::cout << "enclosed" << std::endl;
 #endif
-      auto fn = as<fn_t>((value_t::p) *fp);
-      stack::push(s, fn->_closed_overs[*ip++]);
+
+      auto v = (value_t::p) *fp;
+
+      if (auto fn = as_nt<fn_t>(v)) {
+        stack::push(s, fn->_closed_overs[*ip++]);
+      }
+      else if (auto val = static_cast<rt_value_t::p>(v)) {
+        stack::push(s, val->field(*ip++));
+      }
     }
 
     void closure(stack_t& s, stack_t& fp, int64_t* &ip) {
@@ -198,10 +207,53 @@ namespace rev {
       if (*off != -1) {
         ip += *off;
       }
-      // TODO: emit list as protocol call
+      // TODO: emit list as IFn protocol call
       // TODO: emit list as native call
       else {
         throw std::runtime_error("Arity mismatch when calling fn");
+      }
+    }
+
+    void method(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "method" << std::endl;
+#endif
+      auto proto = as<protocol_t>(stack::pop<value_t::p>(s));
+      auto meth  = *(ip++);
+      auto arity = *(ip++);
+
+      ffi_cif   cif;
+      ffi_type* args[arity];
+      void*     tmp[arity];
+      void*     values[arity];
+
+      for (int i=(arity-1); i>=0; --i) {
+        args[i]   = &ffi_type_pointer;
+        tmp[i]    = stack::pop<void*>(s);
+        values[i] = &(tmp[i]);
+      }
+
+      auto self = (value_t::p) tmp[0];
+      auto type = self->type;
+
+      void* ret    = nullptr;
+      void  (*f)() = nullptr;
+
+      for (int i=0; i<type->_num_ext; ++i) {
+        if (type->_methods[i].id == proto->_id) {
+          f = (void (*)()) type->_methods[i].impls[meth].arities[arity];
+          break;
+        }
+      }
+
+      if (f) {
+        ffi_prep_cif(&cif, FFI_DEFAULT_ABI, arity, &ffi_type_pointer, args);
+        ffi_call(&cif, f, &ret, values);
+        // last value on stack is already the return value
+        stack::push(s, ret);
+      }
+      else {
+        throw std::runtime_error("Method not implemented");
       }
     }
   }

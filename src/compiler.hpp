@@ -20,19 +20,19 @@ namespace rev {
 
     struct lookup_t {
 
-      scope_t  _scope;
-      var_t::p _var;
+      scope_t    _scope;
+      value_t::p _var;
 
       inline operator bool() const {
         return _var;
       }
 
       inline var_t::p operator* () const {
-        return _var;
+        return as<var_t>(_var);
       }
 
       inline var_t::p operator-> () const {
-        return _var;
+        return as<var_t>(_var);
       }
 
       inline bool is_local() const {
@@ -79,7 +79,7 @@ namespace rev {
         _recur_syms(rs)
     {}
 
-    inline ctx_t fn() const {
+    inline ctx_t closure() const {
       return ctx_t(
         *this,
         imu::merge(_env, _locals),

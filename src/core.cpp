@@ -5,6 +5,7 @@
 #include "builtins/operators.hpp"
 #include "specials/def.hpp"
 #include "specials/deftype.hpp"
+#include "specials/protocol.hpp"
 #include "specials/if.hpp"
 #include "specials/do.hpp"
 #include "specials/fn.hpp"
@@ -31,16 +32,19 @@ namespace rev {
     map_t     namespaces;
     thread_t  code;
     stack_t   stack;
+    stack_t   sp;
+    stack_t   fp;
+    int64_t*  ip;
 
-    ns_t::p    in_ns;
-    dvar_t::p  ns;
+    ns_t::p   in_ns;
+    dvar_t::p ns;
 
     // static symbols
     sym_t::p  _ns_;
 
   } rt;
 
-  value_t::p run(int64_t address, stack_t stack);
+  value_t::p run(int64_t address, int64_t to);
 
   int64_t* jump(int64_t off) {
     return rt.code.data() + off;
@@ -87,18 +91,19 @@ namespace rev {
     }
     else {
 
-      scope    = ctx_t::scope_t::local;
-      resolved = imu::get(ctx.local(), sym);
+      scope      = ctx_t::scope_t::local;
+      resolved   = imu::get(ctx.local(), sym);
+
       if (!resolved) {
         scope    = ctx_t::scope_t::env;
         resolved = imu::get(ctx.env(), sym);
-        if (!resolved) {
-          scope    = ctx_t::scope_t::global;
-          resolved = imu::get(&ns->interned, sym);
-          if (!resolved) {
-            resolved = imu::get(&ns->mappings, sym);
-          }
-        }
+      }
+      if (!resolved) {
+        scope    = ctx_t::scope_t::global;
+        resolved = imu::get(&ns->interned, sym);
+      }
+      if (!resolved) {
+        resolved = imu::get(&ns->mappings, sym);
       }
     }
 
@@ -106,7 +111,7 @@ namespace rev {
       throw std::runtime_error(sym->name() + " is not bound");
     }
 
-    return {scope, as<var_t>(*resolved)};
+    return {scope, *resolved};
   }
 
   value_t::p call(const fn_t::p& f, const list_t::p& args) {
@@ -118,7 +123,7 @@ namespace rev {
     },
     args);
 
-    return run(f->code(), stack);
+    return nullptr;//invoke(f->code());
   }
 
   value_t::p macroexpand1(const value_t::p& form, ctx_t& ctx) {
@@ -155,18 +160,20 @@ namespace rev {
 
     special_t find(sym_t::p& sym) {
       if (sym) {
-        if (sym->name() == "def")     { return specials::def;     }
-        if (sym->name() == "deftype") { return specials::deftype; }
-        if (sym->name() == "if")      { return specials::if_;     }
-        if (sym->name() == "fn*")     { return specials::fn;      }
-        if (sym->name() == "do")      { return specials::do_;     }
-        if (sym->name() == "let*")    { return specials::let_;    }
-        if (sym->name() == "loop*")   { return specials::loop;    }
-        if (sym->name() == "recur")   { return specials::recur;   }
-        if (sym->name() == "quote")   { return specials::quote;   }
-        if (sym->name() == "new")     { return specials::new_;    }
-        if (sym->name() == ".")       { return specials::dot;     }
-        if (sym->name() == "set!")    { return specials::set;     }
+        if (sym->name() == "def")         { return specials::def;         }
+        if (sym->name() == "deftype")     { return specials::deftype;     }
+        if (sym->name() == "defprotocol") { return specials::defprotocol; }
+        if (sym->name() == "dispatch*")   { return specials::dispatch;    }
+        if (sym->name() == "if")          { return specials::if_;         }
+        if (sym->name() == "fn*")         { return specials::fn;          }
+        if (sym->name() == "do")          { return specials::do_;         }
+        if (sym->name() == "let*")        { return specials::let_;        }
+        if (sym->name() == "loop*")       { return specials::loop;        }
+        if (sym->name() == "recur")       { return specials::recur;       }
+        if (sym->name() == "quote")       { return specials::quote;       }
+        if (sym->name() == "new")         { return specials::new_;        }
+        if (sym->name() == ".")           { return specials::dot;         }
+        if (sym->name() == "set!")        { return specials::set;         }
         // TODO: implement all special forms
       }
       return nullptr;
@@ -288,28 +295,47 @@ namespace rev {
     return compile_all(forms, ctx, rt.code);
   }
 
-  value_t::p run(int64_t address, stack_t stack) {
+  value_t::p run(int64_t address, int64_t to) {
     // get pointer to last instruction, which is a call to code
     // we want to eval
-    stack_t sp = stack;
-    stack_t fp = sp;
-    auto ip    = rt.code.data() + address;
-    auto end   = rt.code.data() + rt.code.size();
+    rt.ip    = rt.code.data() + address;
+    auto end = rt.code.data() + to;
 
-    while(ip != end) {
-      auto op = *(ip++);
+    while(rt.ip != end) {
+      auto op = *(rt.ip++);
 #ifdef _TRACE
       std::cout
-        << "op(" << (ip - rt.code.data() - 1) << " / " << op << "): "
+        << "op(" << (rt.ip - rt.code.data() - 1) << " / " << op << "): "
         << std::flush;
 #endif
-      ((instr_t) op)(sp, fp, ip);
+      ((instr_t) op)(rt.sp, rt.fp, rt.ip);
     }
 
-    auto ret = instr::stack::pop<value_t::p>(sp);
-    assert(rt.stack == sp);
+    auto ret = instr::stack::pop<value_t::p>(rt.sp);
 
-    // TODO: delete eval code from vm ?
+    return ret;
+  }
+
+  void verify_stack_integrity(stack_t sp) {
+    assert(rt.sp == sp &&
+      "You've hit a severe bug that means that the VM stack wasn't unwound " \
+      "properly. This is most likely a problem with the VM itself.");
+  }
+
+  value_t::p invoke(int64_t address, value_t::p args[], uint32_t nargs) {
+    // save stack pointer for sanity checks and stack unwinding
+    stack_t sp = rt.sp;
+    // setup the frame for the runtime call
+    instr::stack::push(rt.sp, (int64_t) rt.ip);
+    instr::stack::push(rt.sp, (int64_t) rt.fp);
+    rt.fp = rt.sp;
+
+    for (auto i=0; i<nargs; ++i) {
+      instr::stack::push(rt.sp, args[i]);
+    }
+
+    auto ret = run(address, (rt.ip - rt.code.data()));
+    verify_stack_integrity(sp);
 
     return ret;
   }
@@ -318,11 +344,19 @@ namespace rev {
 #ifdef _TRACE
     std::cout << "eval" << std::endl;
 #endif
+
+    // save stack pointer for sanity checks and stack unwinding
+    stack_t sp = rt.sp;
+
     thread_t thread;
     ctx_t    ctx;
     compile(form, ctx, thread);
 
-    return run(finalize_thread(thread), rt.stack);
+    auto ret = run(finalize_thread(thread), rt.code.size());
+    verify_stack_integrity(sp);
+    // TODO: delete eval code from vm ?
+
+    return ret;
   }
 
   value_t::p read(const std::string& s) {
@@ -330,7 +364,7 @@ namespace rev {
   }
 
   void boot(uint64_t stack) {
-    rt.stack = new int64_t[stack];
+    rt.fp = rt.sp = rt.stack = new int64_t[stack];
     rt.in_ns = imu::nu<ns_t>();
     rt.ns    = imu::nu<dvar_t>(); rt.ns->bind(rt.in_ns);
   }
