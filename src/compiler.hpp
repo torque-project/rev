@@ -20,19 +20,19 @@ namespace rev {
 
     struct lookup_t {
 
-      scope_t  _scope;
-      var_t::p _var;
+      scope_t    _scope;
+      value_t::p _var;
 
       inline operator bool() const {
         return _var;
       }
 
       inline var_t::p operator* () const {
-        return _var;
+        return as<var_t>(_var);
       }
 
       inline var_t::p operator-> () const {
-        return _var;
+        return as<var_t>(_var);
       }
 
       inline bool is_local() const {
@@ -52,8 +52,8 @@ namespace rev {
     key_seq_t _recur_syms;
 
     inline ctx_t()
-      : _env(imu::nu<map_t>()),
-        _locals(imu::nu<map_t>())
+      : _env(imu::nu<map_t>())
+      , _locals(imu::nu<map_t>())
     {}
 
     inline ctx_t(
@@ -61,25 +61,25 @@ namespace rev {
       const map_t::p& e,
       const map_t::p& l,
       const map_t::p& c)
-      : _env(e),
-        _locals(l),
-        _closed_overs(c),
-        _recur_point(parent._recur_point),
-        _recur_syms(parent._recur_syms)
+      : _env(e)
+      , _locals(l)
+      , _closed_overs(c)
+      , _recur_point(parent._recur_point)
+      , _recur_syms(parent._recur_syms)
     {}
 
     inline ctx_t(
       const ctx_t& parent,
       int64_t rp,
       const key_seq_t& rs)
-      : _env(parent._env),
-        _locals(parent._locals),
-        _closed_overs(parent._closed_overs),
-        _recur_point(rp),
-        _recur_syms(rs)
+      : _env(parent._env)
+      , _locals(parent._locals)
+      , _closed_overs(parent._closed_overs)
+      , _recur_point(rp)
+      , _recur_syms(rs)
     {}
 
-    inline ctx_t fn() const {
+    inline ctx_t closure() const {
       return ctx_t(
         *this,
         imu::merge(_env, _locals),
@@ -142,6 +142,8 @@ namespace rev {
       0,
       forms);
   }
+
+  ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym);
 
   /**
    * Commits a thread to the main code area. This is used to build
