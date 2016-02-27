@@ -25,6 +25,9 @@ void print(const rev::value_t::p& v) {
   else if (auto n = rev::as_nt<rev::int_t>(v)) {
     std::cout << n->value;
   }
+  else {
+    std::cout << "#{" << v->type->name() << ": " << v << "}" << std::endl;
+  }
 }
 
 int main(int argc, char** argv) {
@@ -42,7 +45,7 @@ int main(int argc, char** argv) {
     char* line = NULL;
     for(;;) {
 
-      std::string prefix = "user";
+      std::string prefix = rev::ns()->name();
 
       line = readline((prefix + "> ").c_str());
       if (!line) {

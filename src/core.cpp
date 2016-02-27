@@ -12,6 +12,7 @@
 #include "specials/let.hpp"
 #include "specials/loop.hpp"
 #include "specials/quote.hpp"
+#include "specials/ns.hpp"
 
 #include <cassert>
 #include <vector>
@@ -60,10 +61,22 @@ namespace rev {
     return pos;
   }
 
+  ns_t::p ns() {
+    return rt.in_ns;
+  }
+
+  ns_t::p ns(const sym_t::p& sym) {
+    return as_nt<ns_t>(imu::get(&rt.namespaces, sym));
+  }
+
+  ns_t::p ns(const sym_t::p& sym, const ns_t::p& ns) {
+    rt.in_ns = ns;
+    rt.namespaces.assoc(sym, ns);
+    return ns;
+  }
+
   void intern(const sym_t::p& sym, const var_t::p& var) {
-    if (!rt.in_ns) {
-      throw std::runtime_error("No current namespace is bound");
-    }
+    assert(rt.in_ns && "No current namespace is bound");
     rt.in_ns->intern(sym, var);
   }
 
@@ -87,7 +100,7 @@ namespace rev {
       }
 
       scope    = ctx_t::scope_t::global;
-      resolved = imu::get(&(as<ns_t>(the_ns)->interned), sym);
+      resolved = imu::get(&(as<ns_t>(the_ns)->interned), sym_t::name(sym));
     }
     else {
 
@@ -174,7 +187,7 @@ namespace rev {
         if (sym->name() == "new")         { return specials::new_;        }
         if (sym->name() == ".")           { return specials::dot;         }
         if (sym->name() == "set!")        { return specials::set;         }
-        // TODO: implement all special forms
+        if (sym->name() == "ns")          { return specials::ns;          }
       }
       return nullptr;
     }
@@ -345,6 +358,9 @@ namespace rev {
     std::cout << "eval" << std::endl;
 #endif
 
+    // bind current namespace
+    rt.ns->bind(rt.in_ns);
+
     // save stack pointer for sanity checks and stack unwinding
     stack_t sp = rt.sp;
 
@@ -365,7 +381,7 @@ namespace rev {
 
   void boot(uint64_t stack) {
     rt.fp = rt.sp = rt.stack = new int64_t[stack];
-    rt.in_ns = imu::nu<ns_t>();
+    rt.in_ns = imu::nu<ns_t>("user");
     rt.ns    = imu::nu<dvar_t>(); rt.ns->bind(rt.in_ns);
   }
 }

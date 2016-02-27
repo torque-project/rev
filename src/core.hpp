@@ -11,6 +11,12 @@ namespace rev {
   value_t::p read(const std::string&);
   value_t::p eval(const value_t::p&);
 
+  ns_t::p ns();
+  ns_t::p ns(const sym_t::p& sym);
+  ns_t::p ns(const sym_t::p& sym, const ns_t::p& n);
+
+  ns_t::p load_ns(const std::string& name);
+
   void intern(const sym_t::p& sym, const var_t::p& var);
 
   template<typename T>

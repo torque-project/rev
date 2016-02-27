@@ -214,15 +214,31 @@ namespace rev {
       return _ns;
     }
 
-    inline bool has_ns() const {
-      return !_ns.empty();
-    }
-
     inline const std::string& name() const {
       return _name;
     }
 
+    inline bool has_ns() const {
+      return !_ns.empty();
+    }
+
+    static inline sym_t::p name(const sym_t::p& sym) {
+      return sym_t::intern(sym->_name);
+    }
+
+    static inline sym_t::p ns(const sym_t::p& sym) {
+      return sym_t::intern(sym->_ns);
+    }
+
     static p intern(const std::string& fqn);
+    /*
+    inline friend bool operator==(const p& l, const p& r) {
+      return (l == r) ||
+        ((l && r) &&
+         (l->_name == r->_name) &&
+         (l->_ns == r->_ns));
+    }
+    */
   };
 
   struct array_t : public value_base_t<array_t> {
@@ -236,12 +252,40 @@ namespace rev {
 
     typedef imu::ty::basic_array_map<sym_t::p, value_t::p> mappings_t;
 
+    std::string _name;
+
     mappings_t interned;
     mappings_t mappings;
     mappings_t aliases;
 
-    inline void intern(const sym_t::p& s, const var_t::p& v) {
-      interned.assoc(s, v);
+    inline ns_t(const std::string& name)
+      : _name(name)
+    {}
+
+    inline std::string name() const {
+      return _name;
+    }
+
+    inline void intern(const sym_t::p& sym, const var_t::p& v) {
+      interned.assoc(sym, v);
+    }
+
+    inline void intern(const ns_t::p& ns) {
+      reference(interned, ns);
+    }
+
+    inline void map(const ns_t::p& ns) {
+      reference(mappings, ns);
+    }
+
+    inline void alias(const sym_t::p& sym, const ns_t::p& ns) {
+      aliases.assoc(sym, ns);
+    }
+
+    void reference(mappings_t& m, const ns_t::p& ns) {
+      imu::for_each([&](const typename mappings_t::value_type& kv) {
+          m.assoc(imu::first(kv), imu::second(kv));
+        }, &ns->interned);
     }
   };
 
@@ -368,6 +412,10 @@ namespace rev {
 
   inline decltype(auto) conj(const list_t::p& l, const value_t::p& x) {
     return imu::conj(l, x);
+  }
+
+  inline decltype(auto) conj(const vector_t::p& v, const value_t::p& x) {
+    return imu::conj(v, x);
   }
 
   inline decltype(auto) conj(const map_t::p& m, const map_t::value_type& x) {
