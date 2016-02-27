@@ -8,6 +8,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include <stdlib.h>
+
 void print(const rev::value_t::p& v) {
   if (auto lst = rev::as_nt<rev::list_t>(v)) {
     std::cout << "(";
@@ -40,7 +42,13 @@ int main(int argc, char** argv) {
 
   try {
 
-    rev::boot(1 << 16);
+    std::string sources = "";
+    if (char* s = getenv("REV_SOURCE_PATH")) {
+      sources = s;
+    }
+    // TODO: make source path configurable via parameter too
+
+    rev::boot(1 << 16, sources);
 
     char* line = NULL;
     for(;;) {

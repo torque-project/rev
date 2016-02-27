@@ -2,6 +2,7 @@
 #include "reader.hpp"
 #include "compiler.hpp"
 #include "instructions.hpp"
+#include "util.hpp"
 #include "builtins/operators.hpp"
 #include "specials/def.hpp"
 #include "specials/deftype.hpp"
@@ -15,6 +16,7 @@
 #include "specials/ns.hpp"
 
 #include <cassert>
+#include <fstream>
 #include <vector>
 
 namespace rev {
@@ -42,6 +44,8 @@ namespace rev {
 
     // static symbols
     sym_t::p  _ns_;
+
+    std::string sources;
 
   } rt;
 
@@ -200,6 +204,11 @@ namespace rev {
       instr::stack::push(s, rev::read(str->_data));
     }
 
+    void load(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto str = as<string_t>(instr::stack::pop<value_t::p>(s));
+      instr::stack::push(s, load_ns(str->_data));
+    }
+
     instr_t find(const sym_t::p& sym) {
       if (sym && sym->ns() == BUILTIN_NS) {
         if (sym->name() == "+")    { return builtins::add; }
@@ -213,6 +222,7 @@ namespace rev {
         if (sym->name() == ">")    { return builtins::gt; }
 
         if (sym->name() == "read") { return builtins::read; }
+        if (sym->name() == "load") { return builtins::load; }
       }
       return nullptr;
     }
@@ -379,9 +389,51 @@ namespace rev {
     return rdr::read(s);
   }
 
-  void boot(uint64_t stack) {
-    rt.fp = rt.sp = rt.stack = new int64_t[stack];
+  void load_file(const std::string& path) {
+
+    ns_t::p cur = rt.in_ns;
+
+    std::fstream file(path);
+    if (!file) {
+      throw std::runtime_error("Can't open source file: " + path);
+    }
+
+    auto ns = as<ns_t>(eval(rdr::read(file)));
+    if (!ns) {
+      throw std::runtime_error("Expecting file to start with ns declaration");
+    }
+
+    while (file.good()) {
+      if (auto o = rdr::read(file)) {
+        eval(o);
+      }
+    }
+
+    if (cur) {
+      rt.in_ns = cur;
+    }
+  }
+
+  ns_t::p load_ns(const sym_t::p& name) {
+    auto path = replace(name->name(), '.', '/');
+    load_file(rt.sources + path + ".trq");
+    return as<ns_t>(imu::get(&rt.namespaces, name));
+  }
+
+  ns_t::p load_ns(const std::string& name) {
+    return load_ns(sym_t::intern(name));
+  }
+
+  void boot(uint64_t stack, const std::string& s) {
     rt.in_ns = imu::nu<ns_t>("user");
-    rt.ns    = imu::nu<dvar_t>(); rt.ns->bind(rt.in_ns);
+    rt.fp = rt.sp = rt.stack = new int64_t[stack];
+    rt.ns      = imu::nu<dvar_t>(); rt.ns->bind(rt.in_ns);
+    rt.sources = s.empty() ? "" : s + "/";
+
+    if (!rt.sources.empty()) {
+      // load core name space and make it visible in user name space
+      auto core = load_ns("torque.core");
+      rt.in_ns->map(core);
+    }
   }
 }
