@@ -59,6 +59,7 @@ namespace rev {
         auto proto = *resolve(ctx, name);
         auto impls = imu::second<imu::ty::array_map::p>(kv);
 
+        t->_methods[n].id    = proto->deref<protocol_t>()->_id;
         t->_methods[n].impls = new type_t::impl_t[imu::count(impls)];
         auto& ext = t->_methods[n++];
 
@@ -118,6 +119,9 @@ namespace rev {
       auto var  = imu::nu<var_t>();
       auto type = imu::nu<type_value_t>(name->name(), fields);
 
+      var->bind(type);
+      intern(name, var);
+
       auto closed = imu::reduce([&](const map_t::p& m, const sym_t::p& sym) {
           return imu::assoc(m, sym, sym);
         }, imu::nu<map_t>(), fields);
@@ -129,9 +133,6 @@ namespace rev {
         }, fields);
 
       emit_type_impls(type->type(), impls, type_ctx);
-
-      var->bind(type);
-      intern(name, var);
 
       t << instr::push << var;
     }
@@ -156,7 +157,7 @@ namespace rev {
     }
 
     void dot(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
-      auto x   = as<sym_t>(imu::first(forms));
+      auto x   = *imu::first(forms);
       auto sym = as<sym_t>(imu::second(forms));
 
       compile(x, ctx, t);

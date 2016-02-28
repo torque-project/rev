@@ -15,7 +15,13 @@ namespace rev {
       t << instr::brcond << 0;
       auto eip = t.size();
 
-      compile(*then, ctx, t);
+      if (then) {
+        compile(*then, ctx, t);
+      }
+      else {
+        t << instr::push << nullptr;
+      }
+
       t << instr::br << 0;
       auto cont = t.size();
 

@@ -3,6 +3,7 @@
 #include "compiler.hpp"
 #include "instructions.hpp"
 #include "util.hpp"
+#include "adapter.hpp"
 #include "builtins/operators.hpp"
 #include "specials/def.hpp"
 #include "specials/deftype.hpp"
@@ -17,6 +18,7 @@
 
 #include <cassert>
 #include <fstream>
+#include <set>
 #include <vector>
 
 namespace rev {
@@ -84,15 +86,28 @@ namespace rev {
     rt.in_ns->intern(sym, var);
   }
 
-  ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym) {
+  bool is_special(const sym_t::p& sym) {
+    static std::set<const std::string> specials = {
+      "def", "do", "if", "let*", "loop*", "quote", "ns", "fn*",
+      "deftype", "defprotocol", "dispatch*", "recur", "new", "set!",
+      "."
+    };
+    return sym && (specials.count(sym->name()) == 1);
+  }
 
+  ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym) {
     auto ns = as<ns_t>(rt.ns->deref());
     maybe<value_t::p> resolved;
     ctx_t::scope_t    scope;
 
+    // TODO: also catch special forms here
+    if ((sym->has_ns() && sym->ns() == BUILTIN_NS) || is_special(sym)) {
+      return {ctx_t::scope_t::global, nullptr};
+    }
+
     if (sym->has_ns()) {
 
-      auto ns_sym = sym_t::intern(sym->ns());
+      auto ns_sym = sym_t::ns(sym);
       auto the_ns = imu::get(&ns->aliases, ns_sym);
 
       if (!the_ns) {
@@ -132,43 +147,65 @@ namespace rev {
   }
 
   value_t::p call(const fn_t::p& f, const list_t::p& args) {
-
-    auto stack = rt.stack;
+    // save stack pointer for sanity checks and stack unwinding
+    stack_t sp = rt.sp;
+    // setup the frame for the runtime call
+    instr::stack::push(rt.sp, (int64_t) rt.ip);
+    instr::stack::push(rt.sp, (int64_t) rt.fp);
+    rt.fp = rt.sp;
 
     imu::for_each([&](const value_t::p& v) {
-      instr::stack::push(stack, v);
+      instr::stack::push(rt.sp, v);
     },
     args);
 
-    return nullptr;//invoke(f->code());
+    auto code  = rt.code.data() + f->code();
+    auto arity = imu::count(args);
+    auto off   = *(code + arity);
+    auto ret   = run(f->code() + off, (rt.ip - rt.code.data()));
+    // verify_stack_integrity(sp);
+
+    return ret;
   }
 
-  value_t::p macroexpand1(const value_t::p& form, ctx_t& ctx) {
-    auto lst = as_nt<list_t>(form);
-    if (auto sym = as_nt<sym_t>(imu::first(lst))) {
+  list_t::p nativize(const value_t::p& form) {
+    if (auto lst = as_nt<list_t>(form)) {
+      return lst;
+    }
+
+    return imu::take_while<list_t::p>(
+      [](const value_t::p&) {
+        return true;
+      }, imu::nu<rt_seq_t>(form));
+  }
+
+  value_t::p macroexpand1(const list_t::p& form, ctx_t& ctx) {
+
+    static sym_t::p is_macro = sym_t::intern("macro");
+
+    if (auto sym = as_nt<sym_t>(imu::first(form))) {
       if (auto lookup = resolve(ctx, sym)) {
         if (lookup.is_global()) {
-          auto mac = as<fn_t>(lookup->deref());
-          if (mac && mac->is_macro()) {
-            return call(mac, imu::rest(lst));
+          auto mac = as_nt<fn_t>(lookup->deref());
+          if (mac && has_meta(*lookup, is_macro)) {
+            return call(mac, imu::rest(form));
           }
         }
       }
     }
+
     return form;
   }
 
-  value_t::p macroexpand(const value_t::p& form, ctx_t& ctx) {
+  list_t::p macroexpand(const list_t::p& form, ctx_t& ctx) {
 
-    value_t::p result = form;
-    value_t::p prev;
+    list_t::p result = nativize(form);
+    list_t::p prev   = nullptr;
 
-    do {
-
+    while(result != prev) {
       prev   = result;
-      result = macroexpand1(result, ctx);
-
-    } while(result != prev);
+      result = nativize(macroexpand1(result, ctx));
+    }
 
     return result;
   }
@@ -209,6 +246,37 @@ namespace rev {
       instr::stack::push(s, load_ns(str->_data));
     }
 
+    void identical(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto a = instr::stack::pop(s);
+      auto b = instr::stack::pop(s);
+      instr::stack::push(s, a == b ? sym_t::true_ : sym_t::false_);
+    }
+
+    void satisfies(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto x     = instr::stack::pop<value_t::p>(s);
+      auto proto = as<protocol_t>(instr::stack::pop<value_t::p>(s));
+      auto ret   = (x && proto->satisfied_by(x->type)) ?
+        sym_t::true_ : sym_t::false_;
+      instr::stack::push(s, ret);
+    }
+
+    void print(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto v   = instr::stack::pop<value_t::p>(s);
+      if (!v) {
+        std::cout << "nil" << std::endl;
+      }
+      else {
+        auto str = as_nt<string_t>(v);
+        if (str) {
+          std::cout << str->_data << std::endl;
+        }
+        else {
+          std::cout << v->type->name() << " " << v << std::endl;
+        }
+      }
+      instr::stack::push(s, nullptr);
+    }
+
     instr_t find(const sym_t::p& sym) {
       if (sym && sym->ns() == BUILTIN_NS) {
         if (sym->name() == "+")    { return builtins::add; }
@@ -221,8 +289,14 @@ namespace rev {
         if (sym->name() == "<")    { return builtins::lt; }
         if (sym->name() == ">")    { return builtins::gt; }
 
-        if (sym->name() == "read") { return builtins::read; }
-        if (sym->name() == "load") { return builtins::load; }
+        if (sym->name() == "identical?") { return identical; }
+        if (sym->name() == "satisfies?") { return satisfies; }
+        if (sym->name() == "print")      { return print; }
+
+        if (sym->name() == "read") { return read; }
+        if (sym->name() == "load") { return load; }
+
+        throw std::runtime_error(sym->name() + " is not a builtin function");
       }
       return nullptr;
     }
@@ -285,22 +359,33 @@ namespace rev {
 
   void compile(const value_t::p& form, ctx_t& ctx, thread_t& t) {
 
-    if (auto lst = as_nt<list_t>(form)) {
-      //      auto expanded = as<list_t>(macroexpand(lst, ctx));
-      emit::invoke(/*expanded*/lst, ctx, t);
-    }
-    else if (auto sym = as_nt<sym_t>(form)) {
-      auto lookup = resolve(ctx, sym);
-      assert(lookup && "symbol resolved to nil instead of var");
-      if (lookup.is_local() || lookup.is_global()) {
-        // this is a local variable of global from a name space
-        // in both cases we just put the contents of the var onto
-        // the stack
-        t << instr::deref << *lookup;
+    if (protocol_t::satisfies(protocol_t::alist, form)) {
+      auto lst = nativize(form);
+      if (!imu::is_empty(lst)) {
+        auto expanded = macroexpand(lst, ctx);
+        emit::invoke(expanded, ctx, t);
       }
       else {
-        // add lookup result to the list of closed over vars
-        t << instr::enclosed << ctx.close_over(sym);
+        t << instr::push << form;
+      }
+    }
+    else if (auto sym = as_nt<sym_t>(form)) {
+      if (sym == sym_t::true_ || sym == sym_t::false_) {
+        t << instr::push << sym;
+      }
+      else {
+        auto lookup = resolve(ctx, sym);
+        assert(lookup && "symbol resolved to nil instead of var");
+        if (lookup.is_local() || lookup.is_global()) {
+          // this is a local variable of global from a name space
+          // in both cases we just put the contents of the var onto
+          // the stack
+          t << instr::deref << *lookup;
+        }
+        else {
+          // add lookup result to the list of closed over vars
+          t << instr::enclosed << ctx.close_over(sym);
+        }
       }
     }
     // TODO: handle other types of forms
@@ -356,7 +441,6 @@ namespace rev {
     for (auto i=0; i<nargs; ++i) {
       instr::stack::push(rt.sp, args[i]);
     }
-
     auto ret = run(address, (rt.ip - rt.code.data()));
     verify_stack_integrity(sp);
 
@@ -398,7 +482,7 @@ namespace rev {
       throw std::runtime_error("Can't open source file: " + path);
     }
 
-    auto ns = as<ns_t>(eval(rdr::read(file)));
+    auto ns = as_nt<ns_t>(eval(rdr::read(file)));
     if (!ns) {
       throw std::runtime_error("Expecting file to start with ns declaration");
     }
@@ -425,8 +509,10 @@ namespace rev {
   }
 
   void boot(uint64_t stack, const std::string& s) {
-    rt.in_ns = imu::nu<ns_t>("user");
+
     rt.fp = rt.sp = rt.stack = new int64_t[stack];
+
+    rt.in_ns   = imu::nu<ns_t>("user");
     rt.ns      = imu::nu<dvar_t>(); rt.ns->bind(rt.in_ns);
     rt.sources = s.empty() ? "" : s + "/";
 

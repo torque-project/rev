@@ -2,8 +2,6 @@
 
 #include <list>
 
-#include <ffi.h>
-
 namespace rev {
 
   int64_t* jump(int64_t off);
@@ -48,7 +46,6 @@ namespace rev {
       auto off = *(ip++);
       stack::push(s, (int64_t) (ip + off));
       stack::push(s, (int64_t) fp);
-      fp = s;
     }
 
     void return_to(stack_t& s, stack_t& fp, int64_t* &ip) {
@@ -93,10 +90,19 @@ namespace rev {
 
     void bind(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
-      std::cout << "bind" << std::endl;
+      std::cout << "bind: " << *ip << std::endl;
 #endif
-      auto var = (var_t::p) *(ip++);
-      var->bind(stack::pop<value_t::p>(s));
+      auto var = (var_t::p) *ip++;
+      auto val = stack::pop<value_t::p>(s);
+      var->bind(val);
+    }
+
+    namespace priv {
+      value_t::p adapt_runtime_types(
+        const type_t::p& type, const std::list<value_t::p>& args) {
+
+        return nullptr;
+      }
     }
 
     void make(stack_t& s, stack_t& fp, int64_t* &ip) {
@@ -107,7 +113,8 @@ namespace rev {
 
       std::list<value_t::p> tmp;
       for (auto i=0; i<imu::count(type->fields()); ++i) {
-        tmp.push_front(stack::pop<value_t::p>(s));
+        auto val = stack::pop<value_t::p>(s);
+        tmp.push_front(val);
       }
 
       // TODO: adapt runtime types
@@ -129,7 +136,7 @@ namespace rev {
 
     void deref(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
-      std::cout << "deref" << std::endl;
+      std::cout << "deref: " << *ip << std::endl;
 #endif
       auto var = (var_t::p) *(ip++);
       stack::push(s, (int64_t) var->deref());
@@ -148,7 +155,6 @@ namespace rev {
 #ifdef _TRACE
       std::cout << "enclosed" << std::endl;
 #endif
-
       auto v = (value_t::p) *fp;
 
       if (auto fn = as_nt<fn_t>(v)) {
@@ -179,8 +185,12 @@ namespace rev {
 #ifdef _TRACE
       std::cout << "dispatch" << std::endl;
 #endif
-      auto f     = as<fn_t>((value_t::p) *fp);
       auto arity = *(ip++);
+
+      // set frame pointer to beginning of function in stack
+      fp = (s - (arity + 1));
+
+      auto f = as<fn_t>((value_t::p) *fp);
 
 #ifdef _DEBUG
       assert(!f->is_macro());
@@ -222,39 +232,15 @@ namespace rev {
       auto meth  = *(ip++);
       auto arity = *(ip++);
 
-      ffi_cif   cif;
-      ffi_type* args[arity];
-      void*     tmp[arity];
-      void*     values[arity];
+      void* args[arity];
 
-      for (int i=(arity-1); i>=0; --i) {
-        args[i]   = &ffi_type_pointer;
-        tmp[i]    = stack::pop<void*>(s);
-        values[i] = &(tmp[i]);
+      // arguments are on the stack in reverse order, so we
+      // can pop arguments front to back here
+      for (int i=0; i<arity; ++i) {
+        args[i] = stack::pop<void*>(s);
       }
 
-      auto self = (value_t::p) tmp[0];
-      auto type = self->type;
-
-      void* ret    = nullptr;
-      void  (*f)() = nullptr;
-
-      for (int i=0; i<type->_num_ext; ++i) {
-        if (type->_methods[i].id == proto->_id) {
-          f = (void (*)()) type->_methods[i].impls[meth].arities[arity];
-          break;
-        }
-      }
-
-      if (f) {
-        ffi_prep_cif(&cif, FFI_DEFAULT_ABI, arity, &ffi_type_pointer, args);
-        ffi_call(&cif, f, &ret, values);
-        // last value on stack is already the return value
-        stack::push(s, ret);
-      }
-      else {
-        throw std::runtime_error("Method not implemented");
-      }
+      stack::push(s, proto->dispatch(meth, args, arity));
     }
   }
 }

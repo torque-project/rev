@@ -31,7 +31,7 @@ namespace rev {
     uint64_t _num_ext;
     ext_t*   _methods;
 
-    const std::string _name;  // protocol implementations
+    const std::string _name; // protocol implementations
     int64_t           _code; // start of the protocol code
 
     std::vector<native_handle_t*> _handles;
@@ -41,6 +41,10 @@ namespace rev {
 
     inline type_t(const std::string& n)
       : _name(n)
+    {}
+
+    inline type_t(const std::string& n, ext_t* methods, uint64_t num)
+      : _name(n), _methods(methods), _num_ext(num)
     {}
 
     ~type_t();
@@ -89,6 +93,20 @@ namespace rev {
     inline void alter_meta(const F& f) {
       set_meta(f(meta));
     }
+
+    /**
+     * Calling these will do a lookup in the values protocol
+     * table and run the appropriate method. This may execute
+     * interpreted code, if this is a runtime value
+     *
+     */
+    // inline value_t::p first() const;
+    // inline value_t::p rest()  const;
+    /*
+    inline bool is_empty() const {
+      return false;
+    }
+    */
   };
 
   template<typename T>
@@ -311,20 +329,72 @@ namespace rev {
 
   struct protocol_t : public value_base_t<protocol_t> {
 
+    enum id_t {
+      str         = 0,
+      coll        = 4,
+      indexed     = 5,
+      seq         = 6,
+      next        = 7,
+      lookup      = 8,
+      associative = 9,
+      imap        = 10,
+      mapentry    = 11,
+      ivector     = 14,
+      meta        = 17,
+      withmeta    = 18,
+      equiv       = 21,
+      seqable     = 23,
+      named       = 38,
+      alist       = 42,
+      ifn         = 43,
+      istring     = 44
+    };
+
     typedef typename semantics<protocol_t>::p p;
 
-    static uint64_t id;
+    static uint64_t ids;
 
     uint64_t    _id;
     std::string _name;
     list_t::p   _meths;
 
     inline protocol_t(const std::string& name, const list_t::p& meths)
-      : _id(id++), _name(name), _meths(meths)
+      : _id(ids++), _name(name), _meths(meths)
     {}
+
+    inline uint64_t id() const {
+      return _id;
+    }
 
     inline list_t::p meths() const {
       return _meths;
+    }
+
+    inline bool satisfied_by(const type_t::cp& type) const {
+      return protocol_t::satisfied_by((id_t) _id, type);
+    }
+
+    static value_t::p dispatch(uint32_t, uint32_t, void* args[], uint32_t);
+
+    inline value_t::p dispatch(uint32_t m, void* args[], uint32_t n) {
+      return protocol_t::dispatch(_id, m, args, n);
+    }
+
+    static bool satisfied_by(id_t id, const type_t::cp& type) {
+      auto ret = false;
+      if (type) {
+        for (auto i=0; i<type->_num_ext; ++i) {
+          if (type->_methods[i].id == id) {
+            ret = true;
+            break;
+          }
+        }
+      }
+      return ret;
+    }
+
+    static inline bool satisfies(id_t id, const value_t::p& v) {
+      return (v && satisfied_by(id, v->type));
     }
   };
 
@@ -470,11 +540,26 @@ namespace rev {
   template<typename T, typename S>
   inline T* as_nt(const maybe<S>& x) {
     if (x) {
-      return as<T>(*x);
+      return as_nt<T>(*x);
     }
     return nullptr;
   }
 
+  inline bool has_meta(const value_t::p& v, const sym_t::p& sym) {
+    return v->meta && ((bool) imu::get(as<map_t>(v->meta), sym));
+  }
+
+  /*
+  inline value_t::p value_t::first() const {
+    void* args[] = {(void*) this};
+    return protocol_t::dispatch(protocol_t::seqable, 0, args, 1);
+  }
+
+  inline value_t::p value_t::rest() const {
+    void* args[] = {(void*) this};
+    return protocol_t::dispatch(protocol_t::next, 0, args, 1);
+  }
+  */
   template<typename T>
   inline typename T::p var_t::deref() const {
     return as<T>(_top);
@@ -485,7 +570,6 @@ namespace imu {
 
   template<typename T>
   inline typename T::p value_cast(const rev::value_t*& v) {
-    std::cout << "value cast" << std::endl;
     return rev::as<T>(v);
   }
 }

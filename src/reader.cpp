@@ -157,13 +157,13 @@ result_t meta(std::istream& in) {
   auto form = read(in);
 
   // TODO: use keywords here once they are implemented
-  if (auto sym = as_nt<sym_t>(form)) {
+  if (auto sym = as_nt<sym_t>(meta)) {
     form->alter_meta([&](const value_t::p& v) {
       auto m = as<map_t>(v);
       return imu::assoc(m ? m : imu::nu<map_t>(), sym, sym_t::true_);
     });
   }
-  else if (auto m = as_nt<map_t>(form)) {
+  else if (auto m = as_nt<map_t>(meta)) {
     form->set_meta(m);
   }
 

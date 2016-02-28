@@ -11,15 +11,18 @@
 #include <stdlib.h>
 
 void print(const rev::value_t::p& v) {
-  if (auto lst = rev::as_nt<rev::list_t>(v)) {
+  if (!v) {
+    std::cout << "nil";
+  }
+  else if (auto lst = rev::as_nt<rev::list_t>(v)) {
     std::cout << "(";
     if (auto fst = imu::first(lst)) {
       print(*fst);
       imu::for_each([&](const rev::value_t::p& v) {
           std::cout << " "; print(v);
         }, imu::rest(lst));
-      std::cout << ")";
     }
+    std::cout << ")";
   }
   else if (auto sym = rev::as_nt<rev::sym_t>(v)) {
     std::cout << sym->name();
@@ -28,7 +31,7 @@ void print(const rev::value_t::p& v) {
     std::cout << n->value;
   }
   else {
-    std::cout << "#{" << v->type->name() << ": " << v << "}" << std::endl;
+    std::cout << "#{" << v->type->name() << ": " << v << "}";
   }
 }
 
@@ -82,7 +85,7 @@ int main(int argc, char** argv) {
       }
       catch(std::exception& e) {
         std::cerr << e.what() << std::endl;
-      }
+        }
 
       free(line);
     }

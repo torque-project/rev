@@ -23,12 +23,14 @@ namespace rev {
       auto locals = imu::nu<map_t>();
       auto arity  = 0;
 
+      list_t::p vars = imu::nu<list_t>();
+
       auto arg = imu::seq(args);
       while (!is_empty(arg)) {
         auto sym = as<sym_t>(imu::first(arg));
         if (sym->name() != "&") {
           auto var = imu::nu<var_t>();
-          t << instr::bind << var;
+          vars = imu::conj(vars, var);
 
           locals = imu::assoc(locals, sym, var);
           ++arity;
@@ -44,6 +46,10 @@ namespace rev {
         }
         arg = imu::rest(arg);
       }
+
+      imu::for_each([&](const var_t::p& var) {
+          t << instr::bind << var;
+        }, vars);
 
       // compile body
       auto body_ctx = ctx.recur(locals, address);

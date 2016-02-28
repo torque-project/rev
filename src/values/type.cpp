@@ -29,12 +29,12 @@ namespace rev {
     auto code = self->type->_code + (int64_t) off;
 
     value_t::p args[cif->nargs+1];
-    args[0] = self;
-    for (int i=0; i<cif->nargs; ++i) {
-      args[i] = *((value_t**) ptrs[0]);
+    for (int i=cif->nargs; i>=1; --i) {
+      args[i] = *((value_t**) ptrs[i-1]);
     }
+    args[0] = self;
 
-    *pad = invoke(code, args, cif->nargs);
+    *pad = invoke(code, args, cif->nargs+1);
   }
 
   type_t::~type_t() {

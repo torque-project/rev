@@ -18,7 +18,7 @@ namespace rev {
 
       compile_all(forms, ctx, t);
 
-      auto syms = ctx.recur_syms();
+      auto syms = imu::into(imu::nu<list_t>(), ctx.recur_syms());
 
       while (auto sym = imu::first(syms)) {
         if (auto var = ctx[as<sym_t>(sym)]) {

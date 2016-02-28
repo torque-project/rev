@@ -14,6 +14,7 @@ namespace rev {
       }
 
       auto var = imu::nu<var_t>();
+      var->set_meta(name->meta);
       intern(name, var);
 
       compile(*init, ctx, t);
