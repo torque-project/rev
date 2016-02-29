@@ -129,9 +129,8 @@ namespace rev {
   typedef std::vector<int64_t> thread_t;
   typedef int64_t*             stack_t;
 
-  void     compile(const value_t::p& form, ctx_t& ctx);
-  void     compile(const value_t::p& form, ctx_t& ctx, thread_t& t);
-  uint32_t compile_all(const list_t::p& form, ctx_t& env);
+  void compile(const value_t::p& form, ctx_t& ctx);
+  void compile(const value_t::p& form, ctx_t& ctx, thread_t& t);
 
   template<typename T>
   uint32_t compile_all(const T& forms, ctx_t& ctx, thread_t& t) {

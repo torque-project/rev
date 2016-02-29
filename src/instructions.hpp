@@ -122,6 +122,22 @@ namespace rev {
       stack::push(s, val);
     }
 
+    template<typename T>
+    void make_native(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "make" << std::endl;
+#endif
+      auto n = *(ip++);
+
+      std::list<value_t::p> tmp;
+      for (auto i=0; i<n; ++i) {
+        auto val = stack::pop<value_t::p>(s);
+        tmp.push_front(val);
+      }
+
+      stack::push(s, T::from_std(tmp));
+    }
+
     void set(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "poke" << std::endl;

@@ -391,6 +391,14 @@ namespace rev {
         }
       }
     }
+    else if (auto v = as_nt<vector_t>(form)) {
+      compile_all(v, ctx, t);
+      t << instr::make_native<vector_t> << imu::count(v);
+    }
+    else if (auto m = as_nt<map_t>(form)) {
+      compile_all(v, ctx, t);
+      t << instr::make_native<map_t> << imu::count(v);
+    }
     // TODO: handle other types of forms
     else {
       // push literals onto the stack
