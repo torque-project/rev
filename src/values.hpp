@@ -58,6 +58,7 @@ namespace rev {
     }
 
     intptr_t prepare_closure(uint8_t arity, int64_t off);
+    void     finalize(int64_t address);
   };
 
   struct value_t {
@@ -452,6 +453,10 @@ namespace rev {
         _type(t),
         _fields(fields)
     {}
+
+    inline type_value_t::p type() const {
+      return _type;
+    };
 
     inline const value_t::p& field(const sym_t::p& sym) {
       auto idx = _type->field(sym);

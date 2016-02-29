@@ -39,7 +39,11 @@ namespace rev {
             imu::map<list_t::p>([&](const value_t::p& arglst) {
               auto v    = as<vector_t>(arglst);
               auto args = into(imu::nu<list_t>(), imu::seq(v));
-              auto body = imu::conj(imu::conj(imu::conj(args, imu::nu<int_t>(n++)), name), DISPATCH);
+              auto body = imu::conj(
+                            imu::conj(
+                              imu::conj(args, imu::nu<int_t>(n++)),
+                              name),
+                            DISPATCH);
               return list_t::factory(v, body);
             }, imu::rest(lst)),
             FN));

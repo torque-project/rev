@@ -108,7 +108,7 @@ namespace rev {
       }, impls);
 
       t->_num_ext = n;
-      t->_code    = finalize_thread(thread);
+      t->finalize(finalize_thread(thread));
     }
 
     void deftype(const list_t::p& forms, ctx_t& ctx, thread_t& t) {

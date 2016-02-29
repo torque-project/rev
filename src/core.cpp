@@ -26,7 +26,8 @@ namespace rev {
   typedef void (*special_t)(const list_t::p&, ctx_t&, thread_t&);
   typedef void (*instr_t)(stack_t&, stack_t&, int64_t*&);
 
-  const char* BUILTIN_NS = "torque.core.builtin";
+  static const char* BUILTIN_NS      = "torque.core.builtin";
+  static const int64_t MAX_FN_LENGTH = 100000;
 
   /**
    * This holds the runtiem state of the interpreter
@@ -65,6 +66,24 @@ namespace rev {
     rt.code.insert(rt.code.end(), t.begin(), t.end());
 
     return pos;
+  }
+
+  int64_t compute_fn_length(int64_t address) {
+    auto code   = rt.code.data() + address;
+    auto instr  = code;
+    auto length = 0;
+
+    while ((*instr != reinterpret_cast<int64_t>(instr::return_to)) &&
+           (length < MAX_FN_LENGTH)) {
+      ++instr;
+      ++length;
+    }
+
+    if (*(code + length) != reinterpret_cast<int64_t>(instr::return_to)) {
+      throw std::runtime_error("Fn exceeded maximum code length");
+    }
+
+    return length + 1;
   }
 
   ns_t::p ns() {
@@ -144,28 +163,6 @@ namespace rev {
     }
 
     return {scope, *resolved};
-  }
-
-  value_t::p call(const fn_t::p& f, const list_t::p& args) {
-    // save stack pointer for sanity checks and stack unwinding
-    stack_t sp = rt.sp;
-    // setup the frame for the runtime call
-    instr::stack::push(rt.sp, (int64_t) rt.ip);
-    instr::stack::push(rt.sp, (int64_t) rt.fp);
-    rt.fp = rt.sp;
-
-    imu::for_each([&](const value_t::p& v) {
-      instr::stack::push(rt.sp, v);
-    },
-    args);
-
-    auto code  = rt.code.data() + f->code();
-    auto arity = imu::count(args);
-    auto off   = *(code + arity);
-    auto ret   = run(f->code() + off, (rt.ip - rt.code.data()));
-    // verify_stack_integrity(sp);
-
-    return ret;
   }
 
   list_t::p nativize(const value_t::p& form) {
@@ -260,6 +257,11 @@ namespace rev {
       instr::stack::push(s, ret);
     }
 
+    void type(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto x = instr::stack::pop<rt_value_t::p>(s);
+      instr::stack::push(s, x ? x->type() : type_value_t::p());
+    }
+
     void print(stack_t& s, stack_t& fp, int64_t* &ip) {
       auto v   = instr::stack::pop<value_t::p>(s);
       if (!v) {
@@ -279,22 +281,23 @@ namespace rev {
 
     instr_t find(const sym_t::p& sym) {
       if (sym && sym->ns() == BUILTIN_NS) {
-        if (sym->name() == "+")    { return builtins::add; }
-        if (sym->name() == "-")    { return builtins::sub; }
-        if (sym->name() == "*")    { return builtins::mul; }
-        if (sym->name() == "/")    { return builtins::div; }
-        if (sym->name() == "==")   { return builtins::eq; }
-        if (sym->name() == "<=")   { return builtins::lte; }
-        if (sym->name() == ">=")   { return builtins::gte; }
-        if (sym->name() == "<")    { return builtins::lt; }
-        if (sym->name() == ">")    { return builtins::gt; }
+        if (sym->name() == "+")  { return builtins::add; }
+        if (sym->name() == "-")  { return builtins::sub; }
+        if (sym->name() == "*")  { return builtins::mul; }
+        if (sym->name() == "/")  { return builtins::div; }
+        if (sym->name() == "==") { return builtins::eq;  }
+        if (sym->name() == "<=") { return builtins::lte; }
+        if (sym->name() == ">=") { return builtins::gte; }
+        if (sym->name() == "<")  { return builtins::lt;  }
+        if (sym->name() == ">")  { return builtins::gt;  }
 
         if (sym->name() == "identical?") { return identical; }
         if (sym->name() == "satisfies?") { return satisfies; }
-        if (sym->name() == "print")      { return print; }
+        if (sym->name() == "type")       { return type;      }
 
-        if (sym->name() == "read") { return read; }
-        if (sym->name() == "load") { return load; }
+        if (sym->name() == "print") { return print; }
+        if (sym->name() == "read")  { return read;  }
+        if (sym->name() == "load")  { return load;  }
 
         throw std::runtime_error(sym->name() + " is not a builtin function");
       }
@@ -409,13 +412,22 @@ namespace rev {
     rt.ip    = rt.code.data() + address;
     auto end = rt.code.data() + to;
 
-    while(rt.ip != end) {
+    // FIXME: we do one additional check per instruction to see if the
+    // next operation is the final one in this run. this is done
+    // so we can exit the loop when the last operation is a 'return'
+    // (which will modify the instruction pointer). however, this is
+    // one extra comparison per instruction. since this is a very tight
+    // loop we should eliminate this in the future, if at all possible
+    bool bail = false;
+
+    while(rt.ip != end && !bail) {
       auto op = *(rt.ip++);
 #ifdef _TRACE
       std::cout
         << "op(" << (rt.ip - rt.code.data() - 1) << " / " << op << "): "
         << std::flush;
 #endif
+      bail = (rt.ip == end);
       ((instr_t) op)(rt.sp, rt.fp, rt.ip);
     }
 
@@ -430,7 +442,8 @@ namespace rev {
       "properly. This is most likely a problem with the VM itself.");
   }
 
-  value_t::p invoke(int64_t address, value_t::p args[], uint32_t nargs) {
+  value_t::p call(int64_t from, int64_t to, value_t::p args[], uint32_t nargs) {
+
     // save stack pointer for sanity checks and stack unwinding
     stack_t sp = rt.sp;
     // setup the frame for the runtime call
@@ -441,10 +454,47 @@ namespace rev {
     for (auto i=0; i<nargs; ++i) {
       instr::stack::push(rt.sp, args[i]);
     }
-    auto ret = run(address, (rt.ip - rt.code.data()));
+    auto ret = run(from, to);
     verify_stack_integrity(sp);
 
     return ret;
+  }
+
+  value_t::p call(const fn_t::p& f, const list_t::p& args) {
+    // save stack pointer for sanity checks and stack unwinding
+    stack_t sp = rt.sp;
+    // setup the frame for the runtime call
+    instr::stack::push(rt.sp, (int64_t) rt.ip);
+    instr::stack::push(rt.sp, (int64_t) rt.fp);
+    rt.fp = rt.sp;
+
+    imu::for_each([&](const value_t::p& v) {
+      instr::stack::push(rt.sp, v);
+    },
+    args);
+
+    auto arity = imu::count(args);
+    auto code  = rt.code.data() + f->code();
+    auto off   = *(code + arity);
+
+    if (arity > f->max_arity()) {
+
+      off = *(code + f->max_arity() + 1);
+      if (off != -1) {
+        auto rest = imu::nu<list_t>();
+        while(arity-- > f->max_arity()) {
+          rest = imu::conj(rest, instr::stack::pop<value_t::p>(rt.sp));
+        }
+        instr::stack::push(rt.sp, rest);
+      }
+    }
+
+    if (off != -1) {
+      return run(f->code() + off, (rt.ip - rt.code.data()));
+      // verify_stack_integrity(sp);
+    }
+
+    throw std::runtime_error("Arity mismatch when calling fn");
   }
 
   value_t::p eval(const value_t::p& form) {

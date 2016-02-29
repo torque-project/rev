@@ -156,4 +156,12 @@ namespace rev {
    *
    */
   int64_t finalize_thread(thread_t& t);
+
+  /**
+   * Returns the length of the function pointed to by address,
+   * where length is defined by the distance to the closest return
+   * statement (there is only one per function).
+   *
+   */
+  int64_t compute_fn_length(int64_t address);
 }

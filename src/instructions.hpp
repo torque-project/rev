@@ -53,7 +53,6 @@ namespace rev {
       std::cout << "return_to" << std::endl;
 #endif
       auto ret  = stack::pop<>(s);
-
       // reset stack to calling function
       s         = fp;
       fp        = stack::pop<stack_t>(s);

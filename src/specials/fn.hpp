@@ -33,7 +33,9 @@ namespace rev {
           vars = imu::conj(vars, var);
 
           locals = imu::assoc(locals, sym, var);
-          ++arity;
+          if (!variadic) {
+            ++arity;
+          }
         }
         else {
           if (variadic) {
@@ -89,9 +91,8 @@ namespace rev {
         std::tie(variadic, arity, off) = body(meth, fn_ctx, thread);
 
         // TODO: check for duplicate variadic bodies
-
-        max_arity = variadic ? max_arity : std::max(arity, max_arity);
-        thread[arity] = off;
+        max_arity = std::max(arity, max_arity);
+        thread[variadic ? arity + 1 : arity] = off;
       },
       fnspec);
 

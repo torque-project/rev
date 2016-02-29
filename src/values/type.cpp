@@ -1,12 +1,12 @@
 #include "../values.hpp"
+#include "../core.hpp"
+#include "../compiler.hpp"
 
 #include <cassert>
 
 #include <ffi.h>
 
 namespace rev {
-
-  extern value_t::p invoke(int64_t, value_t::p args[], uint32_t);
 
   template<>
   type_t value_base_t<type_value_t>::prototype("Type");
@@ -15,6 +15,12 @@ namespace rev {
     ffi_cif*     cif;
     ffi_closure* closure;
     ffi_type**   args;
+
+    struct address_t {
+      int64_t off;
+      int64_t length;
+    } address;
+
     ~native_handle_t() {
       ffi_closure_free(closure);
       delete args;
@@ -22,11 +28,13 @@ namespace rev {
     }
   };
 
-  void call(ffi_cif *cif, void* ret, void* ptrs[], void* off) {
+  void call(ffi_cif *cif, void* ret, void* ptrs[], void* a) {
 
-    auto pad  = (value_t**) ret;
-    auto self = *((value_t**) ptrs[0]);
-    auto code = self->type->_code + (int64_t) off;
+    auto pad     = (value_t**) ret;
+    auto self    = *((value_t**) ptrs[0]);
+    auto address = (type_t::native_handle_t::address_t*) a;
+    auto code    = self->type->_code + (int64_t) address->off;
+    auto to      = code + address->length;
 
     value_t::p args[cif->nargs+1];
     for (int i=cif->nargs; i>=1; --i) {
@@ -34,7 +42,7 @@ namespace rev {
     }
     args[0] = self;
 
-    *pad = invoke(code, args, cif->nargs+1);
+    *pad = call(code, to, args, cif->nargs+1);
   }
 
   type_t::~type_t() {
@@ -59,11 +67,24 @@ namespace rev {
       cif, FFI_DEFAULT_ABI, arity, &ffi_type_pointer, handle->args);
     assert(code == FFI_OK);
 
-    code = ffi_prep_closure_loc(closure, cif, call, (void*) off, ret);
+    handle->address.off    = off;
+    handle->address.length = 0;
+
+    code = ffi_prep_closure_loc(closure, cif, call, (void*) &handle->address, ret);
     assert(code == FFI_OK);
 
     _handles.push_back(handle);
 
     return reinterpret_cast<intptr_t>(ret);
+  }
+
+  void type_t::finalize(int64_t address) {
+
+    _code = address;
+
+    for (auto& handle : _handles) {
+      auto length = compute_fn_length(_code + handle->address.off);
+      handle->address.length = length;
+    }
   }
 }
