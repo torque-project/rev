@@ -189,9 +189,13 @@ namespace rev {
       auto max_arity = (uint8_t) *ip++;
       auto fn        = imu::nu<fn_t>(address, max_arity);
 
+      std::list<value_t::p> tmp;
       for (auto i=0; i<enclosed; ++i) {
-        fn->enclose(stack::pop<value_t::p>(s));
+        auto val = stack::pop<value_t::p>(s);
+        tmp.push_front(val);
       }
+
+      for (auto& i : tmp) { fn->enclose(i); }
 
       stack::push(s, fn);
     }
