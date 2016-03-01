@@ -155,10 +155,9 @@ namespace rev {
     int64_t  _code;
     values_t _closed_overs;
     uint8_t  _max_arity;
-    bool     _is_macro;
 
     fn_t(int64_t code, uint8_t max_arity)
-      : _code(code), _max_arity(max_arity), _is_macro(false)
+      : _code(code), _max_arity(max_arity)
     {}
 
     inline void enclose(const value_t::p& v) {
@@ -169,12 +168,24 @@ namespace rev {
       return _code;
     }
 
-    inline bool is_macro() const {
-      return _is_macro;
-    }
-
     inline uint8_t max_arity() const {
       return _max_arity;
+    }
+
+    static inline uint64_t encode(uint64_t off, uint64_t locals) {
+      return (off & 0x00000000ffffffff) | (locals << 32);
+    }
+
+    static inline uint64_t offset(uint64_t x) {
+      return (x & 0x00000000ffffffff);
+    }
+
+    static inline uint64_t stack_space(uint64_t x) {
+      return (x >> 32);
+    }
+
+    static inline uint64_t stack_space(uint64_t x, uint32_t arity) {
+      return ((x >> 32) - arity);
     }
   };
 

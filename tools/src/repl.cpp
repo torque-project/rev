@@ -24,6 +24,16 @@ void print(const rev::value_t::p& v) {
     }
     std::cout << ")";
   }
+  else if (auto vec = rev::as_nt<rev::vector_t>(v)) {
+    std::cout << "[";
+    if (auto fst = imu::first(vec)) {
+      print(*fst);
+      imu::for_each([&](const rev::value_t::p& v) {
+          std::cout << " "; print(v);
+        }, imu::rest(vec));
+    }
+    std::cout << "]";
+  }
   else if (auto sym = rev::as_nt<rev::sym_t>(v)) {
     std::cout << sym->name();
   }
@@ -85,8 +95,7 @@ int main(int argc, char** argv) {
       }
       catch(std::exception& e) {
         std::cerr << e.what() << std::endl;
-        }
-
+      }
       free(line);
     }
   }

@@ -20,19 +20,14 @@ namespace rev {
 
       auto args   = as<vector_t>(imu::first(meth));
       auto body   = imu::rest(meth);
-      auto locals = imu::nu<map_t>();
+      auto locals = ctx.body();
       auto arity  = 0;
-
-      list_t::p vars = imu::nu<list_t>();
 
       auto arg = imu::seq(args);
       while (!is_empty(arg)) {
         auto sym = as<sym_t>(imu::first(arg));
         if (sym->name() != "&") {
-          auto var = imu::nu<var_t>();
-          vars = imu::conj(vars, var);
-
-          locals = imu::assoc(locals, sym, var);
+          locals = locals.local(sym);
           if (!variadic) {
             ++arity;
           }
@@ -49,17 +44,17 @@ namespace rev {
         arg = imu::rest(arg);
       }
 
-      imu::for_each([&](const var_t::p& var) {
-          t << instr::bind << var;
-        }, vars);
+      // TODO: should we support variadic recur?
+      auto arglst   = imu::take<list_t::p>(imu::count(args), args);
+      auto body_ctx = variadic ? locals : locals.recur(address, arglst);
 
       // compile body
-      auto body_ctx = ctx.recur(locals, address);
       do_(body, body_ctx, t);
       t << instr::return_to;
 
       // return jump point to beginning of body
-      return meth_t(variadic, arity, address);
+      auto encoded = fn_t::encode(address, body_ctx.stack_space());
+      return meth_t(variadic, arity, encoded);
     }
 
     void fn(const list_t::p& forms, ctx_t& ctx, thread_t& t) {

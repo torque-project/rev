@@ -175,7 +175,7 @@ value_t::p do_syntax_quote(const value_t::p& form);
 template<typename S>
 list_t::p expand_seq(const S& s) {
 
-  std::vector<value_t::p> out(imu::count(s));
+  std::vector<value_t::p> out;
 
   imu::for_each([&](const value_t::p& v) {
     auto lst = as_nt<list_t>(v);

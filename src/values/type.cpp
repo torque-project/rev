@@ -33,8 +33,9 @@ namespace rev {
     auto pad     = (value_t**) ret;
     auto self    = *((value_t**) ptrs[0]);
     auto address = (type_t::native_handle_t::address_t*) a;
-    auto code    = self->type->_code + (int64_t) address->off;
+    auto code    = self->type->_code + (int64_t) fn_t::offset(address->off);
     auto to      = code + address->length;
+    auto stack   = fn_t::stack_space(address->off, cif->nargs);
 
     value_t::p args[cif->nargs+1];
     for (int i=cif->nargs; i>=1; --i) {
@@ -42,7 +43,7 @@ namespace rev {
     }
     args[0] = self;
 
-    *pad = call(code, to, args, cif->nargs+1);
+    *pad = call(code, to, stack, args, cif->nargs+1);
   }
 
   type_t::~type_t() {
@@ -83,7 +84,7 @@ namespace rev {
     _code = address;
 
     for (auto& handle : _handles) {
-      auto length = compute_fn_length(_code + handle->address.off);
+      auto length = compute_fn_length(_code + fn_t::offset(handle->address.off));
       handle->address.length = length;
     }
   }

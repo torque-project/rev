@@ -56,7 +56,7 @@ namespace rev {
       imu::for_each([&](const imu::ty::array_map::value_type& kv) {
 
         auto name  = imu::first<sym_t::p>(kv);
-        auto proto = *resolve(ctx, name);
+        auto proto = as<var_t>(*resolve(ctx, name));
         auto impls = imu::second<imu::ty::array_map::p>(kv);
 
         t->_methods[n].id    = proto->deref<protocol_t>()->_id;
@@ -122,11 +122,11 @@ namespace rev {
       var->bind(type);
       intern(name, var);
 
-      auto closed = imu::reduce([&](const map_t::p& m, const sym_t::p& sym) {
-          return imu::assoc(m, sym, sym);
-        }, imu::nu<map_t>(), fields);
+      auto type_ctx = imu::reduce([&](ctx_t& ctx, const sym_t::p& sym) {
+          return ctx.local(sym);
+        }, ctx, fields);
 
-      auto type_ctx = ctx.local(closed).closure();
+      type_ctx = type_ctx.closure();
 
       imu::for_each([&](const sym_t::p& sym) {
           type_ctx.close_over(sym);
@@ -145,7 +145,7 @@ namespace rev {
         throw std::runtime_error("Type has to refer to a namespace level var");
       }
 
-      auto type = (*lookup)->deref<type_value_t>();
+      auto type = as<var_t>(*lookup)->deref<type_value_t>();
       auto args = imu::rest(forms);
 
       if (imu::count(args) != imu::count(type->fields())) {
@@ -161,7 +161,7 @@ namespace rev {
       auto sym = as<sym_t>(imu::second(forms));
 
       compile(x, ctx, t);
-      t << instr::poke << sym;
+      t << instr::field << sym;
     }
 
     void set(const list_t::p& forms, ctx_t& ctx, thread_t& t) {

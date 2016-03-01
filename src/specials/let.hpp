@@ -7,28 +7,26 @@ namespace rev {
   namespace specials {
 
     namespace let {
-      inline map_t::p bindings(const value_t::p& bs, ctx_t& ctx, thread_t& t) {
+      inline ctx_t bindings(const vector_t::p& bs, ctx_t& ctx, thread_t& t) {
 
-        return imu::reduce([&](const map_t::p& m, const imu::ty::cons& b) {
+        return imu::reduce([&](ctx_t& ctx, const list_t::p& b) {
 
-            auto sym      = imu::first<value_t::p>(b);
-            auto val      = imu::second<value_t::p>(b);
-            auto var      = imu::nu<var_t>();
-            auto bindings = imu::assoc(m, *sym, var);
-            auto c        = ctx.local(bindings);
+            auto sym   = as<sym_t>(imu::first(b));
+            auto val   = imu::second(b);
+            auto local = ctx.local(sym);
 
-            compile(*val, c, t);
-            t << instr::bind << var;
+            compile(*val, local, t);
+            t << instr::assign << as<int_t>(local[sym])->value;
 
-            return bindings;
+            return local;
           },
-          imu::nu<map_t>(),
-          imu::partition(2, as<vector_t>(bs)));
+          ctx,
+          imu::partition<list_t::p>(2, bs));
       }
     }
 
     void let_(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
-      auto locals = ctx.local(let::bindings(*imu::first(forms), ctx, t));
+      auto locals = let::bindings(as<vector_t>(imu::first(forms)), ctx, t);
       do_(imu::rest(forms), locals, t);
     }
   }

@@ -12,7 +12,7 @@ namespace rev {
   value_t::p eval(const value_t::p&);
 
   value_t::p call(const fn_t::p& f, const list_t::p& args);
-  value_t::p call(int64_t addr, int64_t to, value_t::p args[], uint32_t n);
+  value_t::p call(int64_t addr, int64_t to, uint32_t stack, value_t::p args[], uint32_t n);
 
   ns_t::p ns();
   ns_t::p ns(const sym_t::p& sym);

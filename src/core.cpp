@@ -183,7 +183,7 @@ namespace rev {
     if (auto sym = as_nt<sym_t>(imu::first(form))) {
       if (auto lookup = resolve(ctx, sym)) {
         if (lookup.is_global()) {
-          auto mac = as_nt<fn_t>(lookup->deref());
+          auto mac = as_nt<fn_t>(as<var_t>(*lookup)->deref());
           if (mac && has_meta(*lookup, is_macro)) {
             return call(mac, imu::rest(form));
           }
@@ -263,14 +263,16 @@ namespace rev {
     }
 
     void print(stack_t& s, stack_t& fp, int64_t* &ip) {
-      auto v   = instr::stack::pop<value_t::p>(s);
+      auto v = instr::stack::pop<value_t::p>(s);
       if (!v) {
         std::cout << "nil" << std::endl;
       }
       else {
-        auto str = as_nt<string_t>(v);
-        if (str) {
+        if (auto str = as_nt<string_t>(v)) {
           std::cout << str->_data << std::endl;
+        }
+        else if (auto sym = as_nt<sym_t>(v)) {
+          std::cout << sym->name() << std::endl;
         }
         else {
           std::cout << v->type->name() << " " << v << std::endl;
@@ -379,10 +381,10 @@ namespace rev {
       else {
         auto lookup = resolve(ctx, sym);
         assert(lookup && "symbol resolved to nil instead of var");
-        if (lookup.is_local() || lookup.is_global()) {
-          // this is a local variable of global from a name space
-          // in both cases we just put the contents of the var onto
-          // the stack
+        if (lookup.is_local()) {
+          t << instr::poke << as<int_t>(*lookup)->value;
+        }
+        else if (lookup.is_global()) {
           t << instr::deref << *lookup;
         }
         else {
@@ -450,7 +452,9 @@ namespace rev {
       "properly. This is most likely a problem with the VM itself.");
   }
 
-  value_t::p call(int64_t from, int64_t to, value_t::p args[], uint32_t nargs) {
+  value_t::p call(
+    int64_t from, int64_t to, uint32_t stack,
+    value_t::p args[], uint32_t nargs) {
 
     // save stack pointer for sanity checks and stack unwinding
     stack_t sp = rt.sp;
@@ -462,6 +466,9 @@ namespace rev {
     for (auto i=0; i<nargs; ++i) {
       instr::stack::push(rt.sp, args[i]);
     }
+
+    rt.sp += stack;
+
     auto ret = run(from, to);
     verify_stack_integrity(sp);
 
@@ -475,6 +482,8 @@ namespace rev {
     instr::stack::push(rt.sp, (int64_t) rt.ip);
     instr::stack::push(rt.sp, (int64_t) rt.fp);
     rt.fp = rt.sp;
+
+    instr::stack::push(rt.sp, f);
 
     imu::for_each([&](const value_t::p& v) {
       instr::stack::push(rt.sp, v);
@@ -494,11 +503,14 @@ namespace rev {
           rest = imu::conj(rest, instr::stack::pop<value_t::p>(rt.sp));
         }
         instr::stack::push(rt.sp, rest);
+        arity = f->max_arity() + 1;
       }
     }
 
     if (off != -1) {
-      return run(f->code() + off, (rt.ip - rt.code.data()));
+      rt.sp += fn_t::stack_space(off, arity);
+      auto ret = run(f->code() + fn_t::offset(off), (rt.ip - rt.code.data()));
+      return ret;
       // verify_stack_integrity(sp);
     }
 
@@ -513,17 +525,21 @@ namespace rev {
     // bind current namespace
     rt.ns->bind(rt.in_ns);
 
-    // save stack pointer for sanity checks and stack unwinding
-    stack_t sp = rt.sp;
-
     thread_t thread;
     ctx_t    ctx;
     compile(form, ctx, thread);
 
+    // save stack pointer for sanity checks and stack unwinding
+    stack_t sp = rt.sp + ctx.stack_space() + 1;
+
+    rt.fp  = rt.sp;
+    rt.sp += ctx.stack_space() + 1;
+
     auto ret = run(finalize_thread(thread), rt.code.size());
     verify_stack_integrity(sp);
-    // TODO: delete eval code from vm ?
+    rt.sp = rt.fp;
 
+    // TODO: delete eval code from vm ?
     return ret;
   }
 
@@ -567,9 +583,7 @@ namespace rev {
   }
 
   void boot(uint64_t stack, const std::string& s) {
-
     rt.fp = rt.sp = rt.stack = new int64_t[stack];
-
     rt.in_ns   = imu::nu<ns_t>("user");
     rt.ns      = imu::nu<dvar_t>(); rt.ns->bind(rt.in_ns);
     rt.sources = s.empty() ? "" : s + "/";

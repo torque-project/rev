@@ -15,18 +15,18 @@ namespace rev {
       t << instr::brcond << 0;
       auto eip = t.size();
 
-      if (then) {
-        compile(*then, ctx, t);
-      }
-      else {
-        t << instr::push << nullptr;
-      }
+      compile(*then, ctx, t);
 
       t << instr::br << 0;
       auto cont = t.size();
 
       t[eip-1] = (t.size() - eip);
-      compile(*else_, ctx, t);
+      if (else_) {
+        compile(*else_, ctx, t);
+      }
+      else {
+        t << instr::push << nullptr;
+      }
 
       t[cont-1] = (t.size() - cont) + 1;
     }

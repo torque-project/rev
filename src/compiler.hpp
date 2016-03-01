@@ -10,8 +10,6 @@ namespace rev {
 
   struct ctx_t {
 
-    typedef typename map_t::key_seq::p key_seq_t;
-
     enum class scope_t {
       local,
       env,
@@ -27,12 +25,12 @@ namespace rev {
         return _var;
       }
 
-      inline var_t::p operator* () const {
-        return as<var_t>(_var);
+      inline value_t::p operator* () const {
+        return _var;
       }
 
-      inline var_t::p operator-> () const {
-        return as<var_t>(_var);
+      inline value_t::p operator-> () const {
+        return _var;
       }
 
       inline bool is_local() const {
@@ -44,26 +42,40 @@ namespace rev {
       }
     };
 
-    map_t::p  _env;
-    map_t::p  _locals;
-    map_t::p  _closed_overs;
+    struct state_t {
 
-    int64_t   _recur_point;
-    key_seq_t _recur_syms;
+      typedef std::shared_ptr<state_t> p;
+
+      uint64_t stack_space;
+
+      inline state_t() : stack_space(0) {}
+    };
+
+    map_t::p   _env;
+    map_t::p   _locals;
+    map_t::p   _closed_overs;
+
+    state_t::p _state;
+
+    int64_t    _recur_point;
+    list_t::p  _recur_syms;
 
     inline ctx_t()
       : _env(imu::nu<map_t>())
       , _locals(imu::nu<map_t>())
+      , _state(state_t::p(new state_t()))
     {}
 
     inline ctx_t(
-      const ctx_t& parent,
-      const map_t::p& e,
-      const map_t::p& l,
-      const map_t::p& c)
+      const ctx_t&      parent,
+      const map_t::p&   e,
+      const map_t::p&   l,
+      const map_t::p&   c,
+      const state_t::p& s)
       : _env(e)
       , _locals(l)
       , _closed_overs(c)
+      , _state(s)
       , _recur_point(parent._recur_point)
       , _recur_syms(parent._recur_syms)
     {}
@@ -71,10 +83,11 @@ namespace rev {
     inline ctx_t(
       const ctx_t& parent,
       int64_t rp,
-      const key_seq_t& rs)
+      const list_t::p& rs)
       : _env(parent._env)
       , _locals(parent._locals)
       , _closed_overs(parent._closed_overs)
+      , _state(parent._state)
       , _recur_point(rp)
       , _recur_syms(rs)
     {}
@@ -84,16 +97,30 @@ namespace rev {
         *this,
         imu::merge(_env, _locals),
         imu::nu<map_t>(),
-        imu::nu<map_t>());
+        imu::nu<map_t>(),
+        state_t::p(new state_t()));
     }
 
-    inline ctx_t local(const map_t::p& locals) const {
-      return ctx_t(*this, _env, imu::merge(_locals, locals), _closed_overs);
+    inline ctx_t body() {
+      return ctx_t(
+        *this,
+        _env,
+        _locals,
+        _closed_overs,
+        state_t::p(new state_t()));
     }
 
-    inline ctx_t recur(
-      const map_t::p& locals, int64_t rp) const {
-      return ctx_t(local(locals), rp, imu::keys(locals));
+    inline ctx_t local(const sym_t::p& sym) {
+      return ctx_t(
+        *this,
+        _env,
+        imu::assoc(_locals, sym, imu::nu<int_t>(alloca())),
+        _closed_overs,
+        _state);
+    }
+
+    inline ctx_t recur(int64_t rp, const list_t::p& rs) const {
+      return ctx_t(*this, rp, rs);
     }
 
     inline map_t::p local() const {
@@ -108,11 +135,19 @@ namespace rev {
       return imu::keys(_closed_overs);
     }
 
+    inline uint64_t alloca() {
+      return _state->stack_space++;
+    }
+
+    inline uint64_t stack_space() const {
+      return _state->stack_space;
+    }
+
     inline int64_t recur_to() const {
       return _recur_point;
     }
 
-    inline key_seq_t recur_syms() const {
+    inline list_t::p recur_syms() const {
       return _recur_syms;
     }
 

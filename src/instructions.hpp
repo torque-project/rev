@@ -34,14 +34,16 @@ namespace rev {
 
     void push(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
-      std::cout << "push: " << *ip << std::endl;
+      std::cout
+        << "push: " << (int64_t*) *ip << " -> "
+        << ((int64_t*) s) << std::endl;
 #endif
       stack::push(s, *ip++);
     }
 
     void return_here(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
-      std::cout << "return_here: " << *ip << std::endl;
+      std::cout << "return_here: " << s << ", " << fp << ", " << *ip << std::endl;
 #endif
       auto off = *(ip++);
       stack::push(s, (int64_t) (ip + off));
@@ -59,7 +61,6 @@ namespace rev {
       auto addr = stack::pop<int64_t*>(s);
       // set instruction pointer to return address
       ip = addr;
-
       stack::push(s, ret);
     }
 
@@ -87,6 +88,15 @@ namespace rev {
       ip += is_truthy(cond) ? 0 : eoff;
     }
 
+    void assign(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "assign: " << fp << ", " << *ip << std::endl;
+#endif
+      auto off = *ip++;
+      auto val = stack::pop<>(s);
+      *(fp + off + 1) = val;
+    }
+
     void bind(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "bind: " << *ip << std::endl;
@@ -94,14 +104,6 @@ namespace rev {
       auto var = (var_t::p) *ip++;
       auto val = stack::pop<value_t::p>(s);
       var->bind(val);
-    }
-
-    namespace priv {
-      value_t::p adapt_runtime_types(
-        const type_t::p& type, const std::list<value_t::p>& args) {
-
-        return nullptr;
-      }
     }
 
     void make(stack_t& s, stack_t& fp, int64_t* &ip) {
@@ -140,7 +142,7 @@ namespace rev {
 
     void set(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
-      std::cout << "poke" << std::endl;
+      std::cout << "set" << std::endl;
 #endif
       auto x   = stack::pop<rt_value_t::p>(s);
       auto val = stack::top<value_t::p>(s);
@@ -159,7 +161,17 @@ namespace rev {
 
     void poke(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
-      std::cout << "poke" << std::endl;
+      std::cout
+        << "poke: " << "fp: " << (fp + *ip + 1) << ", " << *ip << " -> "
+        << ((int64_t*) *(fp + *ip + 1)) << std::endl;
+#endif
+      auto off = *(ip++);
+      stack::push(s, *(fp + off + 1));
+    }
+
+    void field(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "field" << std::endl;
 #endif
       auto x   = stack::pop<rt_value_t::p>(s);
       auto sym = as<sym_t>((value_t::p) *ip++);
@@ -211,10 +223,6 @@ namespace rev {
 
       auto f = as<fn_t>((value_t::p) *fp);
 
-#ifdef _DEBUG
-      assert(!f->is_macro());
-#endif
-
       // FIXME: it's quite ugly to obtain the jump address this way,
       // but for now i can't think of anything better. real memory
       // addresses can't be obtained while building the code, since
@@ -232,9 +240,10 @@ namespace rev {
         arity = f->max_arity() + 1;
       }
 
-      auto off = ip + arity;
-      if (*off != -1) {
-        ip += *off;
+      auto off = *(ip + arity);
+      if (off != -1) {
+        s  += fn_t::stack_space(off, arity);
+        ip += fn_t::offset(off);
       }
       // TODO: emit list as IFn protocol call
       // TODO: emit list as native call
@@ -245,12 +254,16 @@ namespace rev {
 
     void method(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
-      std::cout << "method" << std::endl;
+      std::cout << "method: ";
 #endif
       auto proto = as<protocol_t>(stack::pop<value_t::p>(s));
       auto meth  = *(ip++);
       auto arity = *(ip++);
-
+#ifdef _TRACE
+      std::cout
+        << proto->_name << "[" << meth << "](" << arity << ")"
+        << std::endl;
+#endif
       void* args[arity];
 
       // arguments are on the stack in reverse order, so we
