@@ -56,7 +56,10 @@ void     skip_comment(std::istream& in);
 static sym_t::p QUOTE   = sym_t::intern("quote");
 static sym_t::p UNQUOTE = sym_t::intern("unquote");
 static sym_t::p SPLICE  = sym_t::intern("unquote-splicing");
+static sym_t::p SEQ     = sym_t::intern("seq");
+static sym_t::p APPLY   = sym_t::intern("apply");
 static sym_t::p LIST    = sym_t::intern("list");
+static sym_t::p VECTOR  = sym_t::intern("vector");
 static sym_t::p CONCAT  = sym_t::intern("concat");
 
 static macros_t extensions(
@@ -201,14 +204,14 @@ value_t::p do_syntax_quote(const value_t::p& form) {
   }
   else if (auto lst = as_nt<list_t>(form)) {
     if (auto s = imu::seq(lst)) {
-      return list_t::factory(LIST, imu::conj(expand_seq(s), CONCAT));
+      return list_t::factory(SEQ, imu::conj(expand_seq(s), CONCAT));
     }
     else {
       return imu::nu<list_t>();
     }
   }
   else if (auto vec = as_nt<vector_t>(form)) {
-    // TODO: create vector at runtime
+    list_t::factory(APPLY, VECTOR, imu::conj(expand_seq(seq(vec)), CONCAT));
   }
   else if (auto map = as_nt<map_t>(form)) {
     // TODO: create map at runtime

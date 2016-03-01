@@ -252,6 +252,12 @@ namespace rev {
       }
     }
 
+    void apply(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto args = stack::pop<value_t::p>(s);
+      auto f    = as<fn_t>(stack::pop<value_t::p>(s));
+      stack::push(s, call(f, nativize(args)));
+    }
+
     void method(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "method: ";

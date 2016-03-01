@@ -1,9 +1,9 @@
 #include "core.hpp"
 #include "reader.hpp"
 #include "compiler.hpp"
+#include "adapter.hpp"
 #include "instructions.hpp"
 #include "util.hpp"
-#include "adapter.hpp"
 #include "builtins/operators.hpp"
 #include "specials/def.hpp"
 #include "specials/deftype.hpp"
@@ -15,6 +15,7 @@
 #include "specials/loop.hpp"
 #include "specials/quote.hpp"
 #include "specials/ns.hpp"
+#include "specials/apply.hpp"
 
 #include <cassert>
 #include <fstream>
@@ -109,7 +110,7 @@ namespace rev {
     static std::set<const std::string> specials = {
       "def", "do", "if", "let*", "loop*", "quote", "ns", "fn*",
       "deftype", "defprotocol", "dispatch*", "recur", "new", "set!",
-      "."
+      ".", "apply*"
     };
     return sym && (specials.count(sym->name()) == 1);
   }
@@ -226,6 +227,7 @@ namespace rev {
         if (sym->name() == ".")           { return specials::dot;         }
         if (sym->name() == "set!")        { return specials::set;         }
         if (sym->name() == "ns")          { return specials::ns;          }
+        if (sym->name() == "apply*")      { return specials::apply;       }
       }
       return nullptr;
     }
