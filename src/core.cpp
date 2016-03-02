@@ -5,6 +5,7 @@
 #include "instructions.hpp"
 #include "util.hpp"
 #include "builtins/operators.hpp"
+#include "builtins/functions.hpp"
 #include "specials/def.hpp"
 #include "specials/deftype.hpp"
 #include "specials/protocol.hpp"
@@ -115,15 +116,10 @@ namespace rev {
     return sym && (specials.count(sym->name()) == 1);
   }
 
-  ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym) {
+  ctx_t::lookup_t resolve_nt(ctx_t& ctx, const sym_t::p& sym) {
     auto ns = as<ns_t>(rt.ns->deref());
     maybe<value_t::p> resolved;
     ctx_t::scope_t    scope;
-
-    // TODO: also catch special forms here
-    if ((sym->has_ns() && sym->ns() == BUILTIN_NS) || is_special(sym)) {
-      return {ctx_t::scope_t::global, nullptr};
-    }
 
     if (sym->has_ns()) {
 
@@ -159,22 +155,31 @@ namespace rev {
       }
     }
 
-    if (!resolved) {
-      throw std::runtime_error(sym->name() + " is not bound");
-    }
-
-    return {scope, *resolved};
+    return {scope, (resolved ? *resolved : nullptr)};
   }
 
-  list_t::p nativize(const value_t::p& form) {
-    if (auto lst = as_nt<list_t>(form)) {
-      return lst;
+  ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym) {
+    if ((sym->has_ns() && sym->ns() == BUILTIN_NS) || is_special(sym)) {
+      return {ctx_t::scope_t::global, nullptr};
     }
+    if(auto resolved = resolve_nt(ctx, sym)) {
+      return resolved;
+    }
+    throw std::runtime_error(sym->name() + " is not bound");
+  }
 
-    return imu::take_while<list_t::p>(
-      [](const value_t::p&) {
-        return true;
-      }, imu::nu<rt_seq_t>(form));
+  value_t::p nativize(const value_t::p& form) {
+    if (protocol_t::satisfies(protocol_t::seq, form)) {
+      if (auto lst = as_nt<list_t>(form)) {
+        return lst;
+      }
+
+      return imu::take_while<list_t::p>(
+        [](const value_t::p&) {
+          return true;
+        }, imu::nu<rt_seq_t>(form));
+    }
+    return form;
   }
 
   value_t::p macroexpand1(const list_t::p& form, ctx_t& ctx) {
@@ -195,14 +200,14 @@ namespace rev {
     return form;
   }
 
-  list_t::p macroexpand(const list_t::p& form, ctx_t& ctx) {
+  value_t::p macroexpand(const value_t::p& form, ctx_t& ctx) {
 
-    list_t::p result = nativize(form);
-    list_t::p prev   = nullptr;
+    value_t::p result = form;
+    value_t::p prev   = nullptr;
 
-    while(result != prev) {
+    while(result != prev && is<list_t>(result)) {
       prev   = result;
-      result = nativize(macroexpand1(result, ctx));
+      result = nativize(macroexpand1(as<list_t>(result), ctx));
     }
 
     return result;
@@ -245,59 +250,32 @@ namespace rev {
       instr::stack::push(s, load_ns(str->_data));
     }
 
-    void identical(stack_t& s, stack_t& fp, int64_t* &ip) {
-      auto a = instr::stack::pop(s);
-      auto b = instr::stack::pop(s);
-      instr::stack::push(s, a == b ? sym_t::true_ : sym_t::false_);
-    }
-
-    void satisfies(stack_t& s, stack_t& fp, int64_t* &ip) {
-      auto x     = instr::stack::pop<value_t::p>(s);
-      auto proto = as<protocol_t>(instr::stack::pop<value_t::p>(s));
-      auto ret   = (x && proto->satisfied_by(x->type)) ?
-        sym_t::true_ : sym_t::false_;
-      instr::stack::push(s, ret);
-    }
-
-    void type(stack_t& s, stack_t& fp, int64_t* &ip) {
-      auto x = instr::stack::pop<rt_value_t::p>(s);
-      instr::stack::push(s, x ? x->type() : type_value_t::p());
-    }
-
-    void print(stack_t& s, stack_t& fp, int64_t* &ip) {
-      auto v = instr::stack::pop<value_t::p>(s);
-      if (!v) {
-        std::cout << "nil" << std::endl;
-      }
-      else {
-        if (auto str = as_nt<string_t>(v)) {
-          std::cout << str->_data << std::endl;
-        }
-        else if (auto sym = as_nt<sym_t>(v)) {
-          std::cout << sym->name() << std::endl;
-        }
-        else {
-          std::cout << v->type->name() << " " << v << std::endl;
-        }
-      }
-      instr::stack::push(s, nullptr);
-    }
-
     instr_t find(const sym_t::p& sym) {
       if (sym && sym->ns() == BUILTIN_NS) {
-        if (sym->name() == "+")  { return builtins::add; }
-        if (sym->name() == "-")  { return builtins::sub; }
-        if (sym->name() == "*")  { return builtins::mul; }
-        if (sym->name() == "/")  { return builtins::div; }
-        if (sym->name() == "==") { return builtins::eq;  }
-        if (sym->name() == "<=") { return builtins::lte; }
-        if (sym->name() == ">=") { return builtins::gte; }
-        if (sym->name() == "<")  { return builtins::lt;  }
-        if (sym->name() == ">")  { return builtins::gt;  }
+        if (sym->name() == "+")   { return builtins::add;     }
+        if (sym->name() == "-")   { return builtins::sub;     }
+        if (sym->name() == "*")   { return builtins::mul;     }
+        if (sym->name() == "/")   { return builtins::div;     }
+        if (sym->name() == "==")  { return builtins::eq;      }
+        if (sym->name() == "<=")  { return builtins::lte;     }
+        if (sym->name() == ">=")  { return builtins::gte;     }
+        if (sym->name() == "<")   { return builtins::lt;      }
+        if (sym->name() == ">")   { return builtins::gt;      }
+        if (sym->name() == "&")   { return builtins::bit_and; }
+        if (sym->name() == "|")   { return builtins::bit_or;  }
+        if (sym->name() == "bsl") { return builtins::bsl;     }
+        if (sym->name() == "bsr") { return builtins::bsr;     }
 
-        if (sym->name() == "identical?") { return identical; }
-        if (sym->name() == "satisfies?") { return satisfies; }
-        if (sym->name() == "type")       { return type;      }
+        if (sym->name() == "identical?") { return identical;  }
+        if (sym->name() == "satisfies?") { return satisfies;  }
+        if (sym->name() == "type")       { return type;       }
+        if (sym->name() == "aget")       { return aget;       }
+        if (sym->name() == "aset")       { return aset;       }
+        if (sym->name() == "alength")    { return alength;    }
+        if (sym->name() == "aclone")     { return aclone;     }
+        if (sym->name() == "acopy")      { return acopy;      }
+        if (sym->name() == "array")      { return array;      }
+        if (sym->name() == "make-array") { return make_array; }
 
         if (sym->name() == "print") { return print; }
         if (sym->name() == "read")  { return read;  }
@@ -367,10 +345,15 @@ namespace rev {
   void compile(const value_t::p& form, ctx_t& ctx, thread_t& t) {
 
     if (protocol_t::satisfies(protocol_t::alist, form)) {
-      auto lst = nativize(form);
+      auto lst = as<list_t>(nativize(form));
       if (!imu::is_empty(lst)) {
         auto expanded = macroexpand(lst, ctx);
-        emit::invoke(expanded, ctx, t);
+        if (auto lst = as_nt<list_t>(expanded)) {
+          emit::invoke(lst, ctx, t);
+        }
+        else {
+          compile(expanded, ctx, t);
+        }
       }
       else {
         t << instr::push << form;

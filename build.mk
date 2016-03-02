@@ -18,11 +18,12 @@ libvm.so_sources_$(d) += \
 	  values/string.cpp \
 	  values/fn.cpp \
 		values/type.cpp \
-		values/protocol.cpp
+		values/protocol.cpp \
+	  values/array.cpp
 
-libvm.so_precompiled_header_$(d) :=
-libvm.so_target_dir_$(d) := lib
-libvm.so_cxx_flags_$(d)  := -D_DEBUG -g -std=c++14 -I$(TOP)/lib/momentum/include $(FFI_CFLAGS)
-libvm.so_ld_flags_$(d)   := -shared -undefined dynamic_lookup $(FFI_LFLAGS)
+libvm.so_precompiled_$(d) :=
+libvm.so_target_dir_$(d)  := lib
+libvm.so_cxx_flags_$(d)   := -D_DEBUG -g -std=c++14 -I$(TOP)/lib/momentum/include $(FFI_CFLAGS)
+libvm.so_ld_flags_$(d)    := -shared -undefined dynamic_lookup $(FFI_LFLAGS)
 
 include $(TOP)/build/footer.mk

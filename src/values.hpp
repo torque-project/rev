@@ -271,11 +271,6 @@ namespace rev {
     */
   };
 
-  struct array_t : public value_base_t<array_t> {
-
-    // array of values
-  };
-
   struct ns_t : public value_base_t<ns_t> {
 
     typedef typename semantics<ns_t>::p p;
@@ -338,6 +333,41 @@ namespace rev {
     , value_t::p
     , value_base_t<map_tag_t>
     >;
+
+  struct array_t : public value_base_t<array_t> {
+
+    typedef typename semantics<array_t>::p p;
+
+    std::vector<value_t::p> _arr;
+
+    inline array_t(const array_t::p& cpy)
+      : _arr(cpy->_arr)
+    {}
+
+    inline array_t(const list_t::p& vs) {
+      _arr.reserve(imu::count(vs));
+      imu::for_each([&] (const value_t::p& v) {
+          _arr.push_back(v);
+        }, vs);
+    }
+
+    inline array_t(size_t s)
+      : _arr(s)
+    {}
+
+    inline size_t size() const {
+      return _arr.size();
+    }
+
+    inline value_t::p get(size_t n) {
+      return _arr[n];
+    }
+
+    inline array_t::p set(size_t n, const value_t::p& v) {
+      _arr[n] = v;
+      return this;
+    }
+  };
 
   struct protocol_t : public value_base_t<protocol_t> {
 

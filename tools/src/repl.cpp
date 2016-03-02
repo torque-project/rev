@@ -1,5 +1,6 @@
 #include "core.hpp"
 #include "reader.hpp"
+#include "adapter.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -14,7 +15,8 @@ void print(const rev::value_t::p& v) {
   if (!v) {
     std::cout << "nil";
   }
-  else if (auto lst = rev::as_nt<rev::list_t>(v)) {
+  else if (rev::protocol_t::satisfies(rev::protocol_t::alist, v)) {
+    auto lst = imu::nu<rev::rt_seq_t>(v);
     std::cout << "(";
     if (auto fst = imu::first(lst)) {
       print(*fst);
@@ -53,7 +55,7 @@ int main(int argc, char** argv) {
 
   read_history(".repl_history");
 
-  try {
+  //try {
 
     std::string sources = "";
     if (char* s = getenv("REV_SOURCE_PATH")) {
@@ -77,7 +79,7 @@ int main(int argc, char** argv) {
         continue;
       }
 
-      try {
+      //try {
         auto form = rev::read(line);
 
         // save line in history once we've successfully read it
@@ -89,18 +91,18 @@ int main(int argc, char** argv) {
         auto result = rev::eval(form);
         print(result);
         std::cout << std::endl;
-      }
+        /*}
       catch(rev::rdr::reader_exception& e) {
         std::cout << "Error while reading object: " << e.what() << std::endl;
       }
       catch(std::exception& e) {
         std::cerr << e.what() << std::endl;
         }
-
+        */
       free(line);
     }
-  }
+    /*}
   catch(std::exception& e) {
     std::cerr << "Can't boot VM: " << e.what() << std::endl;
-  }
+    }*/
 }

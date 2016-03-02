@@ -178,12 +178,13 @@ namespace rev {
   }
 
   ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym);
+  ctx_t::lookup_t resolve_nt(ctx_t& ctx, const sym_t::p& sym);
 
   /**
    * Convert a runtime sequence to a list_t
    *
    */
-  list_t::p nativize(const value_t::p& form);
+  value_t::p nativize(const value_t::p& form);
 
   /**
    * Commits a thread to the main code area. This is used to build

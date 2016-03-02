@@ -38,5 +38,10 @@ namespace rev {
       return imu::nu<rt_seq_t>(
         protocol_t::dispatch(protocol_t::next, 0, args, 1));
     }
+
+    static value_t::p seq(const value_t::p& v) {
+      void* args[] = {(void*) v};
+      return protocol_t::dispatch(protocol_t::seqable, 0, args, 1);
+    }
   };
 }

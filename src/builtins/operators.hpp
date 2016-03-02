@@ -95,5 +95,45 @@ namespace rev {
       auto r = (a->value == b->value ? sym_t::true_ : sym_t::false_);
       push(s, r);
     }
+
+    void bit_and(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "bit-and" << std::endl;
+#endif
+      auto b = as<int_t>(pop<value_t::p>(s));
+      auto a = as<int_t>(pop<value_t::p>(s));
+      auto r = imu::nu<int_t>(a->value & b->value);
+      push(s, r);
+    }
+
+    void bit_or(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "bit-or" << std::endl;
+#endif
+      auto b = as<int_t>(pop<value_t::p>(s));
+      auto a = as<int_t>(pop<value_t::p>(s));
+      auto r = imu::nu<int_t>(a->value | b->value);
+      push(s, r);
+    }
+
+    void bsl(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "bit-shift-left" << std::endl;
+#endif
+      auto b = as<int_t>(pop<value_t::p>(s));
+      auto a = as<int_t>(pop<value_t::p>(s));
+      auto r = imu::nu<int_t>(a->value << b->value);
+      push(s, r);
+    }
+
+    void bsr(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "bit-shift-right" << std::endl;
+#endif
+      auto b = as<int_t>(pop<value_t::p>(s));
+      auto a = as<int_t>(pop<value_t::p>(s));
+      auto r = imu::nu<int_t>(a->value >> b->value);
+      push(s, r);
+    }
   }
 }

@@ -211,7 +211,7 @@ value_t::p do_syntax_quote(const value_t::p& form) {
     }
   }
   else if (auto vec = as_nt<vector_t>(form)) {
-    list_t::factory(APPLY, VECTOR, imu::conj(expand_seq(seq(vec)), CONCAT));
+    return list_t::factory(APPLY, VECTOR, imu::conj(expand_seq(seq(vec)), CONCAT));
   }
   else if (auto map = as_nt<map_t>(form)) {
     // TODO: create map at runtime

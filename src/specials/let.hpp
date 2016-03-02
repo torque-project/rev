@@ -23,10 +23,19 @@ namespace rev {
           ctx,
           imu::partition<list_t::p>(2, bs));
       }
+
+      inline vector_t::p nativize(const value_t::p& v) {
+        if (auto vec = as_nt<vector_t>(v)) {
+          return vec;
+        }
+        auto s = rt_seq_t::seq(v);
+        return into(imu::nu<vector_t>(), imu::nu<rt_seq_t>(s));
+      }
     }
 
     void let_(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
-      auto locals = let::bindings(as<vector_t>(imu::first(forms)), ctx, t);
+      auto bindings = let::nativize(*imu::first(forms));
+      auto locals   = let::bindings(bindings, ctx, t);
       do_(imu::rest(forms), locals, t);
     }
   }
