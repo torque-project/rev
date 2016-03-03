@@ -215,7 +215,7 @@ namespace rev {
 
     void dispatch(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
-      std::cout << "dispatch" << std::endl;
+      std::cout << "dispatch: " << std::flush;
 #endif
       auto arity = *(ip++);
 
@@ -223,7 +223,9 @@ namespace rev {
       fp = (s - (arity + 1));
 
       auto f = as<fn_t>((value_t::p) *fp);
-
+#ifdef _TRACE
+      std::cout << f->name() << "(" << arity << ")" << std::endl;
+#endif
       // FIXME: it's quite ugly to obtain the jump address this way,
       // but for now i can't think of anything better. real memory
       // addresses can't be obtained while building the code, since
