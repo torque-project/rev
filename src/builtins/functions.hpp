@@ -73,7 +73,7 @@ namespace rev {
       auto off = as<int_t>(pop<value_t::p>(s));
       auto src = as<array_t>(pop<value_t::p>(s));
       auto dst = as<array_t>(pop<value_t::p>(s));
-
+      
       if (off->value + len->value > src->size()) {
         std::stringstream ss;
         ss
@@ -101,6 +101,9 @@ namespace rev {
         }
         else if (auto sym = as_nt<sym_t>(v)) {
           std::cout << sym->name() << std::endl;
+        }
+        else if (auto i = as_nt<int_t>(v)) {
+          std::cout << i->value << std::endl;
         }
         else {
           std::cout << v->type->name() << " " << v << std::endl;

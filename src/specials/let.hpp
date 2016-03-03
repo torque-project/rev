@@ -29,7 +29,7 @@ namespace rev {
           return vec;
         }
         auto s = rt_seq_t::seq(v);
-        return into(imu::nu<vector_t>(), imu::nu<rt_seq_t>(s));
+        return into(imu::nu<vector_t>(), s);
       }
     }
 

@@ -151,13 +151,14 @@ namespace rev {
     typedef typename std::vector<value_t::p> values_t;
 
     // this stores function pointer to call the fn directly
-    void*    _native[8];
-    int64_t  _code;
-    values_t _closed_overs;
-    uint8_t  _max_arity;
+    void*       _native[8];
+    int64_t     _code;
+    values_t    _closed_overs;
+    uint8_t     _max_arity;
+    value_t::p  _name;
 
-    fn_t(int64_t code, uint8_t max_arity)
-      : _code(code), _max_arity(max_arity)
+    fn_t(int64_t code, uint8_t max_arity, const value_t::p& name)
+      : _code(code), _max_arity(max_arity), _name(name)
     {}
 
     inline void enclose(const value_t::p& v) {
@@ -171,6 +172,8 @@ namespace rev {
     inline uint8_t max_arity() const {
       return _max_arity;
     }
+
+    inline std::string name() const;
 
     static inline uint64_t encode(uint64_t off, uint64_t locals) {
       return (off & 0x00000000ffffffff) | (locals << 32);
@@ -609,6 +612,10 @@ namespace rev {
   template<typename T>
   inline typename T::p var_t::deref() const {
     return as<T>(_top);
+  }
+
+  inline std::string fn_t::name() const {
+    return as<sym_t>(_name)->name();
   }
 }
 

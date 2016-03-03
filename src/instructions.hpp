@@ -196,10 +196,11 @@ namespace rev {
 #ifdef _TRACE
       std::cout << "closure" << std::endl;
 #endif
+      auto name      = (value_t::p) *ip++;
       auto address   = *ip++;
       auto enclosed  = *ip++;
       auto max_arity = (uint8_t) *ip++;
-      auto fn        = imu::nu<fn_t>(address, max_arity);
+      auto fn        = imu::nu<fn_t>(address, max_arity, name);
 
       std::list<value_t::p> tmp;
       for (auto i=0; i<enclosed; ++i) {
@@ -248,7 +249,8 @@ namespace rev {
       // TODO: emit list as IFn protocol call
       // TODO: emit list as native call
       else {
-        throw std::runtime_error("Arity mismatch when calling fn");
+        throw std::runtime_error(
+          "Arity mismatch when calling fn: " + f->name());
       }
     }
 

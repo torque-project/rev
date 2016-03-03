@@ -95,7 +95,7 @@ namespace rev {
       auto nenclosed = compile_all(fn_ctx.closed_overs(), ctx, t);
       auto is_macro  = imu::get(as<map_t>(name->meta), macro, sym_t::false_);
 
-      t << instr::closure << address << nenclosed << max_arity;
+      t << instr::closure << name << address << nenclosed << max_arity;
     }
   }
 }

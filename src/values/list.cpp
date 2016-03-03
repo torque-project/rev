@@ -2,6 +2,10 @@
 
 namespace rev {
 
+  value_t::p List_Coll_conj(value_t::p self, value_t::p x) {
+    return imu::conj(as<list_t>(self), x);
+  }
+
   value_t::p List_Seqable_seq(value_t::p self) {
     return self;
   }
@@ -18,6 +22,10 @@ namespace rev {
     return as<list_t>(self)->rest();
   }
 
+  struct type_t::impl_t List_coll[] = {
+    {0, (intptr_t) List_Coll_conj, 0, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t List_seqable[] = {
     {0, (intptr_t) List_Seqable_seq, 0, 0, 0, 0, 0, 0}
   };
@@ -33,6 +41,7 @@ namespace rev {
 
   struct type_t::ext_t List_methods[] = {
     {protocol_t::alist,   nullptr},
+    {protocol_t::coll,    List_coll},
     {protocol_t::seqable, List_seqable},
     {protocol_t::seq,     List_seq},
     {protocol_t::next,    List_next}
