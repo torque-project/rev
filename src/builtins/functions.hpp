@@ -48,6 +48,11 @@ namespace rev {
       push(s, a->set(n->value, v));
     }
 
+    void is_array(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto x = pop<value_t::p>(s);
+      push(s, is<array_t>(x) ? sym_t::true_ : sym_t::false_);
+    }
+
     void array(stack_t& s, stack_t& fp, int64_t* &ip) {
       auto vals = as<list_t>(pop<value_t::p>(s));
       push(s, imu::nu<array_t>(vals));
@@ -73,7 +78,7 @@ namespace rev {
       auto off = as<int_t>(pop<value_t::p>(s));
       auto src = as<array_t>(pop<value_t::p>(s));
       auto dst = as<array_t>(pop<value_t::p>(s));
-      
+
       if (off->value + len->value > src->size()) {
         std::stringstream ss;
         ss

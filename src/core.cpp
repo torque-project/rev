@@ -275,6 +275,7 @@ namespace rev {
         if (sym->name() == "aclone")     { return aclone;     }
         if (sym->name() == "acopy")      { return acopy;      }
         if (sym->name() == "array")      { return array;      }
+        if (sym->name() == "array?")     { return is_array;   }
         if (sym->name() == "make-array") { return make_array; }
 
         if (sym->name() == "print") { return print; }
