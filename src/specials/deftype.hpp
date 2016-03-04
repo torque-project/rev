@@ -115,9 +115,8 @@ namespace rev {
       auto name   = as<sym_t>(imu::first(forms));
       auto fields = as<vector_t>(imu::second(forms));
       auto impls  = build_meth_info(imu::drop(2, forms));
-
-      auto var  = imu::nu<var_t>();
-      auto type = imu::nu<type_value_t>(name->name(), fields);
+      auto var    = imu::nu<var_t>();
+      auto type   = imu::nu<type_value_t>(name->name(), fields);
 
       var->bind(type);
       intern(name, var);

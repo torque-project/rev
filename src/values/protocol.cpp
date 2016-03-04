@@ -28,7 +28,7 @@ namespace rev {
 
     auto self = (value_t::p) args[0];
     auto type = self->type;
-    
+
     if (auto sym = as_nt<sym_t>(self)) {
       std::cout << sym->name() << std::endl;
     }
@@ -37,7 +37,7 @@ namespace rev {
 
     for (int i=0; i<type->_num_ext; ++i) {
       if (type->_methods[i].id == id) {
-        f = (void (*)()) type->_methods[i].impls[m].arities[n];
+        f = reinterpret_cast<void (*)()>(type->_methods[i].impls[m].arities[n]);
         break;
       }
     }

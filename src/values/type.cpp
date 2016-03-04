@@ -29,7 +29,6 @@ namespace rev {
   };
 
   void call(ffi_cif *cif, void* ret, void* ptrs[], void* a) {
-
     auto pad     = (value_t**) ret;
     auto self    = *((value_t**) ptrs[0]);
     auto address = (type_t::native_handle_t::address_t*) a;
@@ -42,7 +41,6 @@ namespace rev {
       args[i] = *((value_t**) ptrs[i-1]);
     }
     args[0] = self;
-
     *pad = call(code, to, stack, args, cif->nargs+1);
   }
 

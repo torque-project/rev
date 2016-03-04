@@ -33,6 +33,7 @@ namespace rev {
       auto fns = imu::map<list_t::p>([&](const value_t::p& v) {
         auto lst  = as<list_t>(v);
         auto meth = as<sym_t>(imu::first(lst));
+        auto id   = n++;
         return list_t::factory(
           DEF, meth,
           imu::conj(
@@ -41,7 +42,7 @@ namespace rev {
               auto args = into(imu::nu<list_t>(), imu::seq(v));
               auto body = imu::conj(
                             imu::conj(
-                              imu::conj(args, imu::nu<int_t>(n++)),
+                              imu::conj(args, imu::nu<int_t>(id)),
                               name),
                             DISPATCH);
               return list_t::factory(v, body);
