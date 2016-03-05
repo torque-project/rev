@@ -184,7 +184,7 @@ namespace rev {
 
   value_t::p macroexpand1(const list_t::p& form, ctx_t& ctx) {
 
-    static sym_t::p is_macro = sym_t::intern("macro");
+    static auto is_macro = keyw_t::intern("macro");
 
     if (auto sym = as_nt<sym_t>(imu::first(form))) {
       if (auto lookup = resolve(ctx, sym)) {
@@ -480,7 +480,7 @@ namespace rev {
     auto arity = (int64_t) imu::count(args);
     auto code  = rt.code.data() + f->code();
     auto off   = *(code + arity);
-    
+
     if ((arity > f->max_arity()) && f->is_variadic()) {
 
       off = *(code + f->variadic_arity() + 1);

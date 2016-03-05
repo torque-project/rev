@@ -239,20 +239,37 @@ namespace rev {
     }
 
     static p intern(const std::string& s);
+
   };
 
-  struct sym_t : public value_base_t<sym_t> {
+  template<typename T>
+  struct sym_base_t : public value_base_t<T> {
 
-    typedef typename semantics<sym_t>::p  p;
-    typedef typename semantics<sym_t>::cp cp;
-
-    static sym_t::p true_;
-    static sym_t::p false_;
+    typedef typename value_t::semantics<T>::p p;
 
     std::string _name;
     std::string _ns;
 
-    sym_t(const std::string& fqn);
+    sym_base_t(const std::string& fqn) {
+      size_t i = fqn.find_first_of('/');
+      if (i > 0 && i != std::string::npos) {
+
+        std::string q = fqn.substr(0, i);
+        std::string n = fqn.substr(i + 1);
+
+        if (n.empty()) {
+          throw std::runtime_error(
+            "Name part of qualified symbol is empty: " +
+            fqn);
+        }
+
+        _name = n;
+        _ns   = q;
+      }
+      else {
+        _name = fqn;
+      };
+    }
 
     inline const std::string& ns() const {
       return _ns;
@@ -266,23 +283,37 @@ namespace rev {
       return !_ns.empty();
     }
 
-    static inline sym_t::p name(const sym_t::p& sym) {
-      return sym_t::intern(sym->_name);
+    static inline p name(const p& sym) {
+      return intern(sym->_name);
     }
 
-    static inline sym_t::p ns(const sym_t::p& sym) {
-      return sym_t::intern(sym->_ns);
+    static inline p ns(const p& sym) {
+      return intern(sym->_ns);
     }
 
     static p intern(const std::string& fqn);
-    /*
-    inline friend bool operator==(const p& l, const p& r) {
-      return (l == r) ||
-        ((l && r) &&
-         (l->_name == r->_name) &&
-         (l->_ns == r->_ns));
-    }
-    */
+  };
+
+  struct sym_t : public sym_base_t<sym_t> {
+
+    typedef typename semantics<sym_t>::p  p;
+    typedef typename semantics<sym_t>::cp cp;
+
+    static sym_t::p true_;
+    static sym_t::p false_;
+
+    inline sym_t(const std::string& fqn)
+      : sym_base_t<sym_t>(fqn)
+    {}
+  };
+
+  struct keyw_t : public sym_base_t<keyw_t> {
+
+    typedef typename semantics<keyw_t>::p p;
+
+    inline keyw_t(const std::string& fqn)
+      : sym_base_t<keyw_t>(fqn)
+    {}
   };
 
   struct ns_t : public value_base_t<ns_t> {
@@ -606,7 +637,7 @@ namespace rev {
     return nullptr;
   }
 
-  inline bool has_meta(const value_t::p& v, const sym_t::p& sym) {
+  inline bool has_meta(const value_t::p& v, const value_t::p& sym) {
     return v->meta && ((bool) imu::get(as<map_t>(v->meta), sym));
   }
 

@@ -49,6 +49,7 @@ result_t unquote(std::istream& in);
 result_t unbalanced_error(std::istream& in);
 result_t read_string(std::istream& in);
 result_t read_symbol(std::istream& in);
+result_t read_keyword(std::istream& in);
 result_t consult_table(std::istream& in);
 void     skip_white_space(std::istream& in);
 void     skip_comment(std::istream& in);
@@ -73,7 +74,7 @@ static macros_t macros(
    // before loading the keyword name space, we treat keywords as regular
    // symbols so that name(kw) returns a string that doesn't contain the
    // colon like name would on a keyword
-   {':',  read_symbol},
+   {':',  read_keyword},
    {'@',  wrap("deref")},
    {'\'', wrap("quote")},
    {'`',  syntax_quote},
@@ -160,7 +161,7 @@ result_t meta(std::istream& in) {
   auto form = read(in);
 
   // TODO: use keywords here once they are implemented
-  if (auto sym = as_nt<sym_t>(meta)) {
+  if (auto sym = as_nt<keyw_t>(meta)) {
     form->alter_meta([&](const value_t::p& v) {
       auto m = as<map_t>(v);
       return imu::assoc(m ? m : imu::nu<map_t>(), sym, sym_t::true_);
@@ -354,6 +355,13 @@ macro_t symbol_reader(const ctor_t& ctor) {
 result_t read_symbol(std::istream& in) {
   static const auto read = symbol_reader([](const std::string& s){
       return sym_t::intern(s);
+    });
+  return read(in);
+}
+
+result_t read_keyword(std::istream& in) {
+  static const auto read = symbol_reader([](const std::string& s){
+      return keyw_t::intern(s);
     });
   return read(in);
 }

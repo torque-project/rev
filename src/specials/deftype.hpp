@@ -82,8 +82,8 @@ namespace rev {
 #ifdef _DEBUG
               else {
                 std::cout
-                  << "Type doesn't implement arity: " << arity
-                  << " of method: "<< name->name()
+                  << "Type " << t->name() << " doesn't implement arity: "
+                  << arity << " of method: "<< name->name()
                   << std::endl;
               }
 #endif
@@ -99,9 +99,8 @@ namespace rev {
 #ifdef _DEBUG
           else {
             std::cout
-              << "Type doesn't implement method: "
-              << name->name()
-              << std::endl;
+              << "Type " << t->name() << " doesn't implement method: "
+              << name->name() << std::endl;
           }
 #endif
         }, proto->deref<protocol_t>()->meths());
