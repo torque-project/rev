@@ -22,6 +22,10 @@ namespace rev {
     return as<list_t>(self)->rest();
   }
 
+  value_t::p List_Counted_count(value_t::p self) {
+    return imu::nu<int_t>(as<list_t>(self)->count());
+  }
+
   struct type_t::impl_t List_coll[] = {
     {0, (intptr_t) List_Coll_conj, 0, 0, 0, 0, 0, 0}
   };
@@ -39,12 +43,17 @@ namespace rev {
     {0, (intptr_t) List_Next_next, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t List_counted[] = {
+    {0, (intptr_t) List_Counted_count, 0, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::ext_t List_methods[] = {
     {protocol_t::alist,   nullptr},
     {protocol_t::coll,    List_coll},
     {protocol_t::seqable, List_seqable},
     {protocol_t::seq,     List_seq},
-    {protocol_t::next,    List_next}
+    {protocol_t::next,    List_next},
+    {protocol_t::counted, List_counted}
   };
 
   static const uint64_t size = sizeof(List_methods) / sizeof(List_methods[0]);

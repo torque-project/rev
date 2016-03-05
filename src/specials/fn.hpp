@@ -8,7 +8,7 @@ namespace rev {
 
     namespace priv {
 
-      typedef std::tuple<bool, uint8_t, int64_t> meth_t;
+      typedef std::tuple<bool, int8_t, int64_t> meth_t;
     }
 
     priv::meth_t body(const list_t::p& meth, ctx_t& ctx, thread_t& t) {
@@ -78,24 +78,28 @@ namespace rev {
       }
 
       bool    variadic;
-      uint8_t arity;
-      uint8_t max_arity = 0;
+      int8_t  arity;
+      int8_t  max_arity      = -1;
+      int8_t  variadic_arity = -1;
       int64_t off;
 
       imu::for_each([&](const list_t::p& meth) {
         std::tie(variadic, arity, off) = body(meth, fn_ctx, thread);
 
         // TODO: check for duplicate variadic bodies
-        max_arity = std::max(arity, max_arity);
-        thread[variadic ? arity + 1 : arity] = off;
+        variadic_arity = variadic ? arity : variadic_arity;
+        max_arity      = variadic ? max_arity : std::max(arity, max_arity);
+        thread[variadic ? (variadic_arity+1) : arity] = off;
       },
       fnspec);
 
       auto address   = finalize_thread(thread);
       auto nenclosed = compile_all(fn_ctx.closed_overs(), ctx, t);
       auto is_macro  = imu::get(as<map_t>(name->meta), macro, sym_t::false_);
+      auto arities   = (int64_t) ((uint8_t) max_arity) |
+        (((uint8_t) variadic_arity) << 8);
 
-      t << instr::closure << name << address << nenclosed << max_arity;
+      t << instr::closure << name << address << nenclosed << arities;
     }
   }
 }

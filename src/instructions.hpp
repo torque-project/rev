@@ -199,7 +199,7 @@ namespace rev {
       auto name      = (value_t::p) *ip++;
       auto address   = *ip++;
       auto enclosed  = *ip++;
-      auto max_arity = (uint8_t) *ip++;
+      auto max_arity = (uint64_t) *ip++;
       auto fn        = imu::nu<fn_t>(address, max_arity, name);
 
       std::list<value_t::p> tmp;
@@ -232,18 +232,23 @@ namespace rev {
       // compiling may invalidate existing addresses at any time.
       ip = jump(f->_code);
 
-      if (arity > f->max_arity() && *(ip + f->max_arity() + 1) != -1) {
+      auto off = *(ip + arity);
 
-        auto rest = imu::nu<list_t>();
-        while(arity-- > f->max_arity()) {
-          rest = imu::conj(rest, stack::pop<value_t::p>(s));
+      if (arity > f->max_arity() && f->is_variadic()) {
+
+        off = *(ip + f->variadic_arity() + 1);
+        if (off != -1) {
+
+          auto rest = list_t::p();
+          while(arity-- > f->variadic_arity()) {
+            rest = imu::conj(rest, stack::pop<value_t::p>(s));
+          }
+          stack::push(s, rest);
+
+          arity = f->variadic_arity();
         }
-        stack::push(s, rest);
-
-        arity = f->max_arity() + 1;
       }
 
-      auto off = *(ip + arity);
       if (off != -1) {
         s  += fn_t::stack_space(off, arity);
         ip += fn_t::offset(off);

@@ -150,16 +150,19 @@ namespace rev {
     typedef typename semantics<fn_t>::p p;
     typedef typename std::vector<value_t::p> values_t;
 
-    // this stores function pointer to call the fn directly
-    void*       _native[8];
-    int64_t     _code;
-    values_t    _closed_overs;
-    uint8_t     _max_arity;
-    value_t::p  _name;
+    void*      _native[8];
+    int8_t     _max_arity;
+    int8_t     _variadic;
+    value_t::p _name;
+    int64_t    _code;
+    values_t   _closed_overs;
 
-    fn_t(int64_t code, uint8_t max_arity, const value_t::p& name)
-      : _code(code), _max_arity(max_arity), _name(name)
-    {}
+    fn_t(int64_t code, uint64_t arities, const value_t::p& name)
+      : _code(code), _name(name)
+    {
+      _max_arity = (int8_t) (arities & 0xff);
+      _variadic  = (int8_t) (arities >> 8);
+    }
 
     inline void enclose(const value_t::p& v) {
       _closed_overs.push_back(v);
@@ -169,8 +172,16 @@ namespace rev {
       return _code;
     }
 
-    inline uint8_t max_arity() const {
+    inline int8_t max_arity() const {
       return _max_arity;
+    }
+
+    inline int8_t variadic_arity() const {
+      return _variadic;
+    }
+
+    inline bool is_variadic() const {
+      return _variadic != -1;
     }
 
     inline std::string name() const;
@@ -376,6 +387,7 @@ namespace rev {
 
     enum id_t {
       str         = 0,
+      counted     = 2,
       coll        = 4,
       indexed     = 5,
       seq         = 6,

@@ -217,22 +217,22 @@ namespace rev {
 
     special_t find(sym_t::p& sym) {
       if (sym) {
-        if (sym->name() == "def")         { return specials::def;         }
-        if (sym->name() == "deftype")     { return specials::deftype;     }
-        if (sym->name() == "defprotocol") { return specials::defprotocol; }
-        if (sym->name() == "dispatch*")   { return specials::dispatch;    }
-        if (sym->name() == "if")          { return specials::if_;         }
-        if (sym->name() == "fn*")         { return specials::fn;          }
-        if (sym->name() == "do")          { return specials::do_;         }
-        if (sym->name() == "let*")        { return specials::let_;        }
-        if (sym->name() == "loop*")       { return specials::loop;        }
-        if (sym->name() == "recur")       { return specials::recur;       }
-        if (sym->name() == "quote")       { return specials::quote;       }
-        if (sym->name() == "new")         { return specials::new_;        }
-        if (sym->name() == ".")           { return specials::dot;         }
-        if (sym->name() == "set!")        { return specials::set;         }
-        if (sym->name() == "ns")          { return specials::ns;          }
-        if (sym->name() == "apply*")      { return specials::apply;       }
+        if (sym->name() == "def")         { return def;         }
+        if (sym->name() == "deftype")     { return deftype;     }
+        if (sym->name() == "defprotocol") { return defprotocol; }
+        if (sym->name() == "dispatch*")   { return dispatch;    }
+        if (sym->name() == "if")          { return if_;         }
+        if (sym->name() == "fn*")         { return fn;          }
+        if (sym->name() == "do")          { return do_;         }
+        if (sym->name() == "let*")        { return let_;        }
+        if (sym->name() == "loop*")       { return loop;        }
+        if (sym->name() == "recur")       { return recur;       }
+        if (sym->name() == "quote")       { return quote;       }
+        if (sym->name() == "new")         { return new_;        }
+        if (sym->name() == ".")           { return dot;         }
+        if (sym->name() == "set!")        { return set;         }
+        if (sym->name() == "ns")          { return ns;          }
+        if (sym->name() == "apply*")      { return apply;       }
       }
       return nullptr;
     }
@@ -252,20 +252,21 @@ namespace rev {
 
     instr_t find(const sym_t::p& sym) {
       if (sym && sym->ns() == BUILTIN_NS) {
-        if (sym->name() == "+")   { return builtins::add;     }
-        if (sym->name() == "-")   { return builtins::sub;     }
-        if (sym->name() == "*")   { return builtins::mul;     }
-        if (sym->name() == "/")   { return builtins::div;     }
-        if (sym->name() == "==")  { return builtins::eq;      }
-        if (sym->name() == "<=")  { return builtins::lte;     }
-        if (sym->name() == ">=")  { return builtins::gte;     }
-        if (sym->name() == "<")   { return builtins::lt;      }
-        if (sym->name() == ">")   { return builtins::gt;      }
-        if (sym->name() == "&")   { return builtins::bit_and; }
-        if (sym->name() == "|")   { return builtins::bit_or;  }
-        if (sym->name() == "bsl") { return builtins::bsl;     }
-        if (sym->name() == "bsr") { return builtins::bsr;     }
+        if (sym->name() == "+")   { return add;     }
+        if (sym->name() == "-")   { return sub;     }
+        if (sym->name() == "*")   { return mul;     }
+        if (sym->name() == "/")   { return div;     }
+        if (sym->name() == "==")  { return eq;      }
+        if (sym->name() == "<=")  { return lte;     }
+        if (sym->name() == ">=")  { return gte;     }
+        if (sym->name() == "<")   { return lt;      }
+        if (sym->name() == ">")   { return gt;      }
+        if (sym->name() == "&")   { return bit_and; }
+        if (sym->name() == "|")   { return bit_or;  }
+        if (sym->name() == "bsl") { return bsl;     }
+        if (sym->name() == "bsr") { return bsr;     }
 
+        if (sym->name() == "throw")      { return throw_;     }
         if (sym->name() == "identical?") { return identical;  }
         if (sym->name() == "satisfies?") { return satisfies;  }
         if (sym->name() == "type")       { return type;       }
@@ -476,31 +477,29 @@ namespace rev {
     },
     args);
 
-    auto arity = imu::count(args);
+    auto arity = (int64_t) imu::count(args);
     auto code  = rt.code.data() + f->code();
     auto off   = *(code + arity);
+    
+    if ((arity > f->max_arity()) && f->is_variadic()) {
 
-    if (arity > f->max_arity()) {
-
-      off = *(code + f->max_arity() + 1);
+      off = *(code + f->variadic_arity() + 1);
       if (off != -1) {
-        auto rest = imu::nu<list_t>();
-        while(arity-- > f->max_arity()) {
+        auto rest = list_t::p();
+        while(arity-- > f->variadic_arity()) {
           rest = imu::conj(rest, instr::stack::pop<value_t::p>(rt.sp));
         }
         instr::stack::push(rt.sp, rest);
-        arity = f->max_arity() + 1;
+        arity = f->variadic_arity();
       }
     }
 
     if (off != -1) {
       rt.sp += fn_t::stack_space(off, arity);
-      auto ret = run(f->code() + fn_t::offset(off), (rt.ip - rt.code.data()));
-      return ret;
+      return run(f->code() + fn_t::offset(off), (rt.ip - rt.code.data()));
       // verify_stack_integrity(sp);
     }
-
-    throw std::runtime_error("Arity mismatch when calling fn");
+    throw std::runtime_error("Arity mismatch when calling fn: " + f->name());
   }
 
   value_t::p eval(const value_t::p& form) {
