@@ -2,6 +2,7 @@
 
 // #include "rt/core.hpp"
 #include "values.hpp"
+#include "core.hpp"
 
 #include <functional>
 #include <iostream>
@@ -361,6 +362,9 @@ result_t read_symbol(std::istream& in) {
 
 result_t read_keyword(std::istream& in) {
   static const auto read = symbol_reader([](const std::string& s){
+      if (s.size() > 0 && s[0] == ':') {
+        return keyw_t::intern(ns()->name() + "/"  + s.substr(1));
+      }
       return keyw_t::intern(s);
     });
   return read(in);
