@@ -36,7 +36,7 @@ namespace rev {
   struct type_t::impl_t Vector_iindexed[] = {
     {0, 0,
      (intptr_t) Vector_IIndexed_nth2,
-     (intptr_t )Vector_IIndexed_nth3,
+     (intptr_t) Vector_IIndexed_nth3,
      0, 0, 0, 0}
   };
 

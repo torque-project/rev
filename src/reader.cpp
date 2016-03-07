@@ -130,7 +130,7 @@ macro_t list_reader(char until, const from_list_t& ctor) {
 template<typename T>
 macro_t balanced_form(char until) {
   return list_reader(until, [](const values_t& objs) {
-    return T::from_std(objs);
+      return T::from_std(objs);
   });
 }
 

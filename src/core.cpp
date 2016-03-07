@@ -386,8 +386,11 @@ namespace rev {
       t << instr::make_native<vector_t> << imu::count(v);
     }
     else if (auto m = as_nt<map_t>(form)) {
-      compile_all(v, ctx, t);
-      t << instr::make_native<map_t> << imu::count(v);
+      imu::for_each([&](const map_t::value_type& kv) {
+          compile(imu::first(kv), ctx, t);
+          compile(imu::second(kv), ctx, t);
+      }, m);
+      t << instr::make_native<map_t> << (imu::count(m) * 2);
     }
     // TODO: handle other types of forms
     else {
