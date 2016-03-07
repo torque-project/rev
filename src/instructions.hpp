@@ -21,6 +21,10 @@ namespace rev {
         return (T) *(--s);
       }
 
+      inline void pop(stack_t& s, int64_t x) {
+        s -= x;
+      }
+
       template<typename T = int64_t>
       inline T top(stack_t& s) {
         return (T) *(s - 1);
@@ -221,44 +225,66 @@ namespace rev {
       auto arity = *(ip++);
 
       // set frame pointer to beginning of function in stack
-      fp = (s - (arity + 1));
+      auto frame = fp = (s - (arity + 1));
+      auto val   = (value_t::p) *frame;
 
-      auto f = as<fn_t>((value_t::p) *fp);
+      if (auto f = as_nt<fn_t>(val)) {
 #if defined(_TRACE) || defined(_CALLS)
-      std::cout << f->name() << "(" << arity << ")" << std::endl;
+        std::cout << f->name() << "(" << arity << ")" << std::endl;
 #endif
-      // FIXME: it's quite ugly to obtain the jump address this way,
-      // but for now i can't think of anything better. real memory
-      // addresses can't be obtained while building the code, since
-      // compiling may invalidate existing addresses at any time.
-      ip = jump(f->_code);
+        // FIXME: it's quite ugly to obtain the jump address this way,
+        // but for now i can't think of anything better. real memory
+        // addresses can't be obtained while building the code, since
+        // compiling may invalidate existing addresses at any time.
+        ip = jump(f->_code);
 
-      auto off = *(ip + arity);
+        auto off = *(ip + arity);
 
-      if (arity > f->max_arity() && f->is_variadic()) {
+        if (arity > f->max_arity() && f->is_variadic()) {
 
-        off = *(ip + f->variadic_arity() + 1);
-        if (off != -1) {
+          off = *(ip + f->variadic_arity() + 1);
+          if (off != -1) {
 
-          auto rest = list_t::p();
-          while(arity-- > f->variadic_arity()) {
-            rest = imu::conj(rest, stack::pop<value_t::p>(s));
+            auto rest = list_t::p();
+            while(arity-- > f->variadic_arity()) {
+              rest = imu::conj(rest, stack::pop<value_t::p>(s));
+            }
+            stack::push(s, rest);
+
+            arity = f->variadic_arity();
           }
-          stack::push(s, rest);
+        }
 
-          arity = f->variadic_arity();
+        if (off != -1) {
+          fp  = frame;
+          s  += fn_t::stack_space(off, arity);
+          ip += fn_t::offset(off);
+        }
+        else {
+          throw std::runtime_error(
+            "Arity mismatch when calling fn: " + f->name());
         }
       }
-
-      if (off != -1) {
-        s  += fn_t::stack_space(off, arity);
-        ip += fn_t::offset(off);
-      }
-      // TODO: emit list as IFn protocol call
-      // TODO: emit list as native call
       else {
-        throw std::runtime_error(
-          "Arity mismatch when calling fn: " + f->name());
+#if defined(_TRACE) || defined(_CALLS)
+        std::cout
+          << val->type->name() << ".invoke" << "(" << arity << ")"
+          << std::endl;
+#endif
+        auto invoke_arity = arity + 1;
+        void* args[invoke_arity];
+        for(int i=arity; i>0; --i) {
+          args[i] = stack::pop<void*>(s);
+        }
+        args[0] = val;
+
+        // pop invoke target from stack as well as the stored frame and
+        // instruction pointers, since this is not a regular
+        // function call
+        stack::pop(s, 3);
+
+        auto res = protocol_t::dispatch(protocol_t::ifn, 0, args, invoke_arity);
+        stack::push(s, res);
       }
     }
 

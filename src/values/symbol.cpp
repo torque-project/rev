@@ -20,6 +20,17 @@ namespace rev {
     return imu::nu<string_t>(":" + kw->name());
   }
 
+  value_t::p Keyword_IFn_invoke2(value_t::p self, value_t::p m) {
+    std::cout << m->type->name() << std::endl;
+    void* args[] = {(void*) m, (void*) self};
+    return protocol_t::dispatch(protocol_t::lookup, 0, args, 2);
+  }
+
+  value_t::p Keyword_IFn_invoke3(value_t::p self, value_t::p m, value_t::p d ) {
+    void* args[] = {(void*) m, (void*) self, (void*) d};
+    return protocol_t::dispatch(protocol_t::lookup, 0, args, 3);
+  }
+
   struct type_t::impl_t Symbol_printable[] = {
     {0, (intptr_t) Symbol_Printable_str, 0, 0, 0, 0, 0, 0}
   };
@@ -37,12 +48,20 @@ namespace rev {
     {0, (intptr_t) Keyword_Printable_str, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Keyword_ifn[] = {
+    {0, 0,
+     (intptr_t) Keyword_IFn_invoke2,
+     (intptr_t) Keyword_IFn_invoke3,
+     0, 0, 0, 0}
+  };
+
   // struct type_t::impl_t Keyword_equiv[] = {
   //   {0, 0, (intptr_t) Keyword_Equiv_equiv, 0, 0, 0, 0, 0}
   // };
 
   struct type_t::ext_t Keyword_methods[] = {
-    {protocol_t::str,   Keyword_printable}//,
+    {protocol_t::str,   Keyword_printable},
+    {protocol_t::ifn,   Keyword_ifn}
     //{protocol_t::equiv, Keyword_equiv}
   };
 

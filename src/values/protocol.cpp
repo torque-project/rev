@@ -29,9 +29,6 @@ namespace rev {
     auto self = (value_t::p) args[0];
     auto type = self->type;
 
-    if (auto sym = as_nt<sym_t>(self)) {
-      std::cout << sym->name() << std::endl;
-    }
     void* ret    = nullptr;
     void  (*f)() = nullptr;
 
