@@ -2,6 +2,24 @@
 
 namespace rev {
 
+  value_t::p List_Printable_str(value_t::p self) {
+    auto lst = as<list_t>(self);
+    std::string s = "(";
+    if (auto fst = imu::first(lst)) {
+      s += str(*fst)->data();
+      imu::for_each([&](const value_t::p& v) {
+          auto str = rev::str(v);
+          s += " " + str->data();
+        }, imu::rest(lst));
+    }
+    s += ")";
+    return imu::nu<string_t>(s);
+  }
+
+  struct type_t::impl_t List_printable[] = {
+    {0, (intptr_t) List_Printable_str, 0, 0, 0, 0, 0, 0}
+  };
+
   value_t::p List_Coll_conj(value_t::p self, value_t::p x) {
     return imu::conj(as<list_t>(self), x);
   }
@@ -49,6 +67,7 @@ namespace rev {
 
   struct type_t::ext_t List_methods[] = {
     {protocol_t::alist,   nullptr},
+    {protocol_t::str,     List_printable},
     {protocol_t::coll,    List_coll},
     {protocol_t::seqable, List_seqable},
     {protocol_t::seq,     List_seq},

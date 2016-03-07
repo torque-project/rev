@@ -38,6 +38,7 @@ namespace rev {
         << "push: " << (int64_t*) *ip << " -> "
         << ((int64_t*) s) << std::endl;
 #endif
+      auto val = (value_t::p) *ip;
       stack::push(s, *ip++);
     }
 
@@ -174,7 +175,7 @@ namespace rev {
       std::cout << "field" << std::endl;
 #endif
       auto x   = stack::pop<rt_value_t::p>(s);
-      auto sym = as<sym_t>((value_t::p) *ip++);
+      auto sym = (sym_t::p) *ip++;
       stack::push(s, x->field(sym));
     }
 
@@ -214,7 +215,7 @@ namespace rev {
     }
 
     void dispatch(stack_t& s, stack_t& fp, int64_t* &ip) {
-#ifdef _TRACE
+#if defined(_TRACE) || defined(_CALLS)
       std::cout << "dispatch: " << std::flush;
 #endif
       auto arity = *(ip++);
@@ -223,7 +224,7 @@ namespace rev {
       fp = (s - (arity + 1));
 
       auto f = as<fn_t>((value_t::p) *fp);
-#ifdef _TRACE
+#if defined(_TRACE) || defined(_CALLS)
       std::cout << f->name() << "(" << arity << ")" << std::endl;
 #endif
       // FIXME: it's quite ugly to obtain the jump address this way,

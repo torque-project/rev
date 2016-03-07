@@ -4,8 +4,34 @@
 
 namespace rev {
 
+  value_t::p String_Printable_str(value_t::p self) {
+    return self;
+  }
+
+  value_t::p String_Serializable_binary(value_t::p self) {
+    auto s = as<string_t>(self);
+    return imu::nu<binary_t>(s->_data.c_str(), s->_data.size());
+  }
+
+  struct type_t::impl_t String_printable[] = {
+    {0, (intptr_t) String_Printable_str, 0, 0, 0, 0, 0, 0}
+  };
+
+  struct type_t::impl_t String_serializable[] = {
+    {0, (intptr_t) String_Serializable_binary, 0, 0, 0, 0, 0, 0}
+  };
+
+  struct type_t::ext_t String_methods[] = {
+    {protocol_t::istring,      nullptr},
+    {protocol_t::str,          String_printable},
+    {protocol_t::serializable, String_serializable},
+  };
+
+  static const uint64_t size =
+    sizeof(String_methods) / sizeof(String_methods[0]);
+
   template<>
-  type_t value_base_t<string_t>::prototype("String.0");
+  type_t value_base_t<string_t>::prototype("String.0", String_methods, size);
 
   string_t::string_t(const std::string& s)
     : _data(s), _width(1)

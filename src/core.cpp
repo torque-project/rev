@@ -270,6 +270,7 @@ namespace rev {
         if (sym->name() == "identical?") { return identical;  }
         if (sym->name() == "satisfies?") { return satisfies;  }
         if (sym->name() == "type")       { return type;       }
+        if (sym->name() == "binary")     { return binary;     }
         if (sym->name() == "aget")       { return aget;       }
         if (sym->name() == "aset")       { return aset;       }
         if (sym->name() == "alength")    { return alength;    }
@@ -541,9 +542,9 @@ namespace rev {
       throw std::runtime_error("Can't open source file: " + path);
     }
 
-    auto ns = as_nt<ns_t>(eval(rdr::read(file)));
-    if (!ns) {
-      throw std::runtime_error("Expecting file to start with ns declaration");
+    if (!is<ns_t>(eval(rdr::read(file)))) {
+      throw std::runtime_error(
+        "Expecting file to start with ns declaration: " + path);
     }
 
     while (file.good()) {

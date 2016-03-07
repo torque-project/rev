@@ -151,7 +151,13 @@ namespace rev {
       }
 
       compile_all(args, ctx, t);
-      t << instr::make << type;
+
+      if (type->name() == "String") {
+        t << instr::make_native<string_t> << 2;
+      }
+      else {
+        t << instr::make << type;
+      }
     }
 
     void dot(const list_t::p& forms, ctx_t& ctx, thread_t& t) {

@@ -11,42 +11,6 @@
 
 #include <stdlib.h>
 
-void print(const rev::value_t::p& v) {
-  if (!v) {
-    std::cout << "nil";
-  }
-  else if (rev::protocol_t::satisfies(rev::protocol_t::alist, v)) {
-    auto lst = imu::nu<rev::rt_seq_t>(v);
-    std::cout << "(";
-    if (auto fst = imu::first(lst)) {
-      print(*fst);
-      imu::for_each([&](const rev::value_t::p& v) {
-          std::cout << " "; print(v);
-        }, imu::rest(lst));
-    }
-    std::cout << ")";
-  }
-  else if (auto vec = rev::as_nt<rev::vector_t>(v)) {
-    std::cout << "[";
-    if (auto fst = imu::first(vec)) {
-      print(*fst);
-      imu::for_each([&](const rev::value_t::p& v) {
-          std::cout << " "; print(v);
-        }, imu::rest(vec));
-    }
-    std::cout << "]";
-  }
-  else if (auto sym = rev::as_nt<rev::sym_t>(v)) {
-    std::cout << sym->name();
-  }
-  else if (auto n = rev::as_nt<rev::int_t>(v)) {
-    std::cout << n->value;
-  }
-  else {
-    std::cout << "#{" << v->type->name() << ": " << v << "}";
-  }
-}
-
 int main(int argc, char** argv) {
 
 #ifdef _DEBUG
@@ -55,7 +19,7 @@ int main(int argc, char** argv) {
 
   read_history(".repl_history");
 
-  try {
+  //try {
 
     std::string sources = "";
     if (char* s = getenv("REV_SOURCE_PATH")) {
@@ -89,8 +53,7 @@ int main(int argc, char** argv) {
         write_history(".repl_history");
 
         auto result = rev::eval(form);
-        print(result);
-        std::cout << std::endl;
+        std::cout << str(result)->data() << std::endl;
       }
       catch(rev::rdr::reader_exception& e) {
         std::cout << "Error while reading object: " << e.what() << std::endl;
@@ -101,8 +64,8 @@ int main(int argc, char** argv) {
 
       free(line);
     }
-  }
+    /*}
   catch(std::exception& e) {
     std::cerr << "Can't boot VM: " << e.what() << std::endl;
-  }
+    }*/
 }

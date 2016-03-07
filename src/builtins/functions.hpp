@@ -27,6 +27,11 @@ namespace rev {
       push(s, x ? x->type() : type_value_t::p());
     }
 
+    void binary(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto vals = as<list_t>(pop<value_t::p>(s));
+      push(s, imu::nu<binary_t>(vals));
+    }
+
     void aget(stack_t& s, stack_t& fp, int64_t* &ip) {
       auto n = as<int_t>(pop<value_t::p>(s));
       auto a = as<array_t>(pop<value_t::p>(s));

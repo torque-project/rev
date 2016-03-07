@@ -5,7 +5,9 @@
 #include "momentum/vector.hpp"
 #include "momentum/array_map.hpp"
 
+#include <cassert>
 #include <memory>
+#include <sstream>
 
 namespace rev {
 
@@ -57,6 +59,13 @@ namespace rev {
       return _code;
     }
 
+    template<typename T>
+    inline std::string sig(const T* p) const {
+      std::stringstream ss;
+      ss << "#{" << _name << ": " << p << "}";
+      return ss.str();
+    }
+
     intptr_t prepare_closure(uint8_t arity, int64_t off);
     void     finalize(int64_t address);
   };
@@ -76,7 +85,8 @@ namespace rev {
       }
     };
 
-    typedef typename semantics<value_t>::p p;
+    typedef typename semantics<value_t>::p  p;
+    typedef typename semantics<value_t>::cp cp;
 
     // runtime type information for this value
     type_t::cp type;
@@ -94,6 +104,8 @@ namespace rev {
     inline void alter_meta(const F& f) {
       set_meta(f(meta));
     }
+
+    inline p str() const;
 
     /**
      * Calling these will do a lookup in the values protocol
@@ -219,11 +231,48 @@ namespace rev {
 
   struct binary_t : public value_base_t<binary_t> {
 
+    typedef typename semantics<binary_t>::p p;
+
     uint64_t    _size;
     const char* _data;
+
+    inline binary_t() {
+    }
+
+    inline binary_t(const char* data, uint64_t size) {
+      _size = size;
+      _data = data;
+    }
+
+    template<typename S>
+    inline binary_t(const S& bins) {
+      _size = imu::reduce([](size_t size, const p& bin) {
+          return size + bin->size();
+        }, 0, bins);
+      _data = new char[_size];
+
+      imu::reduce([&](size_t pos, const p& bin) {
+        memcpy(const_cast<char*>(_data) + pos, bin->data(), bin->size());
+          return pos + bin->size();
+        }, 0, bins);
+    }
+
+    ~binary_t() {
+      delete[] _data;
+    }
+
+    inline uint64_t size() const {
+      return _size;
+    }
+
+    inline const char* data() const {
+      return _data;
+    }
   };
 
   struct string_t : public value_base_t<string_t> {
+
+    typedef typename semantics<string_t>::p p;
 
     std::string _data;
     int64_t     _width;
@@ -238,8 +287,21 @@ namespace rev {
       return _data;
     }
 
+    value_t::p field(const value_t::p& sym) const;
+
     static p intern(const std::string& s);
 
+    template<typename T>
+    static p from_std(const T& coll) {
+      assert(coll.size() == 2);
+
+      std::string s;
+
+      auto bin = static_cast<binary_t::p>(coll.front());
+      s.append(bin->data(), bin->size());
+
+      return imu::nu<string_t>(s);
+    }
   };
 
   template<typename T>
@@ -417,25 +479,26 @@ namespace rev {
   struct protocol_t : public value_base_t<protocol_t> {
 
     enum id_t {
-      str         = 0,
-      counted     = 2,
-      coll        = 4,
-      indexed     = 5,
-      seq         = 6,
-      next        = 7,
-      lookup      = 8,
-      associative = 9,
-      imap        = 10,
-      mapentry    = 11,
-      ivector     = 14,
-      meta        = 17,
-      withmeta    = 18,
-      equiv       = 21,
-      seqable     = 23,
-      named       = 38,
-      alist       = 42,
-      ifn         = 43,
-      istring     = 44
+      str          = 0,
+      counted      = 2,
+      coll         = 4,
+      indexed      = 5,
+      seq          = 6,
+      next         = 7,
+      lookup       = 8,
+      associative  = 9,
+      imap         = 10,
+      mapentry     = 11,
+      ivector      = 14,
+      meta         = 17,
+      withmeta     = 18,
+      equiv        = 21,
+      seqable      = 23,
+      named        = 38,
+      alist        = 42,
+      ifn          = 43,
+      istring      = 44,
+      serializable = 45
     };
 
     typedef typename semantics<protocol_t>::p p;
@@ -481,7 +544,7 @@ namespace rev {
       return ret;
     }
 
-    static inline bool satisfies(id_t id, const value_t::p& v) {
+    static inline bool satisfies(id_t id, const value_t::cp v) {
       return (v && satisfied_by(id, v->type));
     }
   };
@@ -505,6 +568,10 @@ namespace rev {
         [](const map_t::p& m, const value_t::p& field) {
           return imu::assoc(m, field, field);
         }, _fields, fields);
+    }
+
+    inline std::string name() const {
+      return _type.name();
     }
 
     inline map_t::p fields() const {
@@ -607,7 +674,6 @@ namespace rev {
     return nullptr;
   }
 
-
   template<typename T>
   inline T* as(const value_t::p& x) {
 
@@ -641,17 +707,21 @@ namespace rev {
     return v->meta && ((bool) imu::get(as<map_t>(v->meta), sym));
   }
 
-  /*
-  inline value_t::p value_t::first() const {
-    void* args[] = {(void*) this};
-    return protocol_t::dispatch(protocol_t::seqable, 0, args, 1);
+  inline string_t::p str(const value_t::p v) {
+    if (v) {
+      return as<string_t>(v->str());
+    }
+    return string_t::intern("nil");
   }
 
-  inline value_t::p value_t::rest() const {
-    void* args[] = {(void*) this};
-    return protocol_t::dispatch(protocol_t::next, 0, args, 1);
+  inline value_t::p value_t::str() const {
+    if (protocol_t::satisfies(rev::protocol_t::str, this)) {
+      void* args[] = {(void*) this};
+      return as<string_t>(protocol_t::dispatch(protocol_t::str, 0, args, 1));
+    }
+    return imu::nu<string_t>(type->sig(this));
   }
-  */
+
   template<typename T>
   inline typename T::p var_t::deref() const {
     return as<T>(_top);

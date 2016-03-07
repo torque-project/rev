@@ -15,6 +15,7 @@ libvm.so_sources_$(d) += \
 	  values/map.cpp \
 		values/var.cpp \
     values/ns.cpp \
+	  values/binary.cpp \
 	  values/string.cpp \
 	  values/fn.cpp \
 		values/type.cpp \
