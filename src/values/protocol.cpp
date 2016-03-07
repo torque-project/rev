@@ -49,7 +49,8 @@ namespace rev {
     }
     else {
       std::stringstream ss;
-      ss << "Method not implemented: " << id << " " << m;
+      ss << "Method not implemented: " << id << " " << m << " in type: "
+         << type->name();
       throw std::runtime_error(ss.str());
     }
   }

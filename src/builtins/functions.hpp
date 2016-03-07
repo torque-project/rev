@@ -27,6 +27,11 @@ namespace rev {
       push(s, x ? x->type() : type_value_t::p());
     }
 
+    void is_integer(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto x = pop<value_t::p>(s);
+      push(s, is<int_t>(x) ? sym_t::true_ : sym_t::false_);
+    }
+
     void binary(stack_t& s, stack_t& fp, int64_t* &ip) {
       auto vals = as<list_t>(pop<value_t::p>(s));
       push(s, imu::nu<binary_t>(vals));

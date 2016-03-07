@@ -270,6 +270,7 @@ namespace rev {
         if (sym->name() == "identical?") { return identical;  }
         if (sym->name() == "satisfies?") { return satisfies;  }
         if (sym->name() == "type")       { return type;       }
+        if (sym->name() == "integer?")   { return is_integer; }
         if (sym->name() == "binary")     { return binary;     }
         if (sym->name() == "aget")       { return aget;       }
         if (sym->name() == "aset")       { return aset;       }
