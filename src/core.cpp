@@ -13,6 +13,7 @@
 #include "specials/do.hpp"
 #include "specials/fn.hpp"
 #include "specials/let.hpp"
+#include "specials/binding.hpp"
 #include "specials/loop.hpp"
 #include "specials/quote.hpp"
 #include "specials/ns.hpp"
@@ -44,8 +45,8 @@ namespace rev {
     stack_t   fp;
     int64_t*  ip;
 
-    ns_t::p   in_ns;
-    dvar_t::p ns;
+    ns_t::p  in_ns;
+    var_t::p ns;
 
     // static symbols
     sym_t::p  _ns_;
@@ -109,7 +110,7 @@ namespace rev {
 
   bool is_special(const sym_t::p& sym) {
     static std::set<const std::string> specials = {
-      "def", "do", "if", "let*", "loop*", "quote", "ns", "fn*",
+      "def", "do", "if", "let*", "binding*", "loop*", "quote", "ns", "fn*",
       "deftype", "defprotocol", "dispatch*", "recur", "new", "set!",
       ".", "apply*"
     };
@@ -225,6 +226,7 @@ namespace rev {
         if (sym->name() == "fn*")         { return fn;          }
         if (sym->name() == "do")          { return do_;         }
         if (sym->name() == "let*")        { return let_;        }
+        if (sym->name() == "binding*")    { return binding;     }
         if (sym->name() == "loop*")       { return loop;        }
         if (sym->name() == "recur")       { return recur;       }
         if (sym->name() == "quote")       { return quote;       }
@@ -574,8 +576,9 @@ namespace rev {
 
   void boot(uint64_t stack, const std::string& s) {
     rt.fp = rt.sp = rt.stack = new int64_t[stack];
-    rt.in_ns   = imu::nu<ns_t>("user");
-    rt.ns      = imu::nu<dvar_t>(); rt.ns->bind(rt.in_ns);
+
+    ns(sym_t::intern("user"), imu::nu<ns_t>("user"));
+    rt.ns      = imu::nu<var_t>(); rt.ns->bind(rt.in_ns);
     rt.sources = s.empty() ? "" : s + "/";
 
     if (!rt.sources.empty()) {

@@ -136,25 +136,31 @@ namespace rev {
 
     typedef typename semantics<var_t>::p p;
 
-    value_t::p _top;
+    std::vector<value_t::p> _stack;
+
+    inline var_t()
+      : _stack(1)
+    {}
 
     inline void bind(const value_t::p& v) {
-      _top = v;
+      _stack[0] = v;
     }
 
     inline value_t::p deref() const {
-      return _top;
+      return _stack.back();
     }
 
     template<typename T>
     inline typename T::p deref() const;
-  };
 
-  struct dvar_t : public var_t {
+    inline void push(const value_t::p& v) {
+      _stack.push_back(v);
+    }
 
-    typedef typename semantics<dvar_t>::p p;
-
-    // binding stack
+    inline void pop() {
+      assert((_stack.size()) > 1 && "Push without pop");
+      _stack.pop_back();
+    }
   };
 
   struct fn_t : public value_base_t<fn_t> {
@@ -727,7 +733,7 @@ namespace rev {
 
   template<typename T>
   inline typename T::p var_t::deref() const {
-    return as<T>(_top);
+    return as<T>(_stack.back());
   }
 
   inline std::string fn_t::name() const {

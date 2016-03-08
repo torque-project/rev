@@ -111,6 +111,24 @@ namespace rev {
       var->bind(val);
     }
 
+    void push_bind(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "push_bind: " << *ip << std::endl;
+#endif
+      imu::for_each([&](const var_t::p& var) {
+          var->push(stack::pop<value_t::p>(s));
+        }, (list_t::p) *ip++);
+    }
+
+    void pop_bind(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "pop_bind: " << *ip << std::endl;
+#endif
+      imu::for_each([&](const var_t::p& var) {
+          var->pop();
+        }, (list_t::p) *ip++);
+    }
+
     void make(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "make" << std::endl;
