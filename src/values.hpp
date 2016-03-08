@@ -4,6 +4,7 @@
 #include "momentum/list.hpp"
 #include "momentum/vector.hpp"
 #include "momentum/array_map.hpp"
+#include "momentum/hash_set.hpp"
 
 #include <cassert>
 #include <memory>
@@ -433,6 +434,7 @@ namespace rev {
   struct list_tag_t {};
   struct vector_tag_t {};
   struct map_tag_t {};
+  struct set_tag_t {};
 
   using list_t = imu::ty::basic_list<
       value_t::p
@@ -448,6 +450,11 @@ namespace rev {
       value_t::p
     , value_t::p
     , value_base_t<map_tag_t>
+    >;
+
+  using set_t = imu::ty::basic_hash_set<
+      value_t::p
+    , value_base_t<set_tag_t>
     >;
 
   struct array_t : public value_base_t<array_t> {
@@ -645,6 +652,10 @@ namespace rev {
   // c++ ADL requires that these functions be defined in the same
   // namespace as their type
   inline decltype(auto) seq(const map_t::p& m) {
+    return imu::seq(m);
+  }
+
+  inline decltype(auto) set(const set_t::p& m) {
     return imu::seq(m);
   }
 

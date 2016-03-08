@@ -35,7 +35,7 @@ namespace rev {
   }
 
   value_t::p Map_Lookup_lookup3(value_t::p s, value_t::p k, value_t::p d) {
-    return imu::get(as<map_t>(s), as<map_t>(k), d);
+    return imu::get(as<map_t>(s), k, d);
   }
 
   value_t::p Map_WithMeta_with_meta(value_t::p self, value_t::p meta) {

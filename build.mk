@@ -13,6 +13,7 @@ libvm.so_sources_$(d) += \
 		values/symbol.cpp \
     values/vector.cpp \
 	  values/map.cpp \
+    values/set.cpp \
 		values/var.cpp \
     values/ns.cpp \
 	  values/binary.cpp \

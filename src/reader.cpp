@@ -66,7 +66,8 @@ static sym_t::p HMAP    = sym_t::intern("hash-map");
 static sym_t::p CONCAT  = sym_t::intern("concat");
 
 static macros_t extensions(
-  {{'_', drop}});
+  {{'{', balanced_form<set_t>('}')},
+   {'_', drop}});
 
 static macros_t macros(
   {{'(',  balanced_form<list_t>(')')},
