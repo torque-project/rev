@@ -101,6 +101,15 @@ namespace rev {
         state_t::p(new state_t()));
     }
 
+    inline ctx_t closure(const sym_t::p& name) const {
+      return ctx_t(
+        *this,
+        imu::merge(_env, _locals),
+        imu::nu<map_t>(name, imu::nu<int_t>(-1)),
+        imu::nu<map_t>(),
+        state_t::p(new state_t()));
+    }
+
     inline ctx_t body() {
       return ctx_t(
         *this,
@@ -111,12 +120,17 @@ namespace rev {
     }
 
     inline ctx_t local(const sym_t::p& sym) {
-      return ctx_t(
-        *this,
-        _env,
-        imu::assoc(_locals, sym, imu::nu<int_t>(alloca())),
-        _closed_overs,
-        _state);
+      /*if (imu::get(_locals, sym)) {
+        return *this;
+      }
+      else {*/
+        return ctx_t(
+          *this,
+          _env,
+          imu::assoc(_locals, sym, imu::nu<int_t>(alloca())),
+          _closed_overs,
+          _state);
+        //}
     }
 
     inline ctx_t recur(int64_t rp, const list_t::p& rs) const {

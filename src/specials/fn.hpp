@@ -62,14 +62,15 @@ namespace rev {
       using namespace priv;
       static const auto macro = sym_t::intern("macro");
 
-      thread_t thread(8, -1);
-      ctx_t    fn_ctx = ctx.closure();
+      thread_t thread(8, -1);;
 
       auto name   = as_nt<sym_t>(*imu::first(forms));
       auto fnspec = imu::rest(forms);
 
+      ctx_t fn_ctx = name ? ctx.closure(name) : ctx.closure();
+
       if (!name) {
-        name   = sym_t::intern("lamba");
+        name   = sym_t::intern("anon");
         fnspec = forms;
       }
 

@@ -15,7 +15,7 @@ namespace rev {
             auto val   = imu::second(b);
             auto local = ctx.local(sym);
 
-            compile(*val, local, t);
+            compile(*val, ctx, t);
             t << instr::assign << as<int_t>(local[sym])->value;
 
             return local;

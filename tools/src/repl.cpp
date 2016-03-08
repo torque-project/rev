@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
         continue;
       }
 
-      try {
+      //try {
         auto form = rev::read(line);
 
         // save line in history once we've successfully read it
@@ -54,14 +54,17 @@ int main(int argc, char** argv) {
 
         auto result = rev::eval(form);
         std::cout << str(result)->data() << std::endl;
-      }
+        /*}
       catch(rev::rdr::reader_exception& e) {
         std::cout << "Error while reading object: " << e.what() << std::endl;
       }
       catch(std::exception& e) {
         std::cerr << e.what() << std::endl;
+#ifdef _DEBUG
+        throw;
+#endif
       }
-
+        */
       free(line);
     }
     /*}
