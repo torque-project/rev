@@ -155,6 +155,9 @@ namespace rev {
       if (type->name() == "String") {
         t << instr::make_native<string_t> << 2;
       }
+      else if (type->name() == "Symbol") {
+        t << instr::make_native<sym_t> << 4;
+      }
       else {
         t << instr::make << type;
       }

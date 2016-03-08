@@ -292,12 +292,9 @@ namespace rev {
     static p intern(const std::string& s);
 
     template<typename T>
-    static p from_std(const T& coll) {
-      assert(coll.size() == 2);
-
+    static p from_std(const T& b, const T& e) {
       std::string s;
-
-      auto bin = static_cast<binary_t::p>(coll.front());
+      auto bin = static_cast<binary_t::p>(*b);
       s.append(bin->data(), bin->size());
 
       return imu::nu<string_t>(s);
@@ -367,6 +364,12 @@ namespace rev {
     inline sym_t(const std::string& fqn)
       : sym_base_t<sym_t>(fqn)
     {}
+
+    template<typename T>
+    static p from_std(const T& b, const T& e) {
+      auto fqn = (string_t::p) *(b + 3);
+      return sym_t::intern(fqn->data());
+    }
   };
 
   struct keyw_t : public sym_base_t<keyw_t> {

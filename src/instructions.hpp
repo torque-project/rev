@@ -135,14 +135,12 @@ namespace rev {
       std::cout << "make" << std::endl;
 #endif
       auto n = *(ip++);
+      auto b = (value_t**) (s - n);
+      auto e = (value_t**) s;
+      auto r = T::from_std(b, e);
 
-      std::list<value_t::p> tmp;
-      for (auto i=0; i<n; ++i) {
-        auto val = stack::pop<value_t::p>(s);
-        tmp.push_front(val);
-      }
-
-      stack::push(s, T::from_std(tmp));
+      stack::pop(s, n);
+      stack::push(s, r);
     }
 
     void set(stack_t& s, stack_t& fp, int64_t* &ip) {

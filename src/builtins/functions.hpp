@@ -116,18 +116,7 @@ namespace rev {
         std::cout << "nil" << std::endl;
       }
       else {
-        if (auto str = as_nt<string_t>(v)) {
-          std::cout << str->_data << std::endl;
-        }
-        else if (auto sym = as_nt<sym_t>(v)) {
-          std::cout << sym->name() << std::endl;
-        }
-        else if (auto i = as_nt<int_t>(v)) {
-          std::cout << i->value << std::endl;
-        }
-        else {
-          std::cout << v->type->name() << " " << v << std::endl;
-        }
+        std::cout << str(v)->data() << std::endl;
       }
       push(s, nullptr);
     }
