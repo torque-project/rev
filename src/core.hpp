@@ -21,6 +21,8 @@ namespace rev {
   ns_t::p load_ns(const std::string& name);
   ns_t::p load_ns(const sym_t::p& name);
 
+  void load_file(const std::string& source);
+
   void intern(const sym_t::p& sym, const var_t::p& var);
 
   template<typename T>

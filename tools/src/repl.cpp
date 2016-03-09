@@ -9,6 +9,7 @@
 #include <readline/history.h>
 
 #include <stdlib.h>
+#include <unistd.h>
 
 int main(int argc, char** argv) {
 
@@ -27,6 +28,11 @@ int main(int argc, char** argv) {
     // TODO: make source path configurable via parameter too
 
     rev::boot(1 << 16, sources);
+
+    // load script if provided
+    if (argc > 1) {
+      rev::load_file(argv[1]);
+    }
 
     char* line = NULL;
     for(;;) {

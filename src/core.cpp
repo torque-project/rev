@@ -543,15 +543,7 @@ namespace rev {
 
     ns_t::p cur = rt.in_ns;
 
-    std::fstream file;
-    for (auto& path : rt.sources) {
-      std::cout << "trying: " << (path + '/' + source) << std::endl;
-      file.open(path + '/' + source);
-      if (file.good()) {
-        break;
-      }
-    }
-
+    std::fstream file(source);
     if (!file.good()) {
       throw std::runtime_error("Can't open source file: " + source);
     }
@@ -573,9 +565,17 @@ namespace rev {
   }
 
   ns_t::p load_ns(const sym_t::p& name) {
-    auto path = replace(name->name(), '.', '/');
-    load_file(path + ".trq");
-    return as<ns_t>(imu::get(&rt.namespaces, name));
+
+    auto file = replace(name->name(), '.', '/') + ".trq";
+
+    for (auto& path : rt.sources) {
+      auto source = path + '/' + file;
+      if (access(source.c_str(), F_OK) != -1) {
+        load_file(source);
+        return as<ns_t>(imu::get(&rt.namespaces, name));
+      }
+    }
+    return nullptr;
   }
 
   ns_t::p load_ns(const std::string& name) {
@@ -592,7 +592,9 @@ namespace rev {
     while (ss.good()) {
       std::string path;
       std::getline(ss, path, ':');
-      rt.sources.push_back(path);
+      if (!path.empty()) {
+        rt.sources.push_back(path);
+      }
     }
 
     if (!rt.sources.empty()) {
