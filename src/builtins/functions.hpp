@@ -27,6 +27,11 @@ namespace rev {
       push(s, x ? x->type() : type_value_t::p());
     }
 
+    void is_type(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto x = pop<value_t::p>(s);
+      push(s, is<type_value_t>(x) ? sym_t::true_ : sym_t::false_);
+    }
+
     void is_integer(stack_t& s, stack_t& fp, int64_t* &ip) {
       auto x = pop<value_t::p>(s);
       push(s, is<int_t>(x) ? sym_t::true_ : sym_t::false_);
