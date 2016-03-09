@@ -1,6 +1,7 @@
 #include "core.hpp"
 #include "reader.hpp"
 
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
@@ -27,12 +28,22 @@ int main(int argc, char** argv) {
     }
     // TODO: make source path configurable via parameter too
 
+#ifdef _DEBUG
+    auto s = std::chrono::system_clock::now();
+#endif
+
     rev::boot(1 << 16, sources);
 
     // load script if provided
     if (argc > 1) {
       rev::load_file(argv[1]);
     }
+
+#ifdef _DEBUG
+    auto e = std::chrono::system_clock::now();
+    auto t = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count();
+    std::cout << "Compiled sources in " << t << " ms" << std::endl;
+#endif
 
     char* line = NULL;
     for(;;) {
