@@ -8,7 +8,7 @@ namespace rev {
   namespace specials {
 
     void loop(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
-      auto bindings = as<vector_t>(imu::first(forms));
+      auto bindings = let::nativize(*imu::first(forms));
       auto locals   = let::bindings(bindings, ctx, t);
       auto point    = (int64_t) t.size();
       auto recur    = locals.recur(point, imu::take_nth<list_t::p>(2, bindings));

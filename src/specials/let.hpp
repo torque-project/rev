@@ -25,9 +25,7 @@ namespace rev {
       }
 
       inline vector_t::p nativize(const value_t::p& v) {
-        if (auto vec = as_nt<vector_t>(v)) {
-          return vec;
-        }
+        if (auto vec = as_nt<vector_t>(v)) { return vec; }
         auto s = rt_seq_t::seq(v);
         return into(imu::nu<vector_t>(), s);
       }
