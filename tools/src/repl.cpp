@@ -1,6 +1,5 @@
 #include "core.hpp"
 #include "reader.hpp"
-#include "adapter.hpp"
 
 #include <iostream>
 #include <stdexcept>

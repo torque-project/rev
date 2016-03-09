@@ -29,7 +29,7 @@ namespace rev {
   typedef void (*special_t)(const list_t::p&, ctx_t&, thread_t&);
   typedef void (*instr_t)(stack_t&, stack_t&, int64_t*&);
 
-  static const char* BUILTIN_NS      = "torque.core.builtin";
+  static const char*   BUILTIN_NS    = "torque.core.builtin";
   static const int64_t MAX_FN_LENGTH = 100000;
 
   /**
@@ -51,7 +51,7 @@ namespace rev {
     // static symbols
     sym_t::p  _ns_;
 
-    std::string sources;
+    std::vector<std::string> sources;
 
   } rt;
 
@@ -539,18 +539,26 @@ namespace rev {
     return rdr::read(s);
   }
 
-  void load_file(const std::string& path) {
+  void load_file(const std::string& source) {
 
     ns_t::p cur = rt.in_ns;
 
-    std::fstream file(path);
-    if (!file) {
-      throw std::runtime_error("Can't open source file: " + path);
+    std::fstream file;
+    for (auto& path : rt.sources) {
+      std::cout << "trying: " << (path + '/' + source) << std::endl;
+      file.open(path + '/' + source);
+      if (file.good()) {
+        break;
+      }
+    }
+
+    if (!file.good()) {
+      throw std::runtime_error("Can't open source file: " + source);
     }
 
     if (!is<ns_t>(eval(rdr::read(file)))) {
       throw std::runtime_error(
-        "Expecting file to start with ns declaration: " + path);
+        "Expecting file to start with ns declaration: " + source);
     }
 
     while (file.good()) {
@@ -566,7 +574,7 @@ namespace rev {
 
   ns_t::p load_ns(const sym_t::p& name) {
     auto path = replace(name->name(), '.', '/');
-    load_file(rt.sources + path + ".trq");
+    load_file(path + ".trq");
     return as<ns_t>(imu::get(&rt.namespaces, name));
   }
 
@@ -578,8 +586,14 @@ namespace rev {
     rt.fp = rt.sp = rt.stack = new int64_t[stack];
 
     ns(sym_t::intern("user"), imu::nu<ns_t>("user"));
-    rt.ns      = imu::nu<var_t>(); rt.ns->bind(rt.in_ns);
-    rt.sources = s.empty() ? "" : s + "/";
+    rt.ns = imu::nu<var_t>(); rt.ns->bind(rt.in_ns);
+
+    std::stringstream ss(s);
+    while (ss.good()) {
+      std::string path;
+      std::getline(ss, path, ':');
+      rt.sources.push_back(path);
+    }
 
     if (!rt.sources.empty()) {
       // load core name space and make it visible in user name space
