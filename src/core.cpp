@@ -160,11 +160,14 @@ namespace rev {
   }
 
   ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym) {
-    if ((sym->has_ns() && sym->ns() == BUILTIN_NS) || is_special(sym)) {
+    if (sym->has_ns() && sym->ns() == BUILTIN_NS) {
       return {ctx_t::scope_t::global, nullptr};
     }
     if(auto resolved = resolve_nt(ctx, sym)) {
       return resolved;
+    }
+    if (is_special(sym)) {
+      return {ctx_t::scope_t::global, nullptr};
     }
     throw std::runtime_error(sym->name() + " is not bound");
   }
