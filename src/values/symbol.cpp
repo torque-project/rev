@@ -12,6 +12,13 @@ namespace rev {
     return imu::nu<string_t>(sym->name());
   }
 
+  value_t::p Symbol_WithMeta_withmeta(value_t::p self, value_t::p m) {
+    // FIXME: symbols are interned by default, so this would set the meta
+    // of all symbols with this name. create a copy instead
+    self->set_meta(m);
+    return self;
+  }
+
   value_t::p Keyword_Printable_str(value_t::p self) {
     auto kw = as<keyw_t>(self);
     if (kw->has_ns()) {
@@ -35,12 +42,17 @@ namespace rev {
     {0, (intptr_t) Symbol_Printable_str, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Symbol_withmeta[] = {
+    {0, 0, (intptr_t) Symbol_WithMeta_withmeta, 0, 0, 0, 0, 0}
+  };
+
   // struct type_t::impl_t Symbol_equiv[] = {
   //   {0, 0, (intptr_t) Symbol_Equiv_equiv, 0, 0, 0, 0, 0}
   // };
 
   struct type_t::ext_t Symbol_methods[] = {
-    {protocol_t::str,   Symbol_printable}//,
+    {protocol_t::str,      Symbol_printable},
+    {protocol_t::withmeta, Symbol_withmeta}
     //    {protocol_t::equiv, Symbol_equiv}
   };
 
