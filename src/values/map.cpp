@@ -27,6 +27,10 @@ namespace rev {
     return imu::assoc(as<map_t>(s), k, v);
   }
 
+  value_t::p Map_IMap_dissoc(value_t::p s, value_t::p k) {
+    return imu::dissoc(as<map_t>(s), k);
+  }
+
   value_t::p Map_Lookup_lookup2(value_t::p s, value_t::p k) {
     if (auto v = imu::get(as<map_t>(s), k)) {
       return *v;
@@ -64,7 +68,13 @@ namespace rev {
      0, 0, 0, 0},
     {0, 0, 0,
      (intptr_t) Map_Associative_assoc,
-     0, 0, 0, 0},
+     0, 0, 0, 0}
+  };
+
+  struct type_t::impl_t Map_imap[] = {
+    {0, 0,
+     (intptr_t) Map_IMap_dissoc,
+     0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Map_lookup[] = {
@@ -81,6 +91,7 @@ namespace rev {
   struct type_t::ext_t Map_methods[] = {
     {protocol_t::str,         Map_printable},
     {protocol_t::associative, Map_associative},
+    {protocol_t::imap,        Map_imap},
     {protocol_t::lookup,      Map_lookup},
     {protocol_t::withmeta,    Map_with_meta},
     {protocol_t::counted,     Map_counted}
