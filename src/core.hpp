@@ -23,7 +23,8 @@ namespace rev {
 
   void load_file(const std::string& source);
 
-  void intern(const sym_t::p& sym, const var_t::p& var);
+  void     intern(const sym_t::p& sym, var_t::p var);
+  sym_t::p qualify(const sym_t::p& sym);
 
   template<typename T>
   inline bool is_true(const T& x) {

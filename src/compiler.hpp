@@ -33,6 +33,13 @@ namespace rev {
         return _var;
       }
 
+      inline ns_t::p ns() const {
+        if (is_global()) {
+          return as<ns_t>(as<var_t>(_var)->ns());
+        }
+        return nullptr;
+      }
+
       inline bool is_local() const {
         return _scope == scope_t::local;
       }
@@ -191,8 +198,8 @@ namespace rev {
       forms);
   }
 
-  ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym);
-  ctx_t::lookup_t resolve_nt(ctx_t& ctx, const sym_t::p& sym);
+  ctx_t::lookup_t resolve(const ctx_t& ctx, const sym_t::p& sym);
+  ctx_t::lookup_t resolve_nt(const ctx_t& ctx, const sym_t::p& sym);
 
   /**
    * Convert a runtime sequence to a list_t

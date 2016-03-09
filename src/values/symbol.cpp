@@ -98,6 +98,12 @@ namespace rev {
   }
 
   template<>
+  sym_base_t<sym_t>::p sym_base_t<sym_t>::intern(
+    const std::string& ns, const std::string& name) {
+    return intern(ns + "/" + name);
+  }
+
+  template<>
   sym_base_t<keyw_t>::p sym_base_t<keyw_t>::intern(const std::string& fqn) {
 
     static std::unordered_map<std::string, keyw_t::p> cache;

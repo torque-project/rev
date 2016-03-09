@@ -103,7 +103,7 @@ namespace rev {
     return ns;
   }
 
-  void intern(const sym_t::p& sym, const var_t::p& var) {
+  void intern(const sym_t::p& sym, var_t::p var) {
     assert(rt.in_ns && "No current namespace is bound");
     rt.in_ns->intern(sym, var);
   }
@@ -117,7 +117,7 @@ namespace rev {
     return sym && (specials.count(sym->name()) == 1);
   }
 
-  ctx_t::lookup_t resolve_nt(ctx_t& ctx, const sym_t::p& sym) {
+  ctx_t::lookup_t resolve_nt(const ctx_t& ctx, const sym_t::p& sym) {
     auto ns = as<ns_t>(rt.ns->deref());
     maybe<value_t::p> resolved;
     ctx_t::scope_t    scope;
@@ -159,7 +159,7 @@ namespace rev {
     return {scope, (resolved ? *resolved : nullptr)};
   }
 
-  ctx_t::lookup_t resolve(ctx_t& ctx, const sym_t::p& sym) {
+  ctx_t::lookup_t resolve(const ctx_t& ctx, const sym_t::p& sym) {
     if (sym->has_ns() && sym->ns() == BUILTIN_NS) {
       return {ctx_t::scope_t::global, nullptr};
     }
@@ -170,6 +170,15 @@ namespace rev {
       return {ctx_t::scope_t::global, nullptr};
     }
     throw std::runtime_error(sym->name() + " is not bound");
+  }
+
+  sym_t::p qualify(const sym_t::p& sym) {
+    if (auto lookup = resolve_nt(ctx_t(), sym)) {
+      if (!sym->has_ns()) {
+        return sym_t::intern(lookup.ns()->name(), sym->name());
+      }
+    }
+    return sym;
   }
 
   value_t::p nativize(const value_t::p& form) {

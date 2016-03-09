@@ -203,8 +203,12 @@ list_t::p expand_seq(const S& s) {
 
 value_t::p do_syntax_quote(const value_t::p& form) {
   if (auto sym = as_nt<sym_t>(form)) {
+    auto mangled = sym;
+    if (sym->name().back() != '#') {
+      mangled = qualify(sym);
+    }
     // TODO: handle # symbols
-    return list_t::factory(QUOTE, sym);
+    return list_t::factory(QUOTE, mangled);
   }
   else if (auto lst = as_nt<list_t>(form)) {
     if (auto s = imu::seq(lst)) {

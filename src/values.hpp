@@ -138,10 +138,19 @@ namespace rev {
     typedef typename semantics<var_t>::p p;
 
     std::vector<value_t::p> _stack;
+    value_t::p _ns;
 
     inline var_t()
       : _stack(1)
     {}
+
+    inline value_t::p ns() const {
+      return _ns;
+    }
+
+    inline void ns(const value_t::p& ns) {
+      _ns = ns;
+    }
 
     inline void bind(const value_t::p& v) {
       _stack[0] = v;
@@ -345,6 +354,10 @@ namespace rev {
       return _name;
     }
 
+    inline std::string fqn() const {
+      return has_ns() ? ns() + "/" + name() : name();
+    }
+
     inline bool has_ns() const {
       return !_ns.empty();
     }
@@ -358,6 +371,7 @@ namespace rev {
     }
 
     static p intern(const std::string& fqn);
+    static p intern(const std::string& ns, const std::string& name);
   };
 
   struct sym_t : public sym_base_t<sym_t> {
@@ -408,7 +422,8 @@ namespace rev {
       return _name;
     }
 
-    inline void intern(const sym_t::p& sym, const var_t::p& v) {
+    inline void intern(const sym_t::p& sym, var_t::p v) {
+      v->ns(this);
       interned.assoc(sym, v);
     }
 
