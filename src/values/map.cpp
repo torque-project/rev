@@ -19,8 +19,12 @@ namespace rev {
     return imu::nu<string_t>(s);
   }
 
+  value_t::p Map_Seqable_seq(value_t::p self) {
+    return imu::nu<seq_adapter_t<map_t>>(as<map_t>(self));
+  }
+
   value_t::p Map_Associative_contains_key(value_t::p self, value_t::p n) {
-    return as<vector_t>(self)->nth(as<int_t>(n)->value);
+    return imu::get(as<map_t>(self), n) ? sym_t::true_ : sym_t::false_;
   }
 
   value_t::p Map_Associative_assoc(value_t::p s, value_t::p k, value_t::p v) {
@@ -52,8 +56,45 @@ namespace rev {
     return imu::nu<int_t>(as<map_t>(self)->count());
   }
 
+  value_t::p MapSeq_Seqable_seq(value_t::p self) {
+    return self;
+  }
+
+  value_t::p MapSeq_Seq_first(value_t::p self) {
+    auto seq = as<seq_adapter_t<map_t>>(self)->seq();
+    if (!imu::is_empty(seq)) {
+      auto kv = seq->first();
+      return vector_t::factory(imu::first(kv), imu::second(kv));
+    }
+    return nullptr;
+  }
+
+  value_t::p MapSeq_Seq_rest(value_t::p self) {
+    auto seq = as<seq_adapter_t<map_t>>(self)->seq();
+    if (!imu::is_empty(seq)) {
+      if (auto rest = seq->rest()) {
+        return imu::nu<seq_adapter_t<map_t>>(rest);
+      }
+    }
+    return nullptr;
+  }
+
+  value_t::p MapSeq_Next_next(value_t::p self) {
+    auto seq = as<seq_adapter_t<map_t>>(self)->seq();
+    if (!imu::is_empty(seq)) {
+      if (auto rest = seq->rest()) {
+        return imu::nu<seq_adapter_t<map_t>>(rest);
+      }
+    }
+    return nullptr;
+  }
+
   struct type_t::impl_t Map_printable[] = {
     {0, (intptr_t) Map_Printable_str, 0, 0, 0, 0, 0, 0}
+  };
+
+  struct type_t::impl_t Map_seqable[] = {
+    {0, (intptr_t) Map_Seqable_seq, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Map_with_meta[] = {
@@ -88,8 +129,22 @@ namespace rev {
     {0, (intptr_t) Map_Counted_count, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t MapSeq_seqable[] = {
+    {0, (intptr_t) MapSeq_Seqable_seq, 0, 0, 0, 0, 0, 0}
+  };
+
+  struct type_t::impl_t MapSeq_seq[] = {
+    {0, (intptr_t) MapSeq_Seq_first, 0, 0, 0, 0, 0, 0},
+    {0, (intptr_t) MapSeq_Seq_rest,  0, 0, 0, 0, 0, 0}
+  };
+
+  struct type_t::impl_t MapSeq_next[] = {
+    {0, (intptr_t) MapSeq_Next_next, 0, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::ext_t Map_methods[] = {
     {protocol_t::str,         Map_printable},
+    {protocol_t::seqable,     Map_seqable},
     {protocol_t::associative, Map_associative},
     {protocol_t::imap,        Map_imap},
     {protocol_t::lookup,      Map_lookup},
@@ -97,10 +152,23 @@ namespace rev {
     {protocol_t::counted,     Map_counted}
   };
 
-  static const uint64_t size =
+  struct type_t::ext_t MapSeq_methods[] = {
+    {protocol_t::seqable, MapSeq_seqable},
+    {protocol_t::seq,     MapSeq_seq},
+    {protocol_t::next,    MapSeq_next}
+  };
+
+  static const uint64_t map_size =
     sizeof(Map_methods) / sizeof(Map_methods[0]);
+
+  static const uint64_t seq_size =
+    sizeof(MapSeq_methods) / sizeof(MapSeq_methods[0]);
 
   template<>
   type_t value_base_t<map_tag_t>::prototype(
-    "PersistentArrayMap.0", Map_methods, size);
+    "PersistentArrayMap.0", Map_methods, map_size);
+
+  template<>
+  type_t value_base_t<seq_adapter_t<map_t>>::prototype(
+    "MapSeq.0", MapSeq_methods, seq_size);
 }
