@@ -48,18 +48,20 @@ namespace rev {
   }
 
   value_t::p Map_Collection_conj(value_t::p self, value_t::p x) {
-    if (auto v = as_nt<vector_t>(x)) {
-      return imu::assoc(as<map_t>(self), imu::nth(v, 0), imu::nth(v, 1));
-    }
-    else if (protocol_t::satisfies(protocol_t::mapentry, x)) {
-      rt_vec_t v(x);
-      return imu::assoc(as<map_t>(self), v.key(), v.val());
-    }
-    else {
-      return imu::reduce([](const map_t::p& m, const value_t::p& y) {
-          rt_vec_t v(y);
-          return imu::assoc(m, v.key(), v.val());
-        }, as<map_t>(self), rt_seq_t::seq(x));
+    if (x) {
+      if (auto v = as_nt<vector_t>(x)) {
+        return imu::assoc(as<map_t>(self), imu::nth(v, 0), imu::nth(v, 1));
+      }
+      else if (protocol_t::satisfies(protocol_t::mapentry, x)) {
+        rt_vec_t v(x);
+        return imu::assoc(as<map_t>(self), v.key(), v.val());
+      }
+      else {
+        return imu::reduce([](const map_t::p& m, const value_t::p& y) {
+            rt_vec_t v(y);
+            return imu::assoc(m, v.key(), v.val());
+          }, as<map_t>(self), rt_seq_t::seq(x));
+      }
     }
     return self;
   }
