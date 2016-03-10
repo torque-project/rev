@@ -20,6 +20,10 @@ namespace rev {
     return imu::nu<seq_adapter_t<vector_t>>(as<vector_t>(self));
   }
 
+  value_t::p Vector_Collection_conj(value_t::p self, value_t::p o) {
+    return imu::conj(as<vector_t>(self), o);
+  }
+
   value_t::p Vector_IIndexed_nth2(value_t::p self, value_t::p n) {
     return as<vector_t>(self)->nth(as<int_t>(n)->value);
   }
@@ -73,6 +77,10 @@ namespace rev {
     {0, (intptr_t) Vector_Seqable_seq, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Vector_coll[] = {
+    {0, 0, (intptr_t) Vector_Collection_conj, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t Vector_iindexed[] = {
     {0, 0,
      (intptr_t) Vector_IIndexed_nth2,
@@ -96,6 +104,7 @@ namespace rev {
   struct type_t::ext_t Vector_methods[] = {
     {protocol_t::str,     Vector_printable},
     {protocol_t::seqable, Vector_seqable},
+    {protocol_t::coll,    Vector_coll},
     {protocol_t::indexed, Vector_iindexed},
   };
 
