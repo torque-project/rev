@@ -348,10 +348,6 @@ macro_t symbol_reader(const ctor_t& ctor) {
 
       } while(is_sym_token(c));
 
-      if (sym == "nil") {
-        return pass(value_t::p());
-      }
-
       return pass(ctor(sym));
     }
 
@@ -361,6 +357,9 @@ macro_t symbol_reader(const ctor_t& ctor) {
 
 result_t read_symbol(std::istream& in) {
   static const auto read = symbol_reader([](const std::string& s){
+      if (s == "nil") {
+        return sym_t::p();
+      }
       return sym_t::intern(s);
     });
   return read(in);
@@ -371,6 +370,7 @@ result_t read_keyword(std::istream& in) {
       if (s.size() > 0 && s[0] == ':') {
         return keyw_t::intern(ns()->name() + "/"  + s.substr(1));
       }
+      std::cout << "keyword" << std::endl;
       return keyw_t::intern(s);
     });
   return read(in);
