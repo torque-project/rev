@@ -17,7 +17,11 @@ namespace rev {
   }
 
   value_t::p Vector_Seqable_seq(value_t::p self) {
-    return imu::nu<seq_adapter_t<vector_t>>(as<vector_t>(self));
+    auto v = as<vector_t>(self);
+    if (imu::count(v) > 0) {
+      return imu::nu<seq_adapter_t<vector_t>>(v);
+    }
+    return nullptr;
   }
 
   value_t::p Vector_Collection_conj(value_t::p self, value_t::p o) {
