@@ -1,4 +1,5 @@
 #include "../values.hpp"
+#include "../adapter.hpp"
 
 namespace rev {
 
@@ -44,6 +45,23 @@ namespace rev {
 
   value_t::p Map_Lookup_lookup3(value_t::p s, value_t::p k, value_t::p d) {
     return imu::get(as<map_t>(s), k, d);
+  }
+
+  value_t::p Map_Collection_conj(value_t::p self, value_t::p x) {
+    if (auto v = as_nt<vector_t>(x)) {
+      return imu::assoc(as<map_t>(self), imu::nth(v, 0), imu::nth(v, 1));
+    }
+    else if (protocol_t::satisfies(protocol_t::mapentry, x)) {
+      rt_vec_t v(x);
+      return imu::assoc(as<map_t>(self), v.key(), v.val());
+    }
+    else {
+      return imu::reduce([](const map_t::p& m, const value_t::p& y) {
+          rt_vec_t v(y);
+          return imu::assoc(m, v.key(), v.val());
+        }, as<map_t>(self), rt_seq_t::seq(x));
+    }
+    return self;
   }
 
   value_t::p Map_WithMeta_with_meta(value_t::p self, value_t::p meta) {
@@ -97,6 +115,12 @@ namespace rev {
     {0, (intptr_t) Map_Seqable_seq, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Map_collection[] = {
+    {0, 0,
+     (intptr_t) Map_Collection_conj,
+     0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t Map_with_meta[] = {
     {0, 0,
      (intptr_t) Map_WithMeta_with_meta,
@@ -147,6 +171,7 @@ namespace rev {
     {protocol_t::seqable,     Map_seqable},
     {protocol_t::associative, Map_associative},
     {protocol_t::imap,        Map_imap},
+    {protocol_t::coll,        Map_collection},
     {protocol_t::lookup,      Map_lookup},
     {protocol_t::withmeta,    Map_with_meta},
     {protocol_t::counted,     Map_counted}
