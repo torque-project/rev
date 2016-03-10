@@ -39,24 +39,28 @@ namespace rev {
 
   value_t::p VectorSeq_Seq_first(value_t::p self) {
     auto seq = as<seq_adapter_t<vector_t>>(self)->seq();
-    if (seq) {
+    if (!imu::is_empty(seq)) {
       return seq->first();
     }
     return nullptr;
   }
 
   value_t::p VectorSeq_Seq_rest(value_t::p self) {
-    auto seq  = as<seq_adapter_t<vector_t>>(self)->seq();
-    if (seq) {
-      return imu::nu<seq_adapter_t<vector_t>>(seq->rest());
+    auto seq = as<seq_adapter_t<vector_t>>(self)->seq();
+    if (!imu::is_empty(seq)) {
+      if (auto rest = seq->rest()) {
+        return imu::nu<seq_adapter_t<vector_t>>(rest);
+      }
     }
     return nullptr;
   }
 
   value_t::p VectorSeq_Next_next(value_t::p self) {
-    auto seq  = as<seq_adapter_t<vector_t>>(self)->seq();
-    if (seq) {
-      return imu::nu<seq_adapter_t<vector_t>>(seq->rest());
+    auto seq = as<seq_adapter_t<vector_t>>(self)->seq();
+    if (!imu::is_empty(seq)) {
+      if (auto rest = seq->rest()) {
+        return imu::nu<seq_adapter_t<vector_t>>(rest);
+      }
     }
     return nullptr;
   }
