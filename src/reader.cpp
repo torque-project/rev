@@ -370,7 +370,6 @@ result_t read_keyword(std::istream& in) {
       if (s.size() > 0 && s[0] == ':') {
         return keyw_t::intern(ns()->name() + "/"  + s.substr(1));
       }
-      std::cout << "keyword" << std::endl;
       return keyw_t::intern(s);
     });
   return read(in);
