@@ -28,12 +28,11 @@ namespace rev {
   }
 
   value_t::p Keyword_IFn_invoke2(value_t::p self, value_t::p m) {
-    std::cout << m->type->name() << std::endl;
     void* args[] = {(void*) m, (void*) self};
     return protocol_t::dispatch(protocol_t::lookup, 0, args, 2);
   }
 
-  value_t::p Keyword_IFn_invoke3(value_t::p self, value_t::p m, value_t::p d ) {
+  value_t::p Keyword_IFn_invoke3(value_t::p self, value_t::p m, value_t::p d) {
     void* args[] = {(void*) m, (void*) self, (void*) d};
     return protocol_t::dispatch(protocol_t::lookup, 0, args, 3);
   }

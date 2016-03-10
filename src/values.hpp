@@ -472,6 +472,33 @@ namespace rev {
     , value_base_t<set_tag_t>
     >;
 
+  /**
+   * This is used as a bridge type between the VM and
+   * and the runtime code, to provide a seq interface
+   * for all of the native collection types
+   *
+   */
+  template<typename T>
+  struct seq_adapter_t : public value_base_t<seq_adapter_t<T>> {
+
+    typedef typename T::p value_type_t;
+    typedef decltype(imu::seq(value_type_t())) seq_type_t;
+
+    seq_type_t _seq;
+
+    inline seq_adapter_t(const value_type_t& coll)
+      : _seq(imu::seq(coll))
+    {}
+
+    inline seq_adapter_t(const seq_type_t& s)
+      : _seq(s)
+    {}
+
+    inline seq_type_t seq() const {
+      return _seq;
+    }
+  };
+
   struct array_t : public value_base_t<array_t> {
 
     typedef typename semantics<array_t>::p p;
