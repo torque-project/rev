@@ -172,6 +172,13 @@ namespace rev {
     throw std::runtime_error(sym->name() + " is not bound");
   }
 
+  var_t::p resolve(const sym_t::p& sym) {
+    if (auto lookup = resolve_nt(ctx_t(), sym)) {
+      return as<var_t>(*lookup);
+    }
+    return nullptr;
+  }
+
   sym_t::p qualify(const sym_t::p& sym) {
     if (auto lookup = resolve_nt(ctx_t(), sym)) {
       if (!sym->has_ns()) {
@@ -462,7 +469,6 @@ namespace rev {
   value_t::p call(
     int64_t from, int64_t to, uint32_t stack,
     value_t::p args[], uint32_t nargs) {
-
     // save stack pointer for sanity checks and stack unwinding
     stack_t sp = rt.sp;
     // setup the frame for the runtime call
@@ -475,7 +481,6 @@ namespace rev {
     }
 
     rt.sp += stack;
-
     auto ret = run(from, to);
     verify_stack_integrity(sp);
 

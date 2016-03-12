@@ -238,13 +238,24 @@ namespace rev {
 #if defined(_TRACE) || defined(_CALLS)
       std::cout << "dispatch: " << std::flush;
 #endif
+      static sym_t::p invoke = sym_t::intern("torque.lang.protocols/-invoke");
+      static fn_t::p  invoke_fn;
+
       auto arity = *(ip++);
 
       // set frame pointer to beginning of function in stack
-      auto frame = fp = (s - (arity + 1));
+      auto frame = (s - (arity + 1));
       auto val   = (value_t::p) *frame;
-
-      if (auto f = as_nt<fn_t>(val)) {
+      auto f     = as_nt<fn_t>(val);
+      /*
+      if (!f) {
+        if (!invoke_fn) {
+          invoke_fn = resolve(invoke)->deref<fn_t>();
+        }
+        f = invoke_fn;
+      }
+      */
+      if (f) {
 #if defined(_TRACE) || defined(_CALLS)
         std::cout << f->name() << "(" << arity << ")" << std::endl;
 #endif
@@ -284,7 +295,7 @@ namespace rev {
       else {
 #if defined(_TRACE) || defined(_CALLS)
         std::cout
-          << val->type->name() << ".invoke" << "(" << arity << ")"
+          << val->type->name() << ".-invoke" << "(" << arity << ")"
           << std::endl;
 #endif
         auto invoke_arity = arity + 1;
@@ -294,11 +305,7 @@ namespace rev {
         }
         args[0] = val;
 
-        // pop invoke target from stack as well as the stored frame and
-        // instruction pointers, since this is not a regular
-        // function call
         stack::pop(s, 3);
-
         auto res = protocol_t::dispatch(protocol_t::ifn, 0, args, invoke_arity);
         stack::push(s, res);
       }
