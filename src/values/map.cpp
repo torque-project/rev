@@ -58,8 +58,11 @@ namespace rev {
       }
       else {
         return imu::reduce([](const map_t::p& m, const value_t::p& y) {
-            rt_vec_t v(y);
-            return imu::assoc(m, v.key(), v.val());
+            if (y) {
+              rt_vec_t v(y);
+              return imu::assoc(m, v.key(), v.val());
+            }
+            return m;
           }, as<map_t>(self), rt_seq_t::seq(x));
       }
     }
