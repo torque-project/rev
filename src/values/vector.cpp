@@ -108,6 +108,7 @@ namespace rev {
   struct type_t::ext_t Vector_methods[] = {
     {protocol_t::str,     Vector_printable},
     {protocol_t::seqable, Vector_seqable},
+    {protocol_t::ivector, nullptr},
     {protocol_t::coll,    Vector_coll},
     {protocol_t::indexed, Vector_iindexed},
   };
