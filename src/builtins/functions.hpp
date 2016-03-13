@@ -111,8 +111,9 @@ namespace rev {
     }
 
     void throw_(stack_t& s, stack_t& fp, int64_t* &ip) {
-      auto x = pop<value_t::p>(s);
-      throw std::runtime_error("TODO: print runtime exception");
+      auto x   = pop<value_t::p>(s);
+      auto msg = str(x);
+      throw std::runtime_error(msg->data());
     }
 
     void print(stack_t& s, stack_t& fp, int64_t* &ip) {
