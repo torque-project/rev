@@ -28,13 +28,19 @@ namespace rev {
   }
 
   value_t::p Keyword_IFn_invoke2(value_t::p self, value_t::p m) {
-    void* args[] = {(void*) m, (void*) self};
-    return protocol_t::dispatch(protocol_t::lookup, 0, args, 2);
+    if (m) {
+      void* args[] = {(void*) m, (void*) self};
+      return protocol_t::dispatch(protocol_t::lookup, 0, args, 2);
+    }
+    return nullptr;
   }
 
   value_t::p Keyword_IFn_invoke3(value_t::p self, value_t::p m, value_t::p d) {
-    void* args[] = {(void*) m, (void*) self, (void*) d};
-    return protocol_t::dispatch(protocol_t::lookup, 0, args, 3);
+    if (m) {
+      void* args[] = {(void*) m, (void*) self, (void*) d};
+      return protocol_t::dispatch(protocol_t::lookup, 0, args, 3);
+    }
+    return d;
   }
 
   struct type_t::impl_t Symbol_printable[] = {
