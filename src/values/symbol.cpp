@@ -24,7 +24,11 @@ namespace rev {
   }
 
   value_t::p Symbol_Named_namespace(value_t::p self) {
-    return imu::nu<string_t>(as<sym_t>(self)->ns());
+    auto sym = as<sym_t>(self);
+    if (sym->has_ns()) {
+      return imu::nu<string_t>(sym->ns());
+    }
+    return nullptr;
   }
 
   value_t::p Keyword_Printable_str(value_t::p self) {
