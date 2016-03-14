@@ -27,6 +27,14 @@ namespace rev {
     return imu::get(as<set_t>(s), k, d);
   }
 
+  value_t::p Set_IFn_invoke2(value_t::p self, value_t::p m) {
+    return Set_Lookup_lookup3(self, m, nullptr);
+  }
+
+  value_t::p Set_IFn_invoke3(value_t::p self, value_t::p m, value_t::p d) {
+    return Set_Lookup_lookup3(self, m, d);
+  }
+
   value_t::p Set_Counted_count(value_t::p self) {
     return imu::nu<int_t>(as<map_t>(self)->count());
   }
@@ -42,6 +50,13 @@ namespace rev {
      0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Set_ifn[] = {
+    {0, 0,
+     (intptr_t) Set_IFn_invoke2,
+     (intptr_t) Set_IFn_invoke3,
+     0, 0, 0, 0}
+  };
+
   struct type_t::impl_t Set_counted[] = {
     {0, (intptr_t) Set_Counted_count, 0, 0, 0, 0, 0, 0}
   };
@@ -49,6 +64,7 @@ namespace rev {
   struct type_t::ext_t Set_methods[] = {
     {protocol_t::str,         Set_printable},
     {protocol_t::lookup,      Set_lookup},
+    {protocol_t::ifn,         Set_ifn},
     //{protocol_t::withmeta,    Set_with_meta},
     {protocol_t::counted,     Set_counted}
   };
