@@ -14,7 +14,8 @@ namespace rev {
 
   value_t::p Symbol_WithMeta_withmeta(value_t::p self, value_t::p m) {
     // FIXME: symbols are interned by default, so this would set the meta
-    // of all symbols with this name. create a copy instead
+    // of all symbols with this name. create a copy instead. we have to
+    // implement equiv first though
     self->set_meta(m);
     return self;
   }

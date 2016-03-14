@@ -18,7 +18,7 @@ namespace rev {
 
       auto vars = imu::map<list_t::p>([&](const sym_t::p& sym) {
           return *resolve(ctx, sym);
-        }, imu::into<list_t::p>(imu::nu<list_t>(), syms));
+        }, syms);
 
       t << instr::push_bind << vars;
       do_(imu::rest(forms), ctx, t);

@@ -292,7 +292,7 @@ namespace rev {
             "Arity mismatch when calling fn: " + f->name());
         }
       }
-      else {
+      else if (val) {
 #if defined(_TRACE) || defined(_CALLS)
         std::cout
           << val->type->name() << ".-invoke" << "(" << arity << ")"
@@ -308,6 +308,9 @@ namespace rev {
         stack::pop(s, 3);
         auto res = protocol_t::dispatch(protocol_t::ifn, 0, args, invoke_arity);
         stack::push(s, res);
+      }
+      else {
+        throw std::runtime_error("Callable is nil");
       }
     }
 

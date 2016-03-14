@@ -291,9 +291,11 @@ namespace rev {
         if (sym->name() == "identical?") { return identical;  }
         if (sym->name() == "satisfies?") { return satisfies;  }
         if (sym->name() == "type")       { return type;       }
-        if (sym->name() == "type?")      { return is_type;    }
-        if (sym->name() == "symbol?")    { return is_symbol;  }
-        if (sym->name() == "integer?")   { return is_integer; }
+        if (sym->name() == "type?")      { return builtins::is<type_value_t>; }
+        if (sym->name() == "symbol?")    { return builtins::is<sym_t>; }
+        if (sym->name() == "integer?")   { return builtins::is<int_t>; }
+        if (sym->name() == "var?")       { return builtins::is<var_t>; }
+        if (sym->name() == "array?")     { return builtins::is<array_t>; }
         if (sym->name() == "binary")     { return binary;     }
         if (sym->name() == "aget")       { return aget;       }
         if (sym->name() == "aset")       { return aset;       }
@@ -301,7 +303,6 @@ namespace rev {
         if (sym->name() == "aclone")     { return aclone;     }
         if (sym->name() == "acopy")      { return acopy;      }
         if (sym->name() == "array")      { return array;      }
-        if (sym->name() == "array?")     { return is_array;   }
         if (sym->name() == "make-array") { return make_array; }
 
         if (sym->name() == "print") { return print; }
