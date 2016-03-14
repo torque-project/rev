@@ -292,6 +292,7 @@ namespace rev {
         if (sym->name() == "satisfies?") { return satisfies;  }
         if (sym->name() == "type")       { return type;       }
         if (sym->name() == "type?")      { return is_type;    }
+        if (sym->name() == "symbol?")    { return is_symbol;  }
         if (sym->name() == "integer?")   { return is_integer; }
         if (sym->name() == "binary")     { return binary;     }
         if (sym->name() == "aget")       { return aget;       }
@@ -600,13 +601,10 @@ namespace rev {
     return load_ns(sym_t::intern(name));
   }
 
-  void boot(uint64_t stack, const std::string& s) {
-    rt.fp = rt.sp = rt.stack = new int64_t[stack];
-
-    ns(sym_t::intern("user"), imu::nu<ns_t>("user"));
-    rt.ns = imu::nu<var_t>(); rt.ns->bind(rt.in_ns);
+  bool parse_source_paths(const std::string& s) {
 
     std::stringstream ss(s);
+
     while (ss.good()) {
       std::string path;
       std::getline(ss, path, ':');
@@ -614,8 +612,16 @@ namespace rev {
         rt.sources.push_back(path);
       }
     }
+    return !rt.sources.empty();
+  }
 
-    if (!rt.sources.empty()) {
+  void boot(uint64_t stack, const std::string& s) {
+    rt.fp = rt.sp = rt.stack = new int64_t[stack];
+
+    ns(sym_t::intern("user"), imu::nu<ns_t>("user"));
+    rt.ns = imu::nu<var_t>(); rt.ns->bind(rt.in_ns);
+
+    if (parse_source_paths(s)) {
       // load core name space and make it visible in user name space
       auto core = load_ns("torque.core");
       rt.in_ns->map(core);

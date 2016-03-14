@@ -43,6 +43,7 @@ macro_t  balanced_form(char until);
 macro_t  expand(const macro_t& m);
 macro_t  wrap(const char*);
 result_t read_or_skip(std::istream& in);
+result_t conditional(std::istream& in);
 result_t drop(std::istream& in);
 result_t meta(std::istream& in);
 result_t syntax_quote(std::istream& in);
@@ -67,6 +68,7 @@ static sym_t::p CONCAT  = sym_t::intern("concat");
 
 static macros_t extensions(
   {{'{', balanced_form<set_t>('}')},
+   {'?', conditional},
    {'_', drop}});
 
 static macros_t macros(
@@ -89,6 +91,10 @@ static macros_t macros(
 
 inline result_t pass(const value_t::p& v) {
   return std::make_tuple(parse_state_t::pass, v);
+}
+
+inline result_t skip() {
+  return std::make_tuple(parse_state_t::skip, nullptr);
 }
 
 inline result_t fail() {
@@ -152,10 +158,39 @@ macro_t wrap(const char* s) {
   };
 }
 
+result_t conditional(std::istream& in) {
+
+  static const keyw_t::p REV = keyw_t::intern("rev");
+  static const keyw_t::p DEF = keyw_t::intern("default");
+
+  auto branches = imu::partition<list_t::p>(2, as<list_t>(read(in)));
+
+  value_t::p form = nullptr, def = nullptr;
+  while (!imu::is_empty(branches)) {
+    auto kv = as<list_t>(imu::first(branches));
+    auto k  = as<keyw_t>(imu::first(kv));
+
+    if (k == REV) {
+      form = *imu::second(kv);
+      break;
+    }
+    else if (k == DEF) {
+      def = *imu::second(kv);
+    }
+    branches = imu::rest(branches);
+  }
+
+  if (form || def) {
+    return form ? pass(form) : pass(def);
+  }
+
+  return skip();
+}
+
 result_t drop(std::istream& in) {
   // read two forms and return the second
   read(in);
-  return std::make_tuple(parse_state_t::skip, nullptr);
+  return skip();
 }
 
 result_t meta(std::istream& in) {
