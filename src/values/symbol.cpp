@@ -19,6 +19,14 @@ namespace rev {
     return self;
   }
 
+  value_t::p Symbol_Named_name(value_t::p self) {
+    return imu::nu<string_t>(as<sym_t>(self)->name());
+  }
+
+  value_t::p Symbol_Named_namespace(value_t::p self) {
+    return imu::nu<string_t>(as<sym_t>(self)->ns());
+  }
+
   value_t::p Keyword_Printable_str(value_t::p self) {
     auto kw = as<keyw_t>(self);
     if (kw->has_ns()) {
@@ -47,6 +55,11 @@ namespace rev {
     {0, (intptr_t) Symbol_Printable_str, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Symbol_named[] = {
+    {0, (intptr_t) Symbol_Named_name, 0, 0, 0, 0, 0, 0},
+    {0, (intptr_t) Symbol_Named_namespace, 0, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t Symbol_withmeta[] = {
     {0, 0, (intptr_t) Symbol_WithMeta_withmeta, 0, 0, 0, 0, 0}
   };
@@ -57,7 +70,8 @@ namespace rev {
 
   struct type_t::ext_t Symbol_methods[] = {
     {protocol_t::str,      Symbol_printable},
-    {protocol_t::withmeta, Symbol_withmeta}
+    {protocol_t::withmeta, Symbol_withmeta},
+    {protocol_t::named,    Symbol_named}
     //    {protocol_t::equiv, Symbol_equiv}
   };
 
