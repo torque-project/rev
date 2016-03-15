@@ -73,6 +73,14 @@ namespace rev {
     return nullptr;
   }
 
+  value_t::p Vector_MapEntry_key(value_t::p self) {
+    return as<vector_t>(self)->nth(0);
+  }
+
+  value_t::p Vector_MapEntry_val(value_t::p self) {
+    return as<vector_t>(self)->nth(1);
+  }
+
   struct type_t::impl_t Vector_printable[] = {
     {0, (intptr_t) Vector_Printable_str, 0, 0, 0, 0, 0, 0}
   };
@@ -92,6 +100,11 @@ namespace rev {
      0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Vector_mapentry[] = {
+    {0, (intptr_t) Vector_MapEntry_key, 0, 0, 0, 0, 0, 0},
+    {0, (intptr_t) Vector_MapEntry_val,  0, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t VectorSeq_seqable[] = {
     {0, (intptr_t) VectorSeq_Seqable_seq, 0, 0, 0, 0, 0, 0}
   };
@@ -106,11 +119,12 @@ namespace rev {
   };
 
   struct type_t::ext_t Vector_methods[] = {
-    {protocol_t::str,     Vector_printable},
-    {protocol_t::seqable, Vector_seqable},
-    {protocol_t::ivector, nullptr},
-    {protocol_t::coll,    Vector_coll},
-    {protocol_t::indexed, Vector_iindexed},
+    {protocol_t::str,      Vector_printable},
+    {protocol_t::seqable,  Vector_seqable},
+    {protocol_t::ivector,  nullptr},
+    {protocol_t::coll,     Vector_coll},
+    {protocol_t::indexed,  Vector_iindexed},
+    {protocol_t::mapentry, Vector_mapentry}
   };
 
   struct type_t::ext_t VectorSeq_methods[] = {
