@@ -38,14 +38,15 @@ namespace rev {
       push(s, imu::nu<binary_t>(vals));
     }
 
-    void aget(stack_t& s, stack_t& fp, int64_t* &ip) {
+    template<typename T>
+    void xget(stack_t& s, stack_t& fp, int64_t* &ip) {
       auto n = as<int_t>(pop<value_t::p>(s));
-      auto a = as<array_t>(pop<value_t::p>(s));
+      auto x = as<T>(pop<value_t::p>(s));
 
-      if (n->value >= a->size()) {
-        throw std::runtime_error("Array index out of bounds");
+      if (n->value >= x->size()) {
+        throw std::runtime_error("xget: Index out of bounds");
       }
-      push(s, a->get(n->value));
+      push(s, x->get(n->value));
     }
 
     void aset(stack_t& s, stack_t& fp, int64_t* &ip) {

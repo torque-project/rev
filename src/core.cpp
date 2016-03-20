@@ -299,14 +299,15 @@ namespace rev {
         if (sym->name() == "integer?")   { return builtins::is<int_t>; }
         if (sym->name() == "var?")       { return builtins::is<var_t>; }
         if (sym->name() == "array?")     { return builtins::is<array_t>; }
-        if (sym->name() == "binary")     { return binary;     }
-        if (sym->name() == "aget")       { return aget;       }
-        if (sym->name() == "aset")       { return aset;       }
-        if (sym->name() == "alength")    { return alength;    }
-        if (sym->name() == "aclone")     { return aclone;     }
-        if (sym->name() == "acopy")      { return acopy;      }
-        if (sym->name() == "array")      { return array;      }
-        if (sym->name() == "make-array") { return make_array; }
+        if (sym->name() == "binary")     { return binary;         }
+        if (sym->name() == "bget")       { return xget<binary_t>; }
+        if (sym->name() == "aget")       { return xget<array_t>;  }
+        if (sym->name() == "aset")       { return aset;           }
+        if (sym->name() == "alength")    { return alength;        }
+        if (sym->name() == "aclone")     { return aclone;         }
+        if (sym->name() == "acopy")      { return acopy;          }
+        if (sym->name() == "array")      { return array;          }
+        if (sym->name() == "make-array") { return make_array;     }
 
         if (sym->name() == "print") { return print; }
         if (sym->name() == "read")  { return read;  }

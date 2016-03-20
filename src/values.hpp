@@ -284,6 +284,10 @@ namespace rev {
     inline const char* data() const {
       return _data;
     }
+
+    inline value_t::p get(int64_t n) const {
+      return imu::nu<int_t>(_data[n]);
+    }
   };
 
   struct string_t : public value_base_t<string_t> {
