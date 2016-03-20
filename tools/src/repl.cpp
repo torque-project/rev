@@ -65,8 +65,11 @@ int main(int argc, char** argv) {
         // save line in history once we've successfully read it
         // this orevents copy/paste gobbledigook from bombing
         // the history
-        add_history(line);
-        write_history(".repl_history");
+        //auto hist = current_history();
+        //if (!hist || strcmp(hist->line, line)) {
+          add_history(line);
+          write_history(".repl_history");
+          //}
 
         auto result = rev::eval(form);
         std::cout << str(result)->data() << std::endl;

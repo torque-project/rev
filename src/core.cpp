@@ -18,6 +18,7 @@
 #include "specials/quote.hpp"
 #include "specials/ns.hpp"
 #include "specials/apply.hpp"
+#include "specials/ffi.hpp"
 
 #include <cassert>
 #include <fstream>
@@ -112,7 +113,7 @@ namespace rev {
     static std::set<const std::string> specials = {
       "def", "do", "if", "let*", "binding*", "loop*", "quote", "ns", "fn*",
       "deftype", "defprotocol", "dispatch*", "recur", "new", "set!",
-      ".", "apply*"
+      ".", "apply*", "so*", "import*"
     };
     return sym && (specials.count(sym->name()) == 1);
   }
@@ -254,6 +255,8 @@ namespace rev {
         if (sym->name() == "set!")        { return set;         }
         if (sym->name() == "ns")          { return ns;          }
         if (sym->name() == "apply*")      { return apply;       }
+        if (sym->name() == "so*")         { return so;          }
+        if (sym->name() == "import*")     { return import;      }
       }
       return nullptr;
     }
@@ -352,20 +355,33 @@ namespace rev {
         // 3) emit list as native call
       }*/
       else {
-        // FIXME: this isn't really pretty. maybe it's better to
-        // store the return address at the top of the stack, which
-        // wouldn't require this hack to patch up the return address
-        // after emitting all the arguments. on the other hand binding
-        // the parameter in the function becomes more complicated
-        // if the return address rests on top of the stack
-        t << instr::return_here << 0;
-        auto return_addr = t.size();
+        auto lookup = sym ? resolve_nt(ctx, sym) : ctx_t::lookup_t();
+        if (lookup &&
+            lookup.is_global() &&
+            is<int_t>(as<var_t>(*lookup)->deref())) {
+          if (auto f = as<var_t>(*lookup)->deref<int_t>()) {
+            // the callee is a pointer, so we try to call this as
+            // as native function
+            compile_all(args, ctx, t);
+            t << instr::native << f << imu::count(args);
+          }
+        }
+        else {
+          // FIXME: this isn't really pretty. maybe it's better to
+          // store the return address at the top of the stack, which
+          // wouldn't require this hack to patch up the return address
+          // after emitting all the arguments. on the other hand binding
+          // the parameter in the function becomes more complicated
+          // if the return address rests on top of the stack
+          t << instr::return_here << 0;
+          auto return_addr = t.size();
 
-        compile(head, ctx, t);
-        compile_all(args, ctx, t);
+          compile(head, ctx, t);
+          compile_all(args, ctx, t);
 
-        t << instr::dispatch << imu::count(args);
-        t[return_addr-1] = (t.size() - return_addr);
+          t << instr::dispatch << imu::count(args);
+          t[return_addr-1] = (t.size() - return_addr);
+        }
       }
     }
   }

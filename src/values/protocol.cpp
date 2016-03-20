@@ -26,28 +26,35 @@ namespace rev {
       values[i] = &(args[i]);
     }
 
-    auto self = (value_t::p) args[0];
-    auto type = self->type;
+    if (auto self = (value_t::p) args[0]) {
+      auto type = self->type;
 
-    void* ret    = nullptr;
-    void  (*f)() = nullptr;
+      void* ret    = nullptr;
+      void  (*f)() = nullptr;
 
-    for (int i=0; i<type->_num_ext; ++i) {
-      if (type->_methods[i].id == id) {
-        f = reinterpret_cast<void (*)()>(type->_methods[i].impls[m].arities[n]);
-        break;
+      for (int i=0; i<type->_num_ext; ++i) {
+        if (type->_methods[i].id == id) {
+          auto p = type->_methods[i].impls[m].arities[n];
+          f = reinterpret_cast<void (*)()>(p);
+          break;
+        }
       }
-    }
 
-    if (f) {
-      ffi_prep_cif(&cif, FFI_DEFAULT_ABI, n, &ffi_type_pointer, types);
-      ffi_call(&cif, f, &ret, values);
-      return (value_t::p) ret;
+      if (f) {
+        ffi_prep_cif(&cif, FFI_DEFAULT_ABI, n, &ffi_type_pointer, types);
+        ffi_call(&cif, f, &ret, values);
+        return (value_t::p) ret;
+      }
+      else {
+        std::stringstream ss;
+        ss << "Method not implemented: " << id << " " << m << " in type: "
+           << type->name();
+        throw std::runtime_error(ss.str());
+      }
     }
     else {
       std::stringstream ss;
-      ss << "Method not implemented: " << id << " " << m << " in type: "
-         << type->name();
+      ss << "Can't call protocol method on nil: " << id << " " << m;
       throw std::runtime_error(ss.str());
     }
   }

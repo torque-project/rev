@@ -295,11 +295,11 @@ namespace rev {
 
     string_t(const std::string& s);
 
-    inline std::string data() const {
+    inline const std::string& data() const {
       return _data;
     }
 
-    inline std::string name() const {
+    inline const std::string& name() const {
       return _data;
     }
 
@@ -370,6 +370,13 @@ namespace rev {
       return intern(sym->_ns);
     }
 
+    /**
+     * Before calling this you have to be sure that at least
+     * the first parameter actually derives from sym_base_t
+     *
+     */
+    static bool equiv(const value_t::p& a, const value_t::p& b);
+
     static p intern(const std::string& fqn);
     static p intern(const std::string& ns, const std::string& name);
   };
@@ -402,11 +409,15 @@ namespace rev {
     {}
   };
 
+  struct equal_to {
+    inline bool operator()(const value_t::p& a, const value_t::p& b) const;
+  };
+
   struct ns_t : public value_base_t<ns_t> {
 
     typedef typename semantics<ns_t>::p p;
 
-    typedef imu::ty::basic_array_map<sym_t::p, value_t::p> mappings_t;
+    typedef imu::ty::basic_array_map<sym_t::p, value_t::p, equal_to> mappings_t;
 
     std::string _name;
 
@@ -464,6 +475,7 @@ namespace rev {
   using map_t = imu::ty::basic_array_map<
       value_t::p
     , value_t::p
+    , rev::equal_to
     , value_base_t<map_tag_t>
     >;
 
@@ -556,7 +568,8 @@ namespace rev {
       alist        = 42,
       ifn          = 43,
       istring      = 44,
-      serializable = 45
+      serializable = 45,
+      pointer      = 46
     };
 
     typedef typename semantics<protocol_t>::p p;
@@ -792,6 +805,36 @@ namespace rev {
   inline std::string fn_t::name() const {
     return as<sym_t>(_name)->name();
   }
+
+  template<typename T>
+  bool sym_base_t<T>::equiv(const value_t::p& a, const value_t::p& b) {
+    auto s = as<T>(a);
+    auto x = as_nt<T>(b);
+
+    return x && (x->ns() == s->ns() && (x->name() == s->name()));
+  }
+
+  /**
+   * equality comparison implementation for use in containers
+   *
+   */
+  inline bool equal_to::operator()(
+    const value_t::p& a, const value_t::p& b) const {
+    if (a == b) {
+      return true;
+    }
+    if ((is<sym_t>(a) || is<keyw_t>(a))) {
+      if (!a->meta && !b->meta) {
+        // take shortcut if a != b, a is a symbol type, and both don't
+        // have meta tags (i.e. are interned)
+        return false;
+      }
+      return is<sym_t>(a) ? sym_t::equiv(a, b) : keyw_t::equiv(a, b);
+    }
+    void* args[] = {(void*) a, (void*) b};
+    auto res = protocol_t::dispatch(protocol_t::equiv, 0, args, 2);
+    return res == sym_t::true_;
+  };
 }
 
 namespace imu {

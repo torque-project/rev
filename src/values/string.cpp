@@ -24,7 +24,7 @@ namespace rev {
   struct type_t::ext_t String_methods[] = {
     {protocol_t::istring,      nullptr},
     {protocol_t::str,          String_printable},
-    {protocol_t::serializable, String_serializable},
+    {protocol_t::serializable, String_serializable}
   };
 
   static const uint64_t size =

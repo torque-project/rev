@@ -198,15 +198,18 @@ result_t meta(std::istream& in) {
   auto meta = read(in);
   auto form = read(in);
 
-  // TODO: use keywords here once they are implemented
+  map_t::p m;
+
   if (auto sym = as_nt<keyw_t>(meta)) {
-    form->alter_meta([&](const value_t::p& v) {
-      auto m = as<map_t>(v);
-      return imu::assoc(m ? m : imu::nu<map_t>(), sym, sym_t::true_);
-    });
+    m = imu::assoc(imu::nu<map_t>(), sym, sym_t::true_);
   }
-  else if (auto m = as_nt<map_t>(meta)) {
-    form->set_meta(m);
+  else if (auto m2 = as_nt<map_t>(meta)) {
+    m = m2;
+  }
+
+  if (m) {
+    void* args[] = {(void*) form, (void*) m};
+    form = protocol_t::dispatch(protocol_t::withmeta, 0, args, 2);
   }
 
   return pass(form);
@@ -298,6 +301,7 @@ std::string escape(const std::string& s) {
       }
       out.append(j, i-1);
       switch(*i) {
+      case '0':  out += '\0'; break;
       case 'n':  out += '\n'; break;
       case 'r':  out += '\r'; break;
       case 't':  out += '\t'; break;

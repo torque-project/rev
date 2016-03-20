@@ -2,6 +2,8 @@
 
 #include <list>
 
+#include <ffi.h>
+
 namespace rev {
 
   int64_t* jump(int64_t off);

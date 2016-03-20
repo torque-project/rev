@@ -12,12 +12,19 @@ namespace rev {
     return imu::nu<string_t>(sym->name());
   }
 
-  value_t::p Symbol_WithMeta_withmeta(value_t::p self, value_t::p m) {
-    // FIXME: symbols are interned by default, so this would set the meta
-    // of all symbols with this name. create a copy instead. we have to
-    // implement equiv first though
-    self->set_meta(m);
-    return self;
+  template<typename T>
+  value_t::p Symbolic_WithMeta_withmeta(value_t::p self, value_t::p m) {
+    auto x   = as<T>(self);
+    auto out = imu::nu<T>(x->fqn());
+
+    out->set_meta(m);
+
+    return out;
+  }
+
+  template<typename T>
+  value_t::p Symbolic_Equiv_equiv(value_t::p self, value_t::p other) {
+    return sym_base_t<T>::equiv(self, other) ? sym_t::true_ : sym_t::false_;
   }
 
   value_t::p Symbol_Named_name(value_t::p self) {
@@ -66,22 +73,26 @@ namespace rev {
   };
 
   struct type_t::impl_t Symbol_withmeta[] = {
-    {0, 0, (intptr_t) Symbol_WithMeta_withmeta, 0, 0, 0, 0, 0}
+    {0, 0, (intptr_t) Symbolic_WithMeta_withmeta<sym_t>, 0, 0, 0, 0, 0}
   };
 
-  // struct type_t::impl_t Symbol_equiv[] = {
-  //   {0, 0, (intptr_t) Symbol_Equiv_equiv, 0, 0, 0, 0, 0}
-  // };
+  struct type_t::impl_t Symbol_equiv[] = {
+    {0, 0, (intptr_t) Symbolic_Equiv_equiv<sym_t>, 0, 0, 0, 0, 0}
+  };
 
   struct type_t::ext_t Symbol_methods[] = {
     {protocol_t::str,      Symbol_printable},
     {protocol_t::withmeta, Symbol_withmeta},
-    {protocol_t::named,    Symbol_named}
-    //    {protocol_t::equiv, Symbol_equiv}
+    {protocol_t::named,    Symbol_named},
+    {protocol_t::equiv,    Symbol_equiv}
   };
 
   struct type_t::impl_t Keyword_printable[] = {
     {0, (intptr_t) Keyword_Printable_str, 0, 0, 0, 0, 0, 0}
+  };
+
+  struct type_t::impl_t Keyword_withmeta[] = {
+    {0, 0, (intptr_t) Symbolic_WithMeta_withmeta<keyw_t>, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Keyword_ifn[] = {
@@ -91,14 +102,15 @@ namespace rev {
      0, 0, 0, 0}
   };
 
-  // struct type_t::impl_t Keyword_equiv[] = {
-  //   {0, 0, (intptr_t) Keyword_Equiv_equiv, 0, 0, 0, 0, 0}
-  // };
+  struct type_t::impl_t Keyword_equiv[] = {
+    {0, 0, (intptr_t) Symbolic_Equiv_equiv<keyw_t>, 0, 0, 0, 0, 0}
+  };
 
   struct type_t::ext_t Keyword_methods[] = {
-    {protocol_t::str,   Keyword_printable},
-    {protocol_t::ifn,   Keyword_ifn}
-    //{protocol_t::equiv, Keyword_equiv}
+    {protocol_t::str,      Keyword_printable},
+    {protocol_t::withmeta, Keyword_withmeta},
+    {protocol_t::ifn,      Keyword_ifn},
+    {protocol_t::equiv,    Keyword_equiv}
   };
 
   static const uint64_t sym_size =
