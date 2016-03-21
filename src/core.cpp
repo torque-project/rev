@@ -296,7 +296,8 @@ namespace rev {
         if (sym->name() == "symbol?")    { return builtins::is<sym_t>; }
         if (sym->name() == "integer?")   { return builtins::is<int_t>; }
         if (sym->name() == "var?")       { return builtins::is<var_t>; }
-        if (sym->name() == "array?")     { return builtins::is<array_t>; }
+        if (sym->name() == "binary?")    { return builtins::is<binary_t>; }
+        if (sym->name() == "array?")     { return builtins::is<array_t>;  }
         if (sym->name() == "binary")     { return binary;            }
         if (sym->name() == "bget")       { return xget<binary_t>;    }
         if (sym->name() == "blength")    { return xlength<binary_t>; }

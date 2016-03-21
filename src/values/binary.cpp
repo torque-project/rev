@@ -35,7 +35,7 @@ namespace rev {
   struct type_t::ext_t Binary_methods[] = {
     {protocol_t::str,          Binary_printable},
     {protocol_t::serializable, Binary_serializable},
-    {protocol_t::pointer,      Binary_pointer},
+    {protocol_t::pointer,      Binary_pointer}
   };
 
   static const uint64_t size =
