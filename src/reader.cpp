@@ -49,6 +49,7 @@ result_t meta(std::istream& in);
 result_t syntax_quote(std::istream& in);
 result_t unquote(std::istream& in);
 result_t unbalanced_error(std::istream& in);
+result_t read_char(std::istream& in);
 result_t read_string(std::istream& in);
 result_t read_symbol(std::istream& in);
 result_t read_keyword(std::istream& in);
@@ -75,6 +76,7 @@ static macros_t macros(
   {{'(',  balanced_form<list_t>(')')},
    {'[',  balanced_form<vector_t>(']')},
    {'{',  balanced_form<map_t>('}')},
+   {'\\', read_char},
    {'\"', read_string},
    // before loading the keyword name space, we treat keywords as regular
    // symbols so that name(kw) returns a string that doesn't contain the
@@ -319,6 +321,34 @@ std::string escape(const std::string& s) {
   return out;
 }
 
+bool is_sym_token(char c) {
+  return
+    (c != std::char_traits<char>::eof())
+    && (!isspace(c))
+    && (c != ')') && (c != '}') && (c != ']')
+    //&& (macros.find(c) == macros.end())
+    ;
+}
+
+result_t read_char(std::istream& in) {
+  std::string buf;
+
+  auto ch = in.get();
+  while (in.good() && is_sym_token(ch)) {
+    buf += ch;
+    ch = in.get();
+  }
+
+  if (buf.size() == 1) {
+    return pass(imu::nu<int_t>(buf[0]));
+  }
+  else {
+    // TODO: interpret char token
+  }
+
+  return fail();
+}
+
 macro_t string_reader(const ctor_t& ctor) {
   return [=](std::istream& in) {
     std::string str;
@@ -362,15 +392,6 @@ result_t consult_table(std::istream& in) {
 
 result_t try_default_macros(std::istream& in) {
   return try_macros(in, macros);
-}
-
-bool is_sym_token(char c) {
-  return
-    (c != std::char_traits<char>::eof())
-    && (!isspace(c))
-    && (c != ')') && (c != '}') && (c != ']')
-    //&& (macros.find(c) == macros.end())
-    ;
 }
 
 macro_t symbol_reader(const ctor_t& ctor) {
