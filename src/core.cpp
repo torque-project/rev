@@ -124,7 +124,6 @@ namespace rev {
     ctx_t::scope_t    scope;
 
     if (sym->has_ns()) {
-
       auto ns_sym = sym_t::ns(sym);
       auto the_ns = imu::get(&ns->aliases, ns_sym);
 
@@ -140,7 +139,6 @@ namespace rev {
       resolved = imu::get(&(as<ns_t>(the_ns)->interned), sym_t::name(sym));
     }
     else {
-
       scope      = ctx_t::scope_t::local;
       resolved   = imu::get(ctx.local(), sym);
 

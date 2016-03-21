@@ -11,6 +11,10 @@ namespace rev {
       return imu::nu<string_t>(s);
   }
 
+  value_t::p Binary_Serializable_binary(value_t::p self) {
+    return self;
+  }
+
   value_t::p Binary_Pointer_intptr(value_t::p self) {
     auto data = as<binary_t>(self)->data();
     return imu::nu<int_t>(reinterpret_cast<int64_t>(data));
@@ -20,13 +24,18 @@ namespace rev {
     {0, (intptr_t) Binary_Printable_str, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Binary_serializable[] = {
+   {0, (intptr_t) Binary_Serializable_binary, 0, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t Binary_pointer[] = {
     {0, (intptr_t) Binary_Pointer_intptr, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Binary_methods[] = {
-    {protocol_t::str,     Binary_printable},
-    {protocol_t::pointer, Binary_pointer},
+    {protocol_t::str,          Binary_printable},
+    {protocol_t::serializable, Binary_serializable},
+    {protocol_t::pointer,      Binary_pointer},
   };
 
   static const uint64_t size =
