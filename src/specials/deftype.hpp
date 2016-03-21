@@ -23,17 +23,21 @@ namespace rev {
 
     decltype(auto) build_meth_info(const list_t::p& forms) {
 
-      auto by_proto = imu::partition_by<list_t::p>(&is_symbol, forms);
+      typedef std::function<bool (const value_t::p&)> pred_t;
 
-      return imu::reduce([&](const imu::ty::array_map::p& m, const list_t::p& v) {
-          // auto proto = as<sym_t>(imu::ffirst<list_t>(v));
-          auto proto    = *imu::first<sym_t::p>(as<list_t>(imu::first(v)));
-          auto meths    = as<list_t>(imu::second(v));
-          auto by_arity = build_proto_info(meths);
-          return assoc(m, proto, by_arity);
-        },
-        imu::array_map(),
-        imu::partition<list_t::p>(2, by_proto));
+      auto by_proto = forms;
+      auto protos   = imu::array_map();
+      auto not_sym  = not1(pred_t(is_symbol));
+
+      while (!imu::is_empty(by_proto)) {
+        auto proto = as<sym_t>(imu::first(by_proto));
+        auto meths = imu::take_while<list_t::p>(not_sym, imu::rest(by_proto));
+        auto by_arity = build_proto_info(meths);
+        protos->assoc(proto, by_arity);
+        by_proto = imu::nthrest(imu::count(meths)+1, by_proto);
+      }
+
+      return protos;
     }
 
     decltype(auto) arities(const list_t::p& meth) {
