@@ -70,9 +70,10 @@ namespace rev {
       push(s, imu::nu<array_t>(size->value));
     }
 
-    void alength(stack_t& s, stack_t& fp, int64_t* &ip) {
-      auto a = as<array_t>(pop<value_t::p>(s));
-      push(s, imu::nu<int_t>(a->size()));
+    template<typename T>
+    void xlength(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto x = as<T>(pop<value_t::p>(s));
+      push(s, imu::nu<int_t>(x->size()));
     }
 
     void aclone(stack_t& s, stack_t& fp, int64_t* &ip) {
