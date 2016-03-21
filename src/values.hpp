@@ -307,8 +307,6 @@ namespace rev {
       return _data;
     }
 
-    value_t::p field(const value_t::p& sym) const;
-
     static p intern(const std::string& s);
 
     template<typename T>

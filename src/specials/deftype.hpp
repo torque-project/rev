@@ -153,7 +153,7 @@ namespace rev {
       compile_all(args, ctx, t);
 
       if (type->name() == "String") {
-        t << instr::make_native<string_t> << 2;
+        t << instr::make_native<string_t> << 3;
       }
       else if (type->name() == "Symbol") {
         t << instr::make_native<sym_t> << 4;
