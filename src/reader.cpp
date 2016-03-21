@@ -321,7 +321,7 @@ std::string escape(const std::string& s) {
   return out;
 }
 
-bool is_sym_token(char c) {
+bool is_token(char c) {
   return
     (c != std::char_traits<char>::eof())
     && (!isspace(c))
@@ -333,10 +333,18 @@ bool is_sym_token(char c) {
 result_t read_char(std::istream& in) {
   std::string buf;
 
-  auto ch = in.get();
-  while (in.good() && is_sym_token(ch)) {
+  char ch = in.peek();
+
+  if (is_token(ch)) {
+    do {
+      in.get();
+      buf += ch;
+      ch   = in.peek();
+    } while (in.good() && is_token(ch));
+  }
+  else {
+    in.get();
     buf += ch;
-    ch = in.get();
   }
 
   if (buf.size() == 1) {
@@ -397,7 +405,7 @@ result_t try_default_macros(std::istream& in) {
 macro_t symbol_reader(const ctor_t& ctor) {
   return [=](std::istream& in){
     char c = in.peek();
-    if (is_sym_token(c)) {
+    if (is_token(c)) {
 
       std::string sym;
 
@@ -406,7 +414,7 @@ macro_t symbol_reader(const ctor_t& ctor) {
         sym += in.get();
         c = in.peek();
 
-      } while(is_sym_token(c));
+      } while(is_token(c));
 
       return pass(ctor(sym));
     }
