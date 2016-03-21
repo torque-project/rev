@@ -351,7 +351,12 @@ result_t read_char(std::istream& in) {
     return pass(imu::nu<int_t>(buf[0]));
   }
   else {
-    // TODO: interpret char token
+    if (buf == "newline") {
+      return pass(imu::nu<int_t>('\n'));
+    }
+    if (buf == "space") {
+      return pass(imu::nu<int_t>(' '));
+    }
   }
 
   return fail();
