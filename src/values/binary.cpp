@@ -34,4 +34,36 @@ namespace rev {
 
   template<>
   type_t value_base_t<binary_t>::prototype("Binary.0", Binary_methods, size);
+
+  binary_t::binary_t(const value_t::p& xs) {
+
+    auto bins = as<list_t>(xs);
+
+    _size = imu::reduce([](size_t size, const value_t::p& x) -> size_t {
+        if (auto bin = as_nt<binary_t>(x)) {
+          return size + bin->size();
+        }
+        else if (is<int_t>(x)) {
+          return size + 1;
+        }
+        else {
+          throw std::runtime_error(
+            "Binaries can only be constructed from bytes and" \
+            "other binaries");
+        }
+      }, 0, bins);
+    _data = new char[_size];
+
+    imu::reduce([&](size_t pos, const value_t::p& x) -> size_t {
+        if (auto bin = as_nt<binary_t>(x)) {
+          memcpy(const_cast<char*>(_data) + pos, bin->data(), bin->size());
+          return pos + bin->size();
+        }
+        else if (auto n = as<int_t>(x)) {
+          *(const_cast<char*>(_data) + pos) = n->value;
+          return pos + 1;
+        }
+        return pos;
+      }, 0, bins);
+  }
 }

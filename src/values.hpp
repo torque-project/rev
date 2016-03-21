@@ -260,18 +260,7 @@ namespace rev {
       _data = data;
     }
 
-    template<typename S>
-    inline binary_t(const S& bins) {
-      _size = imu::reduce([](size_t size, const p& bin) {
-          return size + bin->size();
-        }, 0, bins);
-      _data = new char[_size];
-
-      imu::reduce([&](size_t pos, const p& bin) {
-        memcpy(const_cast<char*>(_data) + pos, bin->data(), bin->size());
-          return pos + bin->size();
-        }, 0, bins);
-    }
+    binary_t(const value_t::p& bins);
 
     ~binary_t() {
       delete[] _data;
