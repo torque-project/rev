@@ -307,6 +307,10 @@ namespace rev {
       return _data;
     }
 
+    inline const int64_t count() const {
+      return _data.size();
+    }
+
     static p intern(const std::string& s);
 
     template<typename T>

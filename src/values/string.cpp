@@ -13,6 +13,10 @@ namespace rev {
     return imu::nu<binary_t>(s->_data.c_str(), s->_data.size());
   }
 
+  value_t::p String_Counted_count(value_t::p self) {
+    return imu::nu<int_t>(as<string_t>(self)->count());
+  }
+
   struct type_t::impl_t String_printable[] = {
     {0, (intptr_t) String_Printable_str, 0, 0, 0, 0, 0, 0}
   };
@@ -21,10 +25,16 @@ namespace rev {
     {0, (intptr_t) String_Serializable_binary, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t String_counted[] = {
+    {0, (intptr_t) String_Counted_count, 0, 0, 0, 0, 0, 0}
+  };
+
+
   struct type_t::ext_t String_methods[] = {
     {protocol_t::istring,      nullptr},
     {protocol_t::str,          String_printable},
-    {protocol_t::serializable, String_serializable}
+    {protocol_t::serializable, String_serializable},
+    {protocol_t::counted,      String_counted}
   };
 
   static const uint64_t size =
