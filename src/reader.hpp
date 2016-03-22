@@ -44,6 +44,12 @@ namespace rev {
       }
     };
 
+    struct escape_error : public reader_exception {
+      const char* what() const noexcept {
+        return "Incomplete or unknown escape sequence";
+      }
+    };
+
     /**
      * Read the first form from a string
      *

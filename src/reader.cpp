@@ -288,35 +288,25 @@ result_t unquote(std::istream& in) {
   return pass(list_t::from_std(forms));
 }
 
-std::string escape(const std::string& s) {
+char escape(std::istream& in) {
 
-  std::string out;
-
-  auto i = s.begin();
-  auto j = i;
-
-  while (i != s.end()) {
-    if (*(i++) == '\\') {
-      if (i == s.end()) {
-        throw std::runtime_error(
-          "Incomplete escape sequence at thend of string");
-      }
-      out.append(j, i-1);
-      switch(*i) {
-      case '0':  out += '\0'; break;
-      case 'n':  out += '\n'; break;
-      case 'r':  out += '\r'; break;
-      case 't':  out += '\t'; break;
-      case '\\': out += '\\'; break;
-      default:
-        throw std::runtime_error(
-          std::string("Unsupported escape sequence: \\") + *i);
-      }
-      j = ++i;
-    }
+  if (in.eof()) {
+    throw eos();
   }
 
-  out.append(j, i);
+  char out;
+  char next = in.get();
+
+  switch(next) {
+  case '0':  out = '\0'; break;
+  case 'n':  out = '\n'; break;
+  case 'r':  out = '\r'; break;
+  case 't':  out = '\t'; break;
+  case '\\': out = '\\'; break;
+  case '\"': out = '\"'; break;
+  default:
+    throw escape_error();
+  }
 
   return out;
 }
@@ -365,13 +355,22 @@ result_t read_char(std::istream& in) {
 macro_t string_reader(const ctor_t& ctor) {
   return [=](std::istream& in) {
     std::string str;
-    std::getline(in, str, '\"');
 
-    if (in.eof()) {
-      throw unbalanced('\"');
-    }
+    char c;
+    do {
 
-    return pass(ctor(escape(str)));
+      if (in.eof()) {
+        throw unbalanced('\"');
+      }
+
+      c = in.get();
+      if (c != '\"') {
+        str += c == '\\' ? escape(in) : c;
+      }
+
+    } while (c != '\"');
+
+    return pass(ctor(str));
   };
 }
 
