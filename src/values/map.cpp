@@ -21,7 +21,6 @@ namespace rev {
   }
 
   value_t::p Map_Seqable_seq(value_t::p self) {
-    std::cout << as<map_t>(self)->count() << std::endl;
     return imu::nu<seq_adapter_t<map_t>>(as<map_t>(self));
   }
 
@@ -97,7 +96,6 @@ namespace rev {
     auto seq = as<seq_adapter_t<map_t>>(self)->seq();
     if (!imu::is_empty(seq)) {
       if (auto rest = seq->rest()) {
-        std::cout << "rest " << rest << std::endl;
         return imu::nu<seq_adapter_t<map_t>>(rest);
       }
     }
@@ -108,7 +106,6 @@ namespace rev {
     auto seq = as<seq_adapter_t<map_t>>(self)->seq();
     if (!imu::is_empty(seq)) {
       if (auto rest = seq->rest()) {
-        std::cout << "next " << rest << std::endl;
         return imu::nu<seq_adapter_t<map_t>>(rest);
       }
     }
