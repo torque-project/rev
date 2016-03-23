@@ -351,6 +351,18 @@ result_t read_char(std::istream& in) {
     if (buf == "space") {
       return pass(imu::nu<int_t>(' '));
     }
+    if (buf == "tab") {
+      return pass(imu::nu<int_t>('\t'));
+    }
+    if (buf == "backspace") {
+      return pass(imu::nu<int_t>(8));
+    }
+    if (buf == "formfeed") {
+      return pass(imu::nu<int_t>(12));
+    }
+    if (buf == "return") {
+      return pass(imu::nu<int_t>(13));
+    }
   }
 
   return fail();

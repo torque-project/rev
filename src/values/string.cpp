@@ -29,7 +29,6 @@ namespace rev {
     {0, (intptr_t) String_Counted_count, 0, 0, 0, 0, 0, 0}
   };
 
-
   struct type_t::ext_t String_methods[] = {
     {protocol_t::istring,      nullptr},
     {protocol_t::str,          String_printable},
