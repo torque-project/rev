@@ -13,6 +13,12 @@ namespace rev {
     return imu::nu<binary_t>(s->_data.c_str(), s->_data.size());
   }
 
+  value_t::p String_Equiv_equiv(value_t::p self, value_t::p other) {
+    auto s = as<string_t>(self);
+    auto o = as_nt<string_t>(other);
+    return (o && s->data() == o->data()) ? sym_t::true_ : sym_t::false_;
+  }
+
   value_t::p String_Counted_count(value_t::p self) {
     return imu::nu<int_t>(as<string_t>(self)->count());
   }
@@ -25,6 +31,10 @@ namespace rev {
     {0, (intptr_t) String_Serializable_binary, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t String_equiv[] = {
+    {0, 0, (intptr_t) String_Equiv_equiv, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t String_counted[] = {
     {0, (intptr_t) String_Counted_count, 0, 0, 0, 0, 0, 0}
   };
@@ -33,6 +43,7 @@ namespace rev {
     {protocol_t::istring,      nullptr},
     {protocol_t::str,          String_printable},
     {protocol_t::serializable, String_serializable},
+    {protocol_t::equiv,        String_equiv},
     {protocol_t::counted,      String_counted}
   };
 
