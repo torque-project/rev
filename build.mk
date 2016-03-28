@@ -25,7 +25,7 @@ libvm.so_sources_$(d) += \
 
 libvm.so_precompiled_$(d) :=
 libvm.so_target_dir_$(d)  := lib
-libvm.so_cxx_flags_$(d)   := -D_DEBUG -g -std=c++14 -I$(d)/lib/momentum/include $(FFI_CFLAGS)
+libvm.so_cxx_flags_$(d)   := -O2 -g -std=c++14 -I$(d)/lib/momentum/include $(FFI_CFLAGS)
 libvm.so_ld_flags_$(d)    := -shared -undefined dynamic_lookup $(FFI_LFLAGS)
 
 include $(TOP)/build/footer.mk

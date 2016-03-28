@@ -25,6 +25,8 @@
 #include <set>
 #include <vector>
 
+#include <unistd.h>
+
 namespace rev {
 
   typedef void (*special_t)(const list_t::p&, ctx_t&, thread_t&);
