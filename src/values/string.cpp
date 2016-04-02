@@ -10,7 +10,9 @@ namespace rev {
 
   value_t::p String_Serializable_binary(value_t::p self) {
     auto s = as<string_t>(self);
-    return imu::nu<binary_t>(s->_data.c_str(), s->_data.size());
+    return imu::nu<binary_t>(
+      (unsigned char*) s->_data.c_str(),
+      s->_data.size());
   }
 
   value_t::p String_Equiv_equiv(value_t::p self, value_t::p other) {

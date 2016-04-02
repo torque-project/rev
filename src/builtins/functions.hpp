@@ -65,9 +65,10 @@ namespace rev {
       push(s, imu::nu<array_t>(vals));
     }
 
-    void make_array(stack_t& s, stack_t& fp, int64_t* &ip) {
+    template<typename T>
+    void xmake(stack_t& s, stack_t& fp, int64_t* &ip) {
       auto size = as<int_t>(pop<value_t::p>(s));
-      push(s, imu::nu<array_t>(size->value));
+      push(s, imu::nu<T>(size->value));
     }
 
     template<typename T>

@@ -6,7 +6,7 @@ namespace rev {
     auto b = as<binary_t>(self);
     std::string s;
     s += "#{binary: ";
-    s.append(b->data(), b->size());
+    s.append((const char*) b->data(), b->size());
     s += "}";
       return imu::nu<string_t>(s);
   }
@@ -61,15 +61,17 @@ namespace rev {
             "other binaries");
         }
       }, 0, bins);
-    _data = new char[_size];
+    _data = new uint8_t[_size];
 
     imu::reduce([&](size_t pos, const value_t::p& x) -> size_t {
         if (auto bin = as_nt<binary_t>(x)) {
-          memcpy(const_cast<char*>(_data) + pos, bin->data(), bin->size());
+          memcpy(
+            const_cast<unsigned char*>(_data) + pos, bin->data(),
+            bin->size());
           return pos + bin->size();
         }
         else if (auto n = as<int_t>(x)) {
-          *(const_cast<char*>(_data) + pos) = n->value;
+          *(const_cast<unsigned char*>(_data) + pos) = n->value;
           return pos + 1;
         }
         return pos;

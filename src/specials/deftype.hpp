@@ -168,6 +168,9 @@ namespace rev {
     }
 
     void dot(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
+
+      static const auto TYPE = keyw_t::intern("type");
+
       auto x   = *imu::first(forms);
       auto sym = as<sym_t>(imu::second(forms));
 

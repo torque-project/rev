@@ -8,6 +8,7 @@
 #include <iostream>
 #include <list>
 #include <map>
+#include <set>
 #include <sstream>
 #include <vector>
 
@@ -163,7 +164,13 @@ macro_t wrap(const char* s) {
 result_t conditional(std::istream& in) {
 
   static const keyw_t::p REV = keyw_t::intern("rev");
+  static const keyw_t::p LSB = keyw_t::intern("byte-order/lsb");
+  static const keyw_t::p MSB = keyw_t::intern("byte-order/msb");
   static const keyw_t::p DEF = keyw_t::intern("default");
+
+  static const std::set<keyw_t::p> features({
+      REV, LSB
+    });
 
   auto branches = imu::partition<list_t::p>(2, as<list_t>(read(in)));
 
@@ -172,7 +179,7 @@ result_t conditional(std::istream& in) {
     auto kv = as<list_t>(imu::first(branches));
     auto k  = as<keyw_t>(imu::first(kv));
 
-    if (k == REV) {
+    if (features.find(k) != features.end()) {
       form = *imu::second(kv);
       break;
     }

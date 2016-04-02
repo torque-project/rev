@@ -249,13 +249,18 @@ namespace rev {
 
     typedef typename semantics<binary_t>::p p;
 
-    uint64_t    _size;
-    const char* _data;
+    uint64_t       _size;
+    const uint8_t* _data;
 
     inline binary_t() {
     }
 
-    inline binary_t(const char* data, uint64_t size) {
+    inline binary_t(uint64_t size) {
+      _size = size;
+      _data = new uint8_t[size];
+    }
+
+    inline binary_t(const uint8_t* data, uint64_t size) {
       _size = size;
       _data = data;
     }
@@ -270,7 +275,7 @@ namespace rev {
       return _size;
     }
 
-    inline const char* data() const {
+    inline const uint8_t* data() const {
       return _data;
     }
 
@@ -306,7 +311,7 @@ namespace rev {
     static p from_std(const T& b, const T& e) {
       std::string s;
       auto bin = static_cast<binary_t::p>(*b);
-      s.append(bin->data(), bin->size());
+      s.append((const char*) bin->data(), bin->size());
 
       return imu::nu<string_t>(s);
     }
