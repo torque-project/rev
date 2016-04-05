@@ -126,6 +126,8 @@ namespace rev {
 #ifdef _TRACE
       std::cout << "native: ";
 #endif
+      static var_t::p eno = nullptr;
+
       auto f         = as<int_t>((value_t::p) *(ip++));
       auto meta      = as<map_t>(f->meta);
       auto ret_type  = as<keyw_t>(imu::get(meta, ffi::RET));
@@ -155,6 +157,9 @@ namespace rev {
       ffi_prep_cif(&cif, FFI_DEFAULT_ABI, arity, nat_type, types);
       ffi_call(&cif, ptr, &ret, values);
 
+      if (!eno) { eno = resolve(sym_t::intern("*errno*")); }
+      eno->deref<int_t>()->value = errno;
+
       stack::push(s, ffi::unmarshal(ret, ret_type));
     }
   }
@@ -176,12 +181,14 @@ namespace rev {
       auto sig    = imu::drop(2, forms);
       auto loaded = dlsym((void*) so->value, sym->name().c_str());
       auto call   = imu::nu<int_t>((int64_t) loaded);
+      auto ret    = as<keyw_t>(imu::first(sig));
+      auto args   = as<list_t>(imu::second(sig));
 
       call->set_meta(
         imu::nu<map_t>(
           ffi::NAME, sym,
-          ffi::RET,  as<keyw_t>(imu::first(sig)),
-          ffi::ARGS, as<list_t>(imu::second(sig))));
+          ffi::RET,  ret,
+          ffi::ARGS, imu::into<list_t::p>(imu::nu<list_t>(), args)));
 
       t << instr::push << call;
     }
