@@ -646,11 +646,9 @@ namespace rev {
     if (parse_source_paths(s)) {
       // load core name space and make it visible in user name space
       auto core = load_ns("torque.core");
-      auto eno  = core->intern(sym_t::intern("*errno*"), nu<var_t>());
-
-      eno->bind(nu<int_t>(0));
- 
       rt.in_ns->map(core);
+
+      load_ns("torque.ffi");
     }
   }
 }
