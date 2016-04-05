@@ -166,7 +166,7 @@ result_t conditional(std::istream& in) {
   static const keyw_t::p REV   = keyw_t::intern("rev");
   static const keyw_t::p LSB   = keyw_t::intern("byte-order/lsb");
   static const keyw_t::p MSB   = keyw_t::intern("byte-order/msb");
-  static const keyw_t::p POSIX = keyw_t::intenr("api/posix");
+  static const keyw_t::p POSIX = keyw_t::intern("api/posix");
   static const keyw_t::p DEF   = keyw_t::intern("default");
 
   static const std::set<keyw_t::p> features({
