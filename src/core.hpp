@@ -23,7 +23,7 @@ namespace rev {
 
   void load_file(const std::string& source);
 
-  void     intern(const sym_t::p& sym, var_t::p var);
+  var_t::p intern(const sym_t::p& sym, var_t::p var);
   var_t::p resolve(const sym_t::p& sym);
   sym_t::p qualify(const sym_t::p& sym);
 
@@ -44,5 +44,9 @@ namespace rev {
 
   inline bool is_symbol(const value_t::p& x) {
     return is<sym_t>(x);
+  }
+
+  inline bool is_keyword(const value_t::p& x) {
+    return is<keyw_t>(x);
   }
 }

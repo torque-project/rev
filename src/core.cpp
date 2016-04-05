@@ -106,9 +106,10 @@ namespace rev {
     return ns;
   }
 
-  void intern(const sym_t::p& sym, var_t::p var) {
+  var_t::p intern(const sym_t::p& sym, var_t::p var) {
     assert(rt.in_ns && "No current namespace is bound");
     rt.in_ns->intern(sym, var);
+    return var;
   }
 
   bool is_special(const sym_t::p& sym) {
@@ -645,6 +646,10 @@ namespace rev {
     if (parse_source_paths(s)) {
       // load core name space and make it visible in user name space
       auto core = load_ns("torque.core");
+      auto eno  = core->intern(sym_t::intern("*errno*"), nu<var_t>());
+
+      eno->bind(nu<int_t>(0));
+ 
       rt.in_ns->map(core);
     }
   }
