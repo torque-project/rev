@@ -15,14 +15,29 @@ namespace rev {
 
       // resolve sym first, since it might have been declared
       auto lookup = resolve_nt(ctx, name);
-      auto var    = lookup ? as<var_t>(*lookup) : imu::nu<var_t>();
+      auto var    = imu::nu<var_t>();
+
+      if (lookup) {
+        auto declared = as<var_t>(*lookup);
+        if (declared->ns() != ns()) {
+          std::cout
+            << "redefining symbol " << name->name()
+            << " originally defined in " << as<ns_t>(declared->ns())->name()
+            << std::endl;
+        }
+        else {
+          var = declared;
+        }
+      }
 
       var->set_meta(name->meta);
       intern(name, var);
 
       if (init) {
         if (auto doc = as_nt<string_t>(*init)) {
-          init = imu::first(imu::drop(2, forms));
+          if (imu::count(forms) > 2) {
+            init = imu::first(imu::drop(2, forms));
+          }
         }
         compile(*init, ctx, t);
         t << instr::bind << var;
