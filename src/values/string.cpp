@@ -4,6 +4,8 @@
 
 namespace rev {
 
+  extern value_t::p Binary_Pointer_intptr(value_t::p);
+
   value_t::p String_Printable_str(value_t::p self) {
     return self;
   }
@@ -13,6 +15,12 @@ namespace rev {
     return imu::nu<binary_t>(
       (unsigned char*) s->_data.c_str(),
       s->_data.size());
+  }
+
+  value_t::p String_Pointer_intptr(value_t::p self) {
+    auto x = as<string_t>(self)->name();
+    std::cout << "TEST: " << x << std::endl;
+    return Binary_Pointer_intptr(String_Serializable_binary(self));
   }
 
   value_t::p String_Equiv_equiv(value_t::p self, value_t::p other) {
@@ -33,6 +41,10 @@ namespace rev {
     {0, (intptr_t) String_Serializable_binary, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t String_pointer[] = {
+    {0, (intptr_t) String_Pointer_intptr, 0, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t String_equiv[] = {
     {0, 0, (intptr_t) String_Equiv_equiv, 0, 0, 0, 0, 0}
   };
@@ -45,6 +57,7 @@ namespace rev {
     {protocol_t::istring,      nullptr},
     {protocol_t::str,          String_printable},
     {protocol_t::serializable, String_serializable},
+    {protocol_t::pointer,      String_pointer},
     {protocol_t::equiv,        String_equiv},
     {protocol_t::counted,      String_counted}
   };
