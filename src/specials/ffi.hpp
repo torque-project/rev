@@ -1,6 +1,6 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 
 #include <dlfcn.h>
 
@@ -26,14 +26,20 @@ namespace rev {
     static const auto VOID   = keyw_t::intern("void");
     static const auto SINT32 = keyw_t::intern("sint32");
     static const auto SINT64 = keyw_t::intern("sint64");
+    static const auto UINT64 = keyw_t::intern("uint64");
     static const auto PTR    = keyw_t::intern("ptr");
     static const auto STRING = keyw_t::intern("string");
     static const auto OUT    = keyw_t::intern("out");
 
-    static std::map<keyw_t::p, ffi_type*> convert_type = {
+    static std::unordered_map<
+        keyw_t::p
+      , ffi_type*
+      , std::hash<keyw_t::p>
+      , rev::equal_to> convert_type = {
       {VOID,   &ffi_type_void},
       {SINT32, &ffi_type_sint32},
       {SINT64, &ffi_type_sint64},
+      {UINT64, &ffi_type_uint64},
       {PTR,    &ffi_type_pointer},
       {STRING, &ffi_type_pointer}
     };
@@ -87,7 +93,9 @@ namespace rev {
           if (keyw_t::equiv(k, STRING)) {
             return new marshalled_str_t(as<string_t>(arg));
           }
-          if (keyw_t::equiv(k, SINT32) || keyw_t::equiv(k, SINT64)) {
+          if (keyw_t::equiv(k, SINT32) ||
+              keyw_t::equiv(k, SINT64) ||
+              keyw_t::equiv(k, UINT64)) {
             return new marshalled_t(&(as<int_t>(arg)->value));
           }
           // TODO: throw
@@ -108,7 +116,7 @@ namespace rev {
      */
     value_t::p unmarshal(const void* arg, const value_t::p& type) {
       if (auto k = as_nt<keyw_t>(type)) {
-        if (k == PTR || k == SINT64 || k == SINT32) {
+        if (k == PTR || k == SINT64 || k == SINT32 || k == UINT64) {
           return imu::nu<int_t>((int64_t) arg);
         }
         if (k == VOID) {
@@ -144,20 +152,22 @@ namespace rev {
       std::vector<std::unique_ptr<ffi::marshalled_t>> marshalled(arity);
 
       for (int i=(arity-1); i>=0; --i) {
-        types[i] = &ffi_type_pointer;
-
+        auto type = as<keyw_t>(imu::first(arg_types));
+        types[i] = ffi::convert_type[type];
         marshalled[i].reset(
           ffi::marshal(
             stack::pop<value_t::p>(s),
-            *imu::first(arg_types)));
+            type));
         arg_types = imu::rest(arg_types);
         values[i] = marshalled[i]->arg();
       }
 
+      errno = 0;
+
       ffi_prep_cif(&cif, FFI_DEFAULT_ABI, arity, nat_type, types);
       ffi_call(&cif, ptr, &ret, values);
 
-      if (!eno) { eno = resolve(sym_t::intern("*errno*")); }
+      if (!eno) { eno = resolve(sym_t::intern("torque.ffi/*errno*")); }
       eno->deref<int_t>()->value = errno;
 
       stack::push(s, ffi::unmarshal(ret, ret_type));
