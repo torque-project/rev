@@ -27,14 +27,16 @@ namespace rev {
     return sym_base_t<T>::equiv(self, other) ? sym_t::true_ : sym_t::false_;
   }
 
-  value_t::p Symbol_Named_name(value_t::p self) {
-    return imu::nu<string_t>(as<sym_t>(self)->name());
+  template<typename T>
+  value_t::p Symbolic_Named_name(value_t::p self) {
+    return imu::nu<string_t>(as<T>(self)->name());
   }
 
-  value_t::p Symbol_Named_namespace(value_t::p self) {
-    auto sym = as<sym_t>(self);
-    if (sym->has_ns()) {
-      return imu::nu<string_t>(sym->ns());
+  template<typename T>
+  value_t::p Symbolic_Named_namespace(value_t::p self) {
+    auto x = as<T>(self);
+    if (x->has_ns()) {
+      return imu::nu<string_t>(x->ns());
     }
     return nullptr;
   }
@@ -68,8 +70,8 @@ namespace rev {
   };
 
   struct type_t::impl_t Symbol_named[] = {
-    {0, (intptr_t) Symbol_Named_name, 0, 0, 0, 0, 0, 0},
-    {0, (intptr_t) Symbol_Named_namespace, 0, 0, 0, 0, 0, 0}
+    {0, (intptr_t) Symbolic_Named_name<sym_t>, 0, 0, 0, 0, 0, 0},
+    {0, (intptr_t) Symbolic_Named_namespace<sym_t>, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Symbol_withmeta[] = {
@@ -91,6 +93,11 @@ namespace rev {
     {0, (intptr_t) Keyword_Printable_str, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Keyword_named[] = {
+    {0, (intptr_t) Symbolic_Named_name<keyw_t>, 0, 0, 0, 0, 0, 0},
+    {0, (intptr_t) Symbolic_Named_namespace<keyw_t>, 0, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t Keyword_withmeta[] = {
     {0, 0, (intptr_t) Symbolic_WithMeta_withmeta<keyw_t>, 0, 0, 0, 0, 0}
   };
@@ -109,6 +116,7 @@ namespace rev {
   struct type_t::ext_t Keyword_methods[] = {
     {protocol_t::str,      Keyword_printable},
     {protocol_t::withmeta, Keyword_withmeta},
+    {protocol_t::named,    Keyword_named},
     {protocol_t::ifn,      Keyword_ifn},
     {protocol_t::equiv,    Keyword_equiv}
   };

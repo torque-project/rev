@@ -28,6 +28,18 @@ namespace rev {
     return imu::conj(as<vector_t>(self), o);
   }
 
+  value_t::p Vector_Associative_contains_key(value_t::p self, value_t::p k) {
+    return sym_t::false_;
+  }
+
+  value_t::p Vector_Associative_assoc(
+    value_t::p self, value_t::p k, value_t::p val) {
+
+    auto v = as<vector_t>(self);
+    auto n = as<int_t>(k);
+    return imu::assoc(v, n->value, val);
+  }
+
   value_t::p Vector_IIndexed_nth2(value_t::p self, value_t::p n) {
     return as<vector_t>(self)->nth(as<int_t>(n)->value);
   }
@@ -93,6 +105,11 @@ namespace rev {
     {0, 0, (intptr_t) Vector_Collection_conj, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Vector_associative[] = {
+    {0, 0, (intptr_t) Vector_Associative_contains_key, 0, 0, 0, 0, 0},
+    {0, 0, 0, (intptr_t) Vector_Associative_assoc, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t Vector_iindexed[] = {
     {0, 0,
      (intptr_t) Vector_IIndexed_nth2,
@@ -119,12 +136,13 @@ namespace rev {
   };
 
   struct type_t::ext_t Vector_methods[] = {
-    {protocol_t::str,      Vector_printable},
-    {protocol_t::seqable,  Vector_seqable},
-    {protocol_t::ivector,  nullptr},
-    {protocol_t::coll,     Vector_coll},
-    {protocol_t::indexed,  Vector_iindexed},
-    {protocol_t::mapentry, Vector_mapentry}
+    {protocol_t::str,         Vector_printable},
+    {protocol_t::seqable,     Vector_seqable},
+    {protocol_t::ivector,     nullptr},
+    {protocol_t::coll,        Vector_coll},
+    {protocol_t::associative, Vector_associative},
+    {protocol_t::indexed,     Vector_iindexed},
+    {protocol_t::mapentry,    Vector_mapentry}
   };
 
   struct type_t::ext_t VectorSeq_methods[] = {

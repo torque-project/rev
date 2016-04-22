@@ -116,7 +116,7 @@ namespace rev {
     static std::set<const std::string> specials = {
       "def", "do", "if", "let*", "binding*", "loop*", "quote", "ns", "fn*",
       "deftype", "defprotocol", "dispatch*", "recur", "new", "set!",
-      ".", "apply*", "so*", "import*"
+      ".", "apply*", "so*", "import*", "invoke*"
     };
     return sym && (specials.count(sym->name()) == 1);
   }
@@ -127,6 +127,7 @@ namespace rev {
     ctx_t::scope_t    scope;
 
     if (sym->has_ns()) {
+
       auto ns_sym = sym_t::ns(sym);
       auto the_ns = imu::get(&ns->aliases, ns_sym);
 
@@ -258,6 +259,7 @@ namespace rev {
         if (sym->name() == "apply*")      { return apply;       }
         if (sym->name() == "so*")         { return so;          }
         if (sym->name() == "import*")     { return import;      }
+        if (sym->name() == "invoke*")     { return invoke;      }
       }
       return nullptr;
     }
@@ -312,6 +314,7 @@ namespace rev {
         if (sym->name() == "acopy")       { return acopy;             }
         if (sym->name() == "array")       { return array;             }
         if (sym->name() == "make-array")  { return xmake<array_t>;    }
+        if (sym->name() == "fnptr")       { return fnptr;             }
 
         if (sym->name() == "print") { return print; }
         if (sym->name() == "read")  { return read;  }
@@ -360,33 +363,20 @@ namespace rev {
         // 3) emit list as native call
       }*/
       else {
-        auto lookup = sym ? resolve_nt(ctx, sym) : ctx_t::lookup_t();
-        if (lookup &&
-            lookup.is_global() &&
-            is<int_t>(as<var_t>(*lookup)->deref())) {
-          if (auto f = as<var_t>(*lookup)->deref<int_t>()) {
-            // the callee is a pointer, so we try to call this as
-            // as native function
-            compile_all(args, ctx, t);
-            t << instr::native << f << imu::count(args);
-          }
-        }
-        else {
-          // FIXME: this isn't really pretty. maybe it's better to
-          // store the return address at the top of the stack, which
-          // wouldn't require this hack to patch up the return address
-          // after emitting all the arguments. on the other hand binding
-          // the parameter in the function becomes more complicated
-          // if the return address rests on top of the stack
-          t << instr::return_here << 0;
-          auto return_addr = t.size();
+        // FIXME: this isn't really pretty. maybe it's better to
+        // store the return address at the top of the stack, which
+        // wouldn't require this hack to patch up the return address
+        // after emitting all the arguments. on the other hand binding
+        // the parameter in the function becomes more complicated
+        // if the return address rests on top of the stack
+        t << instr::return_here << 0;
+        auto return_addr = t.size();
 
-          compile(head, ctx, t);
-          compile_all(args, ctx, t);
+        compile(head, ctx, t);
+        compile_all(args, ctx, t);
 
-          t << instr::dispatch << imu::count(args);
-          t[return_addr-1] = (t.size() - return_addr);
-        }
+        t << instr::dispatch << imu::count(args);
+        t[return_addr-1] = (t.size() - return_addr);
       }
     }
   }

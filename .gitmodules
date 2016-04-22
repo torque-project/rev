@@ -4,7 +4,7 @@
 	branch = master
 [submodule "lib/momentum"]
 	path = lib/momentum
-	url = https://github.com/jkrueger/momentum.git
+	url = git@github.com:jkrueger/momentum.git
 	branch = develop
 [submodule "lib/libffi"]
 	path = lib/libffi

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ffi.h"
+
 #include <unordered_map>
 
 #include <dlfcn.h>
@@ -23,28 +25,43 @@ namespace rev {
     static const auto NAME   = keyw_t::intern("name");
     static const auto RET    = keyw_t::intern("ret");
     static const auto ARGS   = keyw_t::intern("args");
+    static const auto NATIVE = keyw_t::intern("native");
     static const auto VOID   = keyw_t::intern("void");
+    static const auto BOOL   = keyw_t::intern("bool");
     static const auto SINT32 = keyw_t::intern("sint32");
+    static const auto UINT32 = keyw_t::intern("uint32");
     static const auto SINT64 = keyw_t::intern("sint64");
     static const auto UINT64 = keyw_t::intern("uint64");
     static const auto PTR    = keyw_t::intern("ptr");
     static const auto STRING = keyw_t::intern("string");
     static const auto OUT    = keyw_t::intern("out");
 
-    static std::unordered_map<
-        keyw_t::p
-      , ffi_type*
-      , std::hash<keyw_t::p>
-      , rev::equal_to> convert_type = {
-      {VOID,   &ffi_type_void},
-      {SINT32, &ffi_type_sint32},
-      {SINT64, &ffi_type_sint64},
-      {UINT64, &ffi_type_uint64},
-      {PTR,    &ffi_type_pointer},
-      {STRING, &ffi_type_pointer}
+    static std::unordered_map<std::string, ffi_type*> convert_type = {
+      {"void",   &ffi_type_void},
+      {"bool",   &ffi_type_uint32},
+      {"sint32", &ffi_type_sint32},
+      {"uint32", &ffi_type_uint32},
+      {"sint64", &ffi_type_sint64},
+      {"uint64", &ffi_type_uint64},
+      {"ptr",    &ffi_type_pointer},
+      {"string", &ffi_type_pointer},
+      {"native", &ffi_type_pointer}
     };
 
+    template<typename T>
+    inline void convert_types(const T& types, ffi_type** out) {
+      int i=0; // imu::count(types);
+      imu::for_each([&](const keyw_t::p& k) {
+          if (!(out[i++] = ffi::convert_type[k->name()])) {
+            throw std::runtime_error("Unknown ffi type: " + k->name());
+          }
+        }, types);
+    }
+
     struct marshalled_t {
+
+      typedef std::unique_ptr<marshalled_t> p;
+
       void* _arg;
 
       inline marshalled_t(void* arg)
@@ -69,11 +86,45 @@ namespace rev {
     };
 
     struct marshalled_out_t : public marshalled_t {
-      std::unique_ptr<marshalled_t> _ref;
+      p _ref;
 
       inline marshalled_out_t(marshalled_t* ref)
         : marshalled_t((void*) &ref->_arg), _ref(ref)
       {}
+    };
+
+    void delegate(ffi_cif* cif, void* ret, void* args[], void* x);
+
+    struct fn_ptr_t : public rev::int_t {
+
+      ffi_cif      _cif;
+      ffi_closure* _closure;
+      ffi_type*    _ret;
+      ffi_type**   _types;
+      fn_t::p      _f;
+      vector_t::p  _sig;
+
+      inline fn_ptr_t(const fn_t::p& f, const vector_t::p& sig)
+        : _f(f), _sig(sig) {
+
+        _closure = (ffi_closure*)
+          ffi_closure_alloc(sizeof(ffi_closure), (void**) &value);
+
+        auto ret  = as<keyw_t>(imu::nth(sig, 0));
+        auto args = as<vector_t>(imu::nth(sig, 1));
+
+        _ret   = convert_type[ret->name()];
+        _types = new ffi_type*[imu::count(args)];
+        convert_types(args, _types);
+
+        ffi_prep_cif(&_cif, FFI_DEFAULT_ABI, 1, convert_type[ret->name()], _types);
+        ffi_prep_closure_loc(_closure, &_cif, delegate, this, (void*) &value);
+      }
+
+      ~fn_ptr_t() {
+        ffi_closure_free(_closure);
+        delete[] _types;
+      }
     };
 
     /**
@@ -86,14 +137,20 @@ namespace rev {
         if (!has_meta(k, OUT)) {
           if (keyw_t::equiv(k, PTR)) {
             if (auto i = as_nt<int_t>(arg)) {
-              return new marshalled_t((void*) &(as<int_t>(arg)->value));
+              return new marshalled_t((void*) &(i->value));
             }
             return new marshalled_t((void*) &arg);
           }
           if (keyw_t::equiv(k, STRING)) {
             return new marshalled_str_t(as<string_t>(arg));
           }
+          if (keyw_t::equiv(k, BOOL)) {
+            static const int zero = 0;
+            static const int one  = 1;
+            return new marshalled_t((void*) &(arg == sym_t::true_ ? one : zero));
+          }
           if (keyw_t::equiv(k, SINT32) ||
+              keyw_t::equiv(k, UINT32) ||
               keyw_t::equiv(k, SINT64) ||
               keyw_t::equiv(k, UINT64)) {
             return new marshalled_t(&(as<int_t>(arg)->value));
@@ -104,7 +161,11 @@ namespace rev {
           auto t = imu::nu<keyw_t>(k->fqn());
           return new marshalled_out_t(marshal(arg, t));
         }
-      }
+      }/*
+      else if (auto v = as_nt<vector_t>(type)) {
+        // fns are serialized as pointers
+        return new marshalled_t(arg);
+        }*/
       // TODO: throw
       return nullptr;
     }
@@ -116,15 +177,45 @@ namespace rev {
      */
     value_t::p unmarshal(const void* arg, const value_t::p& type) {
       if (auto k = as_nt<keyw_t>(type)) {
-        if (k == PTR || k == SINT64 || k == SINT32 || k == UINT64) {
+        if (k == PTR ||
+            k == SINT32 || k == SINT64 ||
+            k == UINT32 || k == UINT64) {
           return imu::nu<int_t>((int64_t) arg);
         }
         if (k == VOID) {
           return nullptr;
         }
+        if (k == STRING) {
+          return imu::nu<string_t>((const char*) arg);
+        }
+        if (k == NATIVE) {
+          return value_t::p(arg);
+        }
       }
       // TODO: throw
       return nullptr;
+    }
+
+    void delegate(ffi_cif* cif, void* ret, void* args[], void* x) {
+      auto handle = reinterpret_cast<fn_ptr_t*>(x);
+
+      auto ret_type  = imu::nth(handle->_sig, 0);
+      auto arg_types = as<vector_t>(imu::nth(handle->_sig, 1));
+
+      auto values = imu::nu<list_t>();
+
+      auto arity = imu::count(arg_types);
+      auto i = arity;
+
+      while (i-- > 0) {
+        values = imu::conj(values, unmarshal(*((void**) args[i]), imu::nth(arg_types, i)));
+      }
+
+      // FIXME: this will not work for strings and the like,
+      // which would have to be allocated on the clojure side
+      // this should be enforced here
+      marshalled_t::p r(marshal(rev::call(handle->_f, values), ret_type));
+      *((void**) ret) = *((void**) r->arg());
     }
   }
 
@@ -136,29 +227,29 @@ namespace rev {
 #endif
       static var_t::p eno = nullptr;
 
-      auto f         = as<int_t>((value_t::p) *(ip++));
-      auto meta      = as<map_t>(f->meta);
-      auto ret_type  = as<keyw_t>(imu::get(meta, ffi::RET));
-      auto nat_type  = ffi::convert_type[ret_type];
-      auto arg_types = as<list_t>(imu::get(meta, ffi::ARGS));
-      auto arity     = *(ip++);
+      auto f         = as<int_t>(stack::pop<value_t::p>(s));
+      auto ret_type  = as<keyw_t>((value_t::p) *(ip++));
+      auto nat_type  = ffi::convert_type[ret_type->name()];
+      auto arg_types = as<vector_t>((value_t::p) *(ip++));
       auto ptr       = reinterpret_cast<void (*)()>(f->value);
-      void* ret      = nullptr;
+      auto arity     = imu::count(arg_types);
+
+      void* ret = nullptr;
 
       ffi_cif   cif;
       ffi_type* types[arity];
       void*     values[arity];
 
-      std::vector<std::unique_ptr<ffi::marshalled_t>> marshalled(arity);
+      ffi::convert_types(arg_types, types);
 
-      for (int i=(arity-1); i>=0; --i) {
-        auto type = as<keyw_t>(imu::first(arg_types));
-        types[i] = ffi::convert_type[type];
+      std::vector<ffi::marshalled_t::p> marshalled(arity);
+
+      auto i = arity;
+      while (i-- > 0) {
         marshalled[i].reset(
           ffi::marshal(
             stack::pop<value_t::p>(s),
-            type));
-        arg_types = imu::rest(arg_types);
+            imu::nth(arg_types, i)));
         values[i] = marshalled[i]->arg();
       }
 
@@ -177,30 +268,54 @@ namespace rev {
   namespace specials {
 
     void so(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
-      auto name    = as<string_t>(imu::first(forms));
-      auto sysname = SO_PREFIX + name->data() + SO_EXT;
-      auto opts    = imu::rest(forms);
+      void* handle = 0;
+      if (auto name = as_nt<string_t>(imu::first(forms))) {
+        auto sysname = SO_PREFIX + name->data() + SO_EXT;
+        handle = dlopen(sysname.c_str(), RTLD_LAZY | RTLD_LOCAL);
+      }
+      else {
+        handle = RTLD_DEFAULT;
+      }
 
-      auto handle = dlopen(sysname.c_str(), RTLD_LAZY | RTLD_LOCAL);
+      auto opts = imu::rest(forms);
+
       t << instr::push << imu::nu<int_t>((int64_t) handle);
     }
 
     void import(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
-      auto so     = resolve(as<sym_t>(imu::first(forms)))->deref<int_t>();
-      auto sym    = as<sym_t>(imu::second(forms));
-      auto sig    = imu::drop(2, forms);
-      auto loaded = dlsym((void*) so->value, sym->name().c_str());
-      auto call   = imu::nu<int_t>((int64_t) loaded);
-      auto ret    = as<keyw_t>(imu::first(sig));
-      auto args   = as<list_t>(imu::second(sig));
+      auto so  = resolve(as<sym_t>(imu::first(forms)))->deref<int_t>();
+      auto sym = as<sym_t>(imu::second(forms));
+      auto sig = imu::drop(2, forms);
 
-      call->set_meta(
-        imu::nu<map_t>(
-          ffi::NAME, sym,
-          ffi::RET,  ret,
-          ffi::ARGS, imu::into<list_t::p>(imu::nu<list_t>(), args)));
+      auto loaded = dlsym((void*) so->value, sym->name().c_str());
+      if (!loaded) {
+        throw std::runtime_error("Failed to import: " + sym->name());
+      }
+
+      auto call = imu::nu<int_t>((int64_t) loaded);
+      call->set_meta(imu::nu<map_t>(ffi::NAME, sym));
 
       t << instr::push << call;
+    }
+
+    void invoke(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
+      auto ptr   = *imu::first(forms);
+      auto ret   = as<keyw_t>(imu::second(forms));
+      auto types = as<vector_t>(imu::first(imu::drop(2, forms)));
+      auto args  = imu::drop(3, forms);
+
+      compile_all(args, ctx, t);
+      compile(ptr, ctx, t);
+      t << instr::native << ret << types;
+    }
+  }
+  namespace builtins {
+    void fnptr(stack_t& s, stack_t& fp, int64_t* &ip) {
+      using namespace instr::stack;
+      auto args = as<vector_t>(pop<value_t::p>(s));
+      auto ret  = as<keyw_t>(pop<value_t::p>(s));
+      auto fn   = as<fn_t>(pop<value_t::p>(s));
+      push(s, imu::nu<ffi::fn_ptr_t>(fn, vector_t::factory(ret, args)));
     }
   }
 }

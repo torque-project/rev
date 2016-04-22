@@ -238,6 +238,8 @@ namespace rev {
 
     T value; // the boxed value type
 
+    inline box_t() : value() {}
+
     inline box_t(const T& v)
       : value(v)
     {}
@@ -450,11 +452,7 @@ namespace rev {
       aliases.assoc(sym, ns);
     }
 
-    void reference(mappings_t& m, const ns_t::p& ns) {
-      imu::for_each([&](const typename mappings_t::value_type& kv) {
-          m.assoc(imu::first(kv), imu::second(kv));
-        }, &ns->interned);
-    }
+    void reference(mappings_t& m, const ns_t::p& ns);
   };
 
   struct list_tag_t {};
@@ -812,6 +810,12 @@ namespace rev {
     auto x = as_nt<T>(b);
 
     return x && (x->ns() == s->ns() && (x->name() == s->name()));
+  }
+
+  inline void ns_t::reference(mappings_t& m, const ns_t::p& ns)  {
+    imu::for_each([&](const typename mappings_t::value_type& kv) {
+        m.assoc(imu::first(kv), imu::second(kv));
+      }, &ns->interned);
   }
 
   /**

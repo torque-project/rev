@@ -19,7 +19,6 @@ namespace rev {
 
   value_t::p String_Pointer_intptr(value_t::p self) {
     auto x = as<string_t>(self)->name();
-    std::cout << "TEST: " << x << std::endl;
     return Binary_Pointer_intptr(String_Serializable_binary(self));
   }
 
