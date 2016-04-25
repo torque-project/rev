@@ -96,9 +96,9 @@ namespace rev {
         : marshalled_t((void*) &ref->_arg), _ref(ref)
       {}
     };
-
+extern "C" {
     void delegate(ffi_cif* cif, void* ret, void* args[], void* x);
-
+}
     struct fn_ptr_t : public rev::int_t {
 
       ffi_cif      _cif;
@@ -111,8 +111,10 @@ namespace rev {
       inline fn_ptr_t(const fn_t::p& f, const vector_t::p& sig)
         : _f(f), _sig(sig) {
 
+        void* out;
+
         _closure = (ffi_closure*)
-          ffi_closure_alloc(sizeof(ffi_closure), (void**) &value);
+          ffi_closure_alloc(sizeof(ffi_closure), &out);
 
         auto ret  = as<keyw_t>(imu::nth(sig, 0));
         auto args = as<vector_t>(imu::nth(sig, 1));
@@ -120,10 +122,16 @@ namespace rev {
         _ret   = convert_type[ret->name()];
         _types = new ffi_type*[imu::count(args)];
         convert_types(args, _types);
-
-        ffi_prep_cif(&_cif, FFI_DEFAULT_ABI, 1, convert_type[ret->name()], _types);
-        ffi_prep_closure_loc(_closure, &_cif, delegate, this, (void*) &value);
-      }
+	
+	if (ffi_prep_cif(&_cif, FFI_DEFAULT_ABI, imu::count(args), _ret, _types) != FFI_OK) {
+  	  std::cout << "error while creating cif" << std::endl;
+        }
+        if (ffi_prep_closure_loc(_closure, &_cif, delegate, this, out) != FFI_OK) {
+          std::cout << "error while prepping closure" << std::endl;
+        }
+ 
+	value = reinterpret_cast<int64_t>(out);
+     }
 
       ~fn_ptr_t() {
         ffi_closure_free(_closure);
@@ -199,7 +207,7 @@ namespace rev {
       // TODO: throw
       return nullptr;
     }
-
+extern "C" {
     void delegate(ffi_cif* cif, void* ret, void* args[], void* x) {
       auto handle = reinterpret_cast<fn_ptr_t*>(x);
 
@@ -220,7 +228,7 @@ namespace rev {
       // this should be enforced here
       marshalled_t::p r(marshal(rev::call(handle->_f, values), ret_type));
       *((void**) ret) = *((void**) r->arg());
-    }
+    } }
   }
 
   namespace instr {
