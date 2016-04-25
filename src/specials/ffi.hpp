@@ -282,17 +282,17 @@ extern "C" {
     void so(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
       void* handle = 0;
       if (auto name = as_nt<string_t>(imu::first(forms))) {
-	std::string sysname;
-	if (name->data() == "c") {
+        std::string sysname;
 #if defined(__linux__)
-      	  sysname = LIBC_SO;
-#else
-	  sysname = "c";
+        if (name->data() == "c") {
+          sysname = LIBC_SO;
+        }
+        else {
 #endif
-	}
-	else {
           sysname = SO_PREFIX + name->data() + SO_EXT;
-	}
+#if defined(__linux__)
+        }
+#endif
         handle = dlopen(sysname.c_str(), RTLD_LAZY | RTLD_LOCAL);
       }
       else {
