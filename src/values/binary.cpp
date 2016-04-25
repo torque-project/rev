@@ -1,5 +1,7 @@
 #include "../values.hpp"
 
+#include <string.h>
+
 namespace rev {
 
   value_t::p Binary_Printable_str(value_t::p self) {

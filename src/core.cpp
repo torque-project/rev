@@ -113,7 +113,7 @@ namespace rev {
   }
 
   bool is_special(const sym_t::p& sym) {
-    static std::set<const std::string> specials = {
+    static std::set<std::string> specials = {
       "def", "do", "if", "let*", "binding*", "loop*", "quote", "ns", "fn*",
       "deftype", "defprotocol", "dispatch*", "recur", "new", "set!",
       ".", "apply*", "so*", "import*", "invoke*"

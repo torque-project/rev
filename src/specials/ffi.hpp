@@ -11,6 +11,10 @@
 #define SO_PREFIX "lib"
 #define SO_EXT    ".so"
 
+#if defined (__linux__)
+#include <gnu/lib-names.h>
+#endif
+
 #if defined (__APPLE__) && defined (__MACH__)
 #undef  SO_EXT
 #define SO_EXT ".dylib"
@@ -270,7 +274,17 @@ namespace rev {
     void so(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
       void* handle = 0;
       if (auto name = as_nt<string_t>(imu::first(forms))) {
-        auto sysname = SO_PREFIX + name->data() + SO_EXT;
+	std::string sysname;
+	if (name->data() == "c") {
+#if defined(__linux__)
+      	  sysname = LIBC_SO;
+#else
+	  sysname = "c";
+#endif
+	}
+	else {
+          sysname = SO_PREFIX + name->data() + SO_EXT;
+	}
         handle = dlopen(sysname.c_str(), RTLD_LAZY | RTLD_LOCAL);
       }
       else {

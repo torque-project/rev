@@ -2,6 +2,8 @@
 
 #include <unordered_map>
 
+#include <string.h>
+
 namespace rev {
 
   extern value_t::p Binary_Pointer_intptr(value_t::p);

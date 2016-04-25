@@ -1,5 +1,7 @@
 #include "../values.hpp"
 
+#include <string.h>
+
 using namespace rev;
 
 extern "C" {

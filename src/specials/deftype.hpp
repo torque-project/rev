@@ -2,6 +2,8 @@
 
 #include "fn.hpp"
 
+#include <string.h>
+
 namespace rev {
 
   namespace specials {
