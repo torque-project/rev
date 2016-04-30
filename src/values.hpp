@@ -31,7 +31,7 @@ namespace rev {
     // runtime callable function pointers to the protocol
     // implementations. this can be used to call the protocol
     // implementations directly
-    uint64_t _num_ext;
+    uint32_t _num_ext;
     ext_t*   _methods;
 
     const std::string _name; // protocol implementations
