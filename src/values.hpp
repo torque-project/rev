@@ -756,7 +756,9 @@ namespace rev {
       return static_cast<T*>(x);
     }
 
-    throw std::bad_cast();
+    throw std::runtime_error(
+      "Can't cast type " + x->type->name() + " to " +
+      T::prototype.name());
   }
 
   template<typename T, typename S>
@@ -764,8 +766,9 @@ namespace rev {
     if (x) {
       return as<T>(*x);
     }
-    throw std::domain_error(
-      "Passed unset maybe instance to 'as'");
+    throw std::runtime_error(
+      "Can't cast unset reference to type " +
+      T::prototype.name());
   }
 
   template<typename T, typename S>

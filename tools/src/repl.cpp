@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 
   read_history(".repl_history");
 
-  //try {
+  // try {
 
     std::string sources = "";
     if (char* s = getenv("REV_SOURCE_PATH")) {
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
         continue;
       }
 
-      //try {
+      try {
         auto form = rev::read(line);
 
         // save line in history once we've successfully read it
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
         auto result = rev::eval(form);
         std::cout << str(result)->data() << std::endl;
-        /*}
+        }
       catch(rev::rdr::reader_exception& e) {
         std::cout << "Error while reading object: " << e.what() << std::endl;
       }
@@ -83,11 +83,11 @@ int main(int argc, char** argv) {
         throw;
 #endif
       }
-        */
+        
       free(line);
     }
-    /*}
-  catch(std::exception& e) {
-    std::cerr << "Can't boot VM: " << e.what() << std::endl;
-    }*/
+  //  }
+  //catch(std::exception& e) {
+  //  std::cerr << "Can't boot VM: " << e.what() << std::endl;
+  //  }
 }

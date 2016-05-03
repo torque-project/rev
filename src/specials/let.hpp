@@ -8,7 +8,6 @@ namespace rev {
 
     namespace let {
       inline ctx_t bindings(const vector_t::p& bs, ctx_t& ctx, thread_t& t) {
-
         return imu::reduce([&](ctx_t& ctx, const list_t::p& b) {
 
             auto sym   = as<sym_t>(imu::first(b));
