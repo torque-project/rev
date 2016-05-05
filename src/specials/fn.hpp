@@ -84,15 +84,23 @@ namespace rev {
       int8_t  variadic_arity = -1;
       int64_t off;
 
-      imu::for_each([&](const list_t::p& meth) {
-        std::tie(variadic, arity, off) = body(meth, fn_ctx, thread);
+      try {
+        imu::for_each([&](const list_t::p& meth) {
+          std::tie(variadic, arity, off) = body(meth, fn_ctx, thread);
 
-        // TODO: check for duplicate variadic bodies
-        variadic_arity = variadic ? arity : variadic_arity;
-        max_arity      = variadic ? max_arity : std::max(arity, max_arity);
-        thread[variadic ? (variadic_arity+1) : arity] = off;
-      },
-      fnspec);
+          // TODO: check for duplicate variadic bodies
+          variadic_arity = variadic ? arity : variadic_arity;
+          max_arity      = variadic ? max_arity : std::max(arity, max_arity);
+          thread[variadic ? (variadic_arity+1) : arity] = off;
+        },
+          fnspec);
+      }
+      catch(...) {
+        std::cout
+          << "While compiling fn: " << name->name()
+          << std::endl << "  ";
+        throw;
+      }
 
       auto address   = finalize_thread(thread);
       auto nenclosed = compile_all(fn_ctx.closed_overs(), ctx, t);

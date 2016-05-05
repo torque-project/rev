@@ -4,12 +4,6 @@
 
 using namespace rev;
 
-extern "C" {
-  value_t::p Integer_new(int64_t i) {
-    return imu::nu<int_t>(i);
-  }
-}
-
 namespace rev {
   value_t::p Int_Printable_str(value_t::p self) {
     return imu::nu<string_t>(std::to_string(as<int_t>(self)->value));
@@ -52,4 +46,12 @@ namespace rev {
 
   template<>
   type_t value_base_t<int_t>::prototype("Integer.0", Int_methods, size);
+}
+
+extern "C" {
+  value_t::p torque_lang_Integer_new(int64_t i) {
+    return imu::nu<int_t>(i);
+  }
+
+  type_t::p torque_lang_Integer = &value_base_t<int_t>::prototype;
 }
