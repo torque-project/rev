@@ -169,9 +169,15 @@ result_t conditional(std::istream& in) {
   static const keyw_t::p ARCH  = keyw_t::intern("arch/x86-64");
   static const keyw_t::p POSIX = keyw_t::intern("api/posix");
   static const keyw_t::p DEF   = keyw_t::intern("default");
+   
+#if defined(__APPLE__) && defined (__MACH__)
+  static const keyw_t::p OS = keyw_t::intern("os/darwin");
+#elif defined(__linux__)
+  static const keyw_t::p OS = keyw_t::intern("os/linux");
+#endif
 
   static const std::set<keyw_t::p> features({
-      REV, LSB, ARCH, POSIX
+      REV, LSB, ARCH, OS, POSIX
     });
 
   auto branches = imu::partition<list_t::p>(2, as<list_t>(read(in)));
