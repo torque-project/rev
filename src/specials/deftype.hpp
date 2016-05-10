@@ -164,6 +164,9 @@ namespace rev {
       else if (type->name() == "Symbol") {
         t << instr::make_native<sym_t> << 4;
       }
+      else if (type->name() == "Keyword") {
+        t << instr::make_native<keyw_t> << 4;
+      }
       else {
         t << instr::make << type;
       }

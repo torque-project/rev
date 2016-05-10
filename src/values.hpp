@@ -52,6 +52,7 @@ namespace rev {
 
     ~type_t();
 
+
     inline std::string name() const {
       return _name;
     }
@@ -409,6 +410,12 @@ namespace rev {
     inline keyw_t(const std::string& fqn)
       : sym_base_t<keyw_t>(fqn)
     {}
+
+    template<typename T>
+    static p from_std(const T& b, const T& e) {
+      auto fqn = (string_t::p) *(b + 3);
+      return keyw_t::intern(fqn->data());
+    }
   };
 
   struct equal_to {
