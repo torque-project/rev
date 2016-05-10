@@ -21,7 +21,11 @@ namespace rev {
   }
 
   value_t::p Map_Seqable_seq(value_t::p self) {
-    return imu::nu<seq_adapter_t<map_t>>(as<map_t>(self));
+    auto m = as<map_t>(self);
+    if (imu::count(m) > 0) {
+      return imu::nu<seq_adapter_t<map_t>>(m);
+    }
+    return nullptr;
   }
 
   value_t::p Map_Associative_contains_key(value_t::p self, value_t::p n) {
