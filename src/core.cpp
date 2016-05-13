@@ -597,7 +597,7 @@ namespace rev {
 
   ns_t::p load_ns(const sym_t::p& name) {
 
-    auto file = replace(name->name(), '.', '/') + ".trq";
+    auto file = replace(replace(name->name(), '.', '/'),'-','_') + ".trq";
 
     for (auto& path : rt.sources) {
       auto source = path + '/' + file;
