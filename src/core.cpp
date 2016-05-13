@@ -636,6 +636,7 @@ namespace rev {
     if (parse_source_paths(s)) {
       // load core name space and make it visible in user name space
       auto core = load_ns("torque.core");
+      core->intern(sym_t::intern("*ns*"), rt.ns);
       rt.in_ns->map(core);
 
       load_ns("torque.ffi");
