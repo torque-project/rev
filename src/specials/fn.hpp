@@ -1,6 +1,7 @@
 #pragma once
 
 #include "do.hpp"
+#include "let.hpp"
 
 namespace rev {
 
@@ -18,7 +19,7 @@ namespace rev {
       uint64_t address  = t.size();
       bool     variadic = false;
 
-      auto args   = as<vector_t>(imu::first(meth));
+      auto args   = let::nativize(*imu::first(meth));
       auto body   = imu::rest(meth);
       auto locals = ctx.body();
       auto arity  = 0;
@@ -62,7 +63,7 @@ namespace rev {
       using namespace priv;
       static const auto macro = sym_t::intern("macro");
 
-      thread_t thread(8, -1);;
+      thread_t thread(8, -1);
 
       auto name   = as_nt<sym_t>(*imu::first(forms));
       auto fnspec = imu::rest(forms);
@@ -74,7 +75,7 @@ namespace rev {
         fnspec = forms;
       }
 
-      if (is<vector_t>(*imu::first(fnspec))) {
+      if (protocol_t::satisfies(protocol_t::ivector, *imu::first(fnspec))) {
         fnspec = list_t::factory(fnspec);
       }
 
@@ -93,7 +94,7 @@ namespace rev {
           max_arity      = variadic ? max_arity : std::max(arity, max_arity);
           thread[variadic ? (variadic_arity+1) : arity] = off;
         },
-          fnspec);
+        fnspec);
       }
       catch(...) {
         std::cout
