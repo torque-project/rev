@@ -442,6 +442,10 @@ namespace rev {
       return _name;
     }
 
+    inline value_t::p resolve(const sym_t::p& sym) {
+      return imu::get(&interned, sym, nullptr);
+    }
+
     inline void intern(const sym_t::p& sym, var_t::p v) {
       v->ns(this);
       interned.assoc(sym, v);
@@ -449,6 +453,10 @@ namespace rev {
 
     inline void intern(const ns_t::p& ns) {
       reference(interned, ns);
+    }
+
+    inline void map(const sym_t::p& sym, var_t::p v) {
+      mappings.assoc(sym, v);
     }
 
     inline void map(const ns_t::p& ns) {
