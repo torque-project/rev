@@ -1,3 +1,4 @@
+#include "../adapter.hpp"
 #include "../values.hpp"
 
 namespace rev {
@@ -93,6 +94,11 @@ namespace rev {
     return as<vector_t>(self)->nth(1);
   }
 
+  value_t::p Vector_Equiv_equiv(value_t::p self, value_t::p other) {
+    equal_to eq;
+    return imu::seqs::equiv(imu::seq(as<vector_t>(self)), rt_seq_t::seq(other), eq) ? sym_t::true_ : sym_t::false_;
+  }
+
   struct type_t::impl_t Vector_printable[] = {
     {0, (intptr_t) Vector_Printable_str, 0, 0, 0, 0, 0, 0}
   };
@@ -122,6 +128,10 @@ namespace rev {
     {0, (intptr_t) Vector_MapEntry_val,  0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Vector_equiv[] = {
+    {0, 0, (intptr_t) Vector_Equiv_equiv, 0, 0, 0, 0, 0},
+  };
+
   struct type_t::impl_t VectorSeq_seqable[] = {
     {0, (intptr_t) VectorSeq_Seqable_seq, 0, 0, 0, 0, 0, 0}
   };
@@ -142,7 +152,8 @@ namespace rev {
     {protocol_t::coll,        Vector_coll},
     {protocol_t::associative, Vector_associative},
     {protocol_t::indexed,     Vector_iindexed},
-    {protocol_t::mapentry,    Vector_mapentry}
+    {protocol_t::mapentry,    Vector_mapentry},
+    {protocol_t::equiv,       Vector_equiv}
   };
 
   struct type_t::ext_t VectorSeq_methods[] = {
