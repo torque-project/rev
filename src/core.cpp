@@ -570,22 +570,16 @@ namespace rev {
     return rdr::read(s);
   }
 
-  void load_file(const std::string& source) {
+  void load_stream(std::istream& is) {
 
     ns_t::p cur = rt.in_ns;
 
-    std::fstream file(source);
-    if (!file.good()) {
-      throw std::runtime_error("Can't open source file: " + source);
+    if (!rev::is<rev::ns_t>(eval(rdr::read(is)))) {
+      throw std::runtime_error("Expected file to start with ns declaration: ");
     }
 
-    if (!is<ns_t>(eval(rdr::read(file)))) {
-      throw std::runtime_error(
-        "Expecting file to start with ns declaration: " + source);
-    }
-
-    while (file.good()) {
-      if (auto o = rdr::read(file)) {
+    while (is.good()) {
+      if (auto o = rdr::read(is)) {
         eval(o);
       }
     }
@@ -593,6 +587,16 @@ namespace rev {
     if (cur) {
       rt.in_ns = cur;
     }
+  }
+
+  void load_file(const std::string& source) {
+
+    std::fstream file(source);
+    if (!file.good()) {
+      throw std::runtime_error("Can't open source file: " + source);
+    }
+
+    load_stream(file);
   }
 
   ns_t::p load_ns(const sym_t::p& name) {

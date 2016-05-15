@@ -2,6 +2,7 @@
 
 #include "values.hpp"
 
+#include <istream>
 #include <string>
 
 namespace rev {
@@ -22,6 +23,7 @@ namespace rev {
   ns_t::p load_ns(const sym_t::p& name);
 
   void load_file(const std::string& source);
+  void load_stream(std::istream& is);
 
   var_t::p intern(const sym_t::p& sym, var_t::p var);
   var_t::p resolve(const sym_t::p& sym);

@@ -107,7 +107,7 @@ namespace rev {
       set_meta(f(meta));
     }
 
-    inline p str() const;
+    inline std::string str() const;
 
     /**
      * Calling these will do a lookup in the values protocol
@@ -609,10 +609,17 @@ namespace rev {
       return protocol_t::satisfied_by((id_t) _id, type);
     }
 
-    static value_t::p dispatch(uint32_t, uint32_t, void* args[], uint32_t);
+    static value_t::p dispatch(uint32_t, uint32_t, const void* args[], uint32_t);
 
-    inline value_t::p dispatch(uint32_t m, void* args[], uint32_t n) {
+    inline value_t::p dispatch(uint32_t m, const void* args[], uint32_t n) {
       return protocol_t::dispatch(_id, m, args, n);
+    }
+
+    template<typename... TS>
+    static inline value_t::p dispatch_(id_t id, uint32_t meth, TS... args) {
+      const void* ptrs [sizeof...(args)] =
+        {reinterpret_cast<const void*>(args)...};
+      return protocol_t::dispatch(id, meth, ptrs, sizeof...(args));
     }
 
     static bool satisfied_by(id_t id, const type_t::cp& type) {
@@ -798,19 +805,29 @@ namespace rev {
     return v->meta && ((bool) imu::get(as<map_t>(v->meta), sym));
   }
 
-  inline string_t::p str(const value_t::p v) {
+  inline std::string str(const value_t::p v) {
     if (v) {
-      return as<string_t>(v->str());
+      return v->str();
     }
-    return string_t::intern("nil");
+    return "nil";
   }
 
-  inline value_t::p value_t::str() const {
+  inline std::string value_t::str() const {
     if (protocol_t::satisfies(rev::protocol_t::str, this)) {
-      void* args[] = {(void*) this};
-      return as<string_t>(protocol_t::dispatch(protocol_t::str, 0, args, 1));
+      auto s = protocol_t::dispatch_(protocol_t::str, 0, this);
+      if (protocol_t::satisfies(protocol_t::istring, s)) {
+        auto size = as<int_t>(protocol_t::dispatch_(protocol_t::counted, 0, s));
+        auto data = as<int_t>(protocol_t::dispatch_(protocol_t::pointer, 0, s));
+        std::string out; out.append((const char*) data->value, size->value);
+        return out;
+      }
     }
-    return imu::nu<string_t>(type->sig(this));
+    return "<unprintable>";
+    //return type->sig(this);
+  }
+
+  inline void pr(const value_t::p& v) {
+    std::cout << str(v) << std::endl;
   }
 
   template<typename T>
@@ -853,7 +870,7 @@ namespace rev {
       }
       return is<sym_t>(a) ? sym_t::equiv(a, b) : keyw_t::equiv(a, b);
     }
-    void* args[] = {(void*) a, (void*) b};
+    const void* args[] = {(void*) a, (void*) b};
     auto res = protocol_t::dispatch(protocol_t::equiv, 0, args, 2);
     return res == sym_t::true_;
   };

@@ -107,7 +107,7 @@ namespace rev {
     void throw_(stack_t& s, stack_t& fp, int64_t* &ip) {
       auto x   = pop<value_t::p>(s);
       auto msg = str(x);
-      throw std::runtime_error(msg->data());
+      throw std::runtime_error(msg);
     }
 
     void print(stack_t& s, stack_t& fp, int64_t* &ip) {
@@ -116,7 +116,7 @@ namespace rev {
         std::cout << "nil" << std::endl;
       }
       else {
-        std::cout << str(v)->data() << std::endl;
+        pr(v);
       }
       push(s, nullptr);
     }

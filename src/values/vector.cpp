@@ -7,10 +7,10 @@ namespace rev {
     auto v = as<vector_t>(self);
     std::string s = "[";
     if (auto fst = imu::first(v)) {
-      s += str(*fst)->data();
+      s += str(*fst);
       imu::for_each([&](const value_t::p& v) {
           auto str = rev::str(v);
-          s += " " + str->data();
+          s += " " + str;
         }, imu::rest(v));
     }
     s += "]";
@@ -52,6 +52,14 @@ namespace rev {
       return v->nth(i);
     }
     return d;
+  }
+
+  value_t::p Vector_Lookup_lookup2(value_t::p s, value_t::p k) {
+    return Vector_IIndexed_nth2(s, k);
+  }
+
+  value_t::p Vector_Lookup_lookup3(value_t::p s, value_t::p k, value_t::p d) {
+    return Vector_IIndexed_nth3(s, k, d);
   }
 
   value_t::p VectorSeq_Seqable_seq(value_t::p self) {
@@ -123,6 +131,13 @@ namespace rev {
      0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Vector_lookup[] = {
+    {0, 0,
+     (intptr_t) Vector_Lookup_lookup2,
+     (intptr_t) Vector_Lookup_lookup3,
+     0, 0, 0, 0}
+  };
+
   struct type_t::impl_t Vector_mapentry[] = {
     {0, (intptr_t) Vector_MapEntry_key, 0, 0, 0, 0, 0, 0},
     {0, (intptr_t) Vector_MapEntry_val,  0, 0, 0, 0, 0, 0}
@@ -152,8 +167,9 @@ namespace rev {
     {protocol_t::coll,        Vector_coll},
     {protocol_t::associative, Vector_associative},
     {protocol_t::indexed,     Vector_iindexed},
-    {protocol_t::mapentry,    Vector_mapentry},
     {protocol_t::equiv,       Vector_equiv}
+    {protocol_t::lookup,      Vector_lookup},
+    {protocol_t::mapentry,    Vector_mapentry}
   };
 
   struct type_t::ext_t VectorSeq_methods[] = {

@@ -13,7 +13,7 @@ namespace rev {
   type_t value_base_t<protocol_t>::prototype("Protocol");
 
   value_t::p protocol_t::dispatch(
-    uint32_t id, uint32_t m, void* args[], uint32_t n) {
+    uint32_t id, uint32_t m, const void* args[], uint32_t n) {
 
     assert(n >= 1);
 

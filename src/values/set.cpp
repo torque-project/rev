@@ -6,10 +6,10 @@ namespace rev {
     auto set = imu::seq(as<set_t>(self));
     std::string s = "#{";
     if (auto fst = imu::first(set)) {
-      s += str(*fst)->data();
+      s += str(*fst);
       imu::for_each([&](const value_t::p& v) {
           auto str = rev::str(v);
-          s += " " + str->data();
+          s += " " + str;
         }, imu::rest(set));
     }
     s += "}";

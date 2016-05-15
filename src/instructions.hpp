@@ -301,9 +301,9 @@ namespace rev {
           << std::endl;
 #endif
         auto invoke_arity = arity + 1;
-        void* args[invoke_arity];
+        const void* args[invoke_arity];
         for(int i=arity; i>0; --i) {
-          args[i] = stack::pop<void*>(s);
+          args[i] = stack::pop<const void*>(s);
         }
         args[0] = val;
 
@@ -334,12 +334,12 @@ namespace rev {
         << proto->_name << "[" << meth << "](" << arity << ")"
         << std::endl;
 #endif
-      void* args[arity];
+      const void* args[arity];
 
       // arguments are on the stack in reverse order, so we
       // can pop arguments front to back here
       for (int i=0; i<arity; ++i) {
-        args[i] = stack::pop<void*>(s);
+        args[i] = stack::pop<const void*>(s);
       }
 
       stack::push(s, proto->dispatch(meth, args, arity));

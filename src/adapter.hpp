@@ -27,21 +27,18 @@ namespace rev {
     }
 
     inline value_t::p first() const {
-      void* args[] = {(void*) _head};
-      return  protocol_t::dispatch(protocol_t::seq, 0, args, 1);
+      return  protocol_t::dispatch_(protocol_t::seq, 0, _head);
     }
 
     inline p rest() const {
-      void* args[] = {(void*) _head};
       // use next instead of rest, since next returns nil at
       // the ned of a seq
       return imu::nu<rt_seq_t>(
-        protocol_t::dispatch(protocol_t::next, 0, args, 1));
+        protocol_t::dispatch_(protocol_t::next, 0, _head));
     }
 
     static p seq(const value_t::p& v) {
-      void* args[] = {(void*) v};
-      auto s = protocol_t::dispatch(protocol_t::seqable, 0, args, 1);
+      auto s = protocol_t::dispatch_(protocol_t::seqable, 0, v);
       return imu::nu<rt_seq_t>(s);
     }
   };
@@ -58,8 +55,7 @@ namespace rev {
 
     inline value_t::p nth(uint64_t n) const {
       int_t i(n);
-      void* args[] = {(void*) _vec, (void*) &i};
-      return protocol_t::dispatch(protocol_t::indexed, 0, args, 2);
+      return protocol_t::dispatch_(protocol_t::indexed, 0, _vec, &i);
     }
 
     inline value_t::p key() const {

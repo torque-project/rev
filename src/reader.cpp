@@ -225,8 +225,7 @@ result_t meta(std::istream& in) {
   }
 
   if (m) {
-    void* args[] = {(void*) form, (void*) m};
-    form = protocol_t::dispatch(protocol_t::withmeta, 0, args, 2);
+    form = protocol_t::dispatch_(protocol_t::withmeta, 0, form, m);
   }
 
   return pass(form);

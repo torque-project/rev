@@ -51,16 +51,14 @@ namespace rev {
 
   value_t::p Keyword_IFn_invoke2(value_t::p self, value_t::p m) {
     if (m) {
-      void* args[] = {(void*) m, (void*) self};
-      return protocol_t::dispatch(protocol_t::lookup, 0, args, 2);
+      return protocol_t::dispatch_(protocol_t::lookup, 0, m, self);
     }
     return nullptr;
   }
 
   value_t::p Keyword_IFn_invoke3(value_t::p self, value_t::p m, value_t::p d) {
     if (m) {
-      void* args[] = {(void*) m, (void*) self, (void*) d};
-      return protocol_t::dispatch(protocol_t::lookup, 0, args, 3);
+      return protocol_t::dispatch_(protocol_t::lookup, 0, m, self, d);
     }
     return d;
   }
@@ -158,4 +156,9 @@ namespace rev {
 
   sym_t::p sym_t::true_  = sym_t::intern("true");
   sym_t::p sym_t::false_ = sym_t::intern("false");
+}
+
+extern "C" {
+  const rev::sym_t* torque_lang_True  = rev::sym_t::true_;
+  const rev::sym_t* torque_lang_False = rev::sym_t::false_;
 }

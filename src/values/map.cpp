@@ -9,11 +9,11 @@ namespace rev {
     if (auto fst = imu::first(m)) {
       auto a = rev::str(imu::first(*fst));
       auto b = rev::str(imu::second(*fst));
-      s += a->data() + " " + b->data();
+      s += a + " " + b;
       imu::for_each([&](const map_t::value_type& v) {
           auto a = rev::str(imu::first(v));
           auto b = rev::str(imu::second(v));
-          s += " " + a->data() + " " + b->data();
+          s += " " + a + " " + b;
         }, imu::rest(m));
     }
     s += "}";
