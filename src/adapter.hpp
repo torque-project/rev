@@ -43,6 +43,13 @@ namespace rev {
     }
   };
 
+  template<typename T>
+  inline typename T::p nativize(const value_t::p& v) {
+    if (auto x = as_nt<T>(v)) { return x; }
+    auto s = rt_seq_t::seq(v);
+    return into(imu::nu<T>(), s);
+  }
+
   struct rt_vec_t : public imu::no_mixin {
 
     typedef std::shared_ptr<rt_vec_t> p;

@@ -8,7 +8,7 @@ namespace rev {
 
     void binding(const list_t::p& forms, ctx_t& ctx, thread_t& t) {
 
-      auto bindings = imu::seq(let::nativize(*imu::first(forms)));
+      auto bindings = imu::seq(nativize<vector_t>(*imu::first(forms)));
       auto syms     = imu::take_nth<list_t::p>(2, bindings);
       auto vals     = imu::take_nth<list_t::p>(2, imu::drop(1, bindings));
 

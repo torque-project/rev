@@ -1,7 +1,6 @@
 #pragma once
 
 #include "do.hpp"
-#include "let.hpp"
 
 namespace rev {
 
@@ -19,7 +18,7 @@ namespace rev {
       uint64_t address  = t.size();
       bool     variadic = false;
 
-      auto args   = let::nativize(*imu::first(meth));
+      auto args   = nativize<vector_t>(*imu::first(meth));
       auto body   = imu::rest(meth);
       auto locals = ctx.body();
       auto arity  = 0;
@@ -77,6 +76,9 @@ namespace rev {
 
       if (protocol_t::satisfies(protocol_t::ivector, *imu::first(fnspec))) {
         fnspec = list_t::factory(fnspec);
+      }
+      else {
+        fnspec = nativize<list_t>(fnspec);
       }
 
       bool    variadic;
