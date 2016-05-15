@@ -167,7 +167,7 @@ namespace rev {
     {protocol_t::coll,        Vector_coll},
     {protocol_t::associative, Vector_associative},
     {protocol_t::indexed,     Vector_iindexed},
-    {protocol_t::equiv,       Vector_equiv}
+    {protocol_t::equiv,       Vector_equiv},
     {protocol_t::lookup,      Vector_lookup},
     {protocol_t::mapentry,    Vector_mapentry}
   };
