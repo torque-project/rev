@@ -862,6 +862,9 @@ namespace rev {
     if (a == b) {
       return true;
     }
+    if (a == nullptr || b == nullptr) {
+      return false;
+    }
     if ((is<sym_t>(a) || is<keyw_t>(a))) {
       if (!a->meta && !b->meta) {
         // take shortcut if a != b, a is a symbol type, and both don't
