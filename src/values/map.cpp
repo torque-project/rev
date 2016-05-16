@@ -83,6 +83,26 @@ namespace rev {
     return imu::nu<int_t>(as<map_t>(self)->count());
   }
 
+  value_t::p Map_Equiv_equiv(value_t::p self, value_t::p other) {
+    auto self_count = as<map_t>(self)->count();
+    auto other_count = as<int_t>(protocol_t::dispatch_(protocol_t::counted,
+                                                       0, other)
+                                 )->value;
+    if (self_count != other_count) {
+      return sym_t::false_;
+    }
+
+    return imu::is_every([&](const map_t::value_type& v) {
+        auto k = imu::first(v);
+        auto self_val = imu::second(v);
+        auto not_found = "Map_equiv_not_found";
+        auto other_val = protocol_t::dispatch_(protocol_t::lookup,
+                                               0, other, k, not_found);
+        equal_to eq;
+        return eq(self_val, other_val);
+      }, as<map_t>(self)) ? sym_t::true_ : sym_t::false_;
+  }
+
   value_t::p MapSeq_Seqable_seq(value_t::p self) {
     return self;
   }
@@ -162,6 +182,10 @@ namespace rev {
     {0, (intptr_t) Map_Counted_count, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Map_equiv[] = {
+    {0, 0, (intptr_t) Map_Equiv_equiv, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t MapSeq_seqable[] = {
     {0, (intptr_t) MapSeq_Seqable_seq, 0, 0, 0, 0, 0, 0}
   };
@@ -183,7 +207,8 @@ namespace rev {
     {protocol_t::coll,        Map_collection},
     {protocol_t::lookup,      Map_lookup},
     {protocol_t::withmeta,    Map_with_meta},
-    {protocol_t::counted,     Map_counted}
+    {protocol_t::counted,     Map_counted},
+    {protocol_t::equiv,       Map_equiv}
   };
 
   struct type_t::ext_t MapSeq_methods[] = {
