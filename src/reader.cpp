@@ -66,6 +66,7 @@ static sym_t::p APPLY   = sym_t::intern("apply");
 static sym_t::p LIST    = sym_t::intern("list");
 static sym_t::p VECTOR  = sym_t::intern("vector");
 static sym_t::p HMAP    = sym_t::intern("hash-map");
+static sym_t::p HSET    = sym_t::intern("hash-set");
 static sym_t::p CONCAT  = sym_t::intern("concat");
 
 static macros_t extensions(
@@ -277,6 +278,9 @@ value_t::p do_syntax_quote(const value_t::p& form) {
   }
   else if (auto map = as_nt<map_t>(form)) {
     return list_t::factory(APPLY, HMAP, imu::conj(expand_seq(seq(vec)), CONCAT));
+  }
+  else if (auto map = as_nt<set_t>(form)) {
+    return list_t::factory(APPLY, HSET, imu::conj(expand_seq(seq(vec)), CONCAT));
   }
   else if (is<int_t>(form) || is<string_t>(form)) {
     return form;

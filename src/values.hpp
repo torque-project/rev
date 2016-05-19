@@ -494,6 +494,7 @@ namespace rev {
 
   using set_t = imu::ty::basic_hash_set<
       value_t::p
+    , rev::equal_to
     , value_base_t<set_tag_t>
     >;
 

@@ -36,7 +36,7 @@ namespace rev {
   }
 
   value_t::p Set_Counted_count(value_t::p self) {
-    return imu::nu<int_t>(as<map_t>(self)->count());
+    return imu::nu<int_t>(as<set_t>(self)->count());
   }
 
   struct type_t::impl_t Set_printable[] = {

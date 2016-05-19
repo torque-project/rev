@@ -13,6 +13,12 @@ namespace rev {
   }
 
   template<typename T>
+  value_t::p Symbolic_Meta_meta(value_t::p self) {
+    auto x = as<T>(self);
+    return x->meta;
+  }
+  
+  template<typename T>
   value_t::p Symbolic_WithMeta_withmeta(value_t::p self, value_t::p m) {
     auto x   = as<T>(self);
     auto out = imu::nu<T>(x->fqn());
@@ -76,12 +82,17 @@ namespace rev {
     {0, 0, (intptr_t) Symbolic_WithMeta_withmeta<sym_t>, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Symbol_meta[] = {
+    {0, (intptr_t) Symbolic_Meta_meta<sym_t>, 0, 0, 0, 0, 0, 0}
+  };
+
   struct type_t::impl_t Symbol_equiv[] = {
     {0, 0, (intptr_t) Symbolic_Equiv_equiv<sym_t>, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Symbol_methods[] = {
     {protocol_t::str,      Symbol_printable},
+    {protocol_t::meta,     Symbol_meta},
     {protocol_t::withmeta, Symbol_withmeta},
     {protocol_t::named,    Symbol_named},
     {protocol_t::equiv,    Symbol_equiv}
@@ -94,6 +105,10 @@ namespace rev {
   struct type_t::impl_t Keyword_named[] = {
     {0, (intptr_t) Symbolic_Named_name<keyw_t>, 0, 0, 0, 0, 0, 0},
     {0, (intptr_t) Symbolic_Named_namespace<keyw_t>, 0, 0, 0, 0, 0, 0}
+  };
+
+  struct type_t::impl_t Keyword_meta[] = {
+    {0, (intptr_t) Symbolic_Meta_meta<keyw_t>, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Keyword_withmeta[] = {
@@ -113,6 +128,7 @@ namespace rev {
 
   struct type_t::ext_t Keyword_methods[] = {
     {protocol_t::str,      Keyword_printable},
+    {protocol_t::meta,     Keyword_meta},
     {protocol_t::withmeta, Keyword_withmeta},
     {protocol_t::named,    Keyword_named},
     {protocol_t::ifn,      Keyword_ifn},

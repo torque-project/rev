@@ -299,6 +299,7 @@ namespace rev {
         if (sym->name() == "type")        { return type;       }
         if (sym->name() == "type?")       { return builtins::is<type_value_t>; }
         if (sym->name() == "symbol?")     { return builtins::is<sym_t>; }
+        if (sym->name() == "keyword?")    { return builtins::is<keyw_t>; }
         if (sym->name() == "integer?")    { return builtins::is<int_t>; }
         if (sym->name() == "var?")        { return builtins::is<var_t>; }
         if (sym->name() == "binary?")     { return builtins::is<binary_t>; }
@@ -428,13 +429,19 @@ namespace rev {
       }, m);
       t << instr::make_native<map_t> << (imu::count(m) * 2);
     }
+    else if (auto s = as_nt<set_t>(form)) {
+      imu::for_each([&](const set_t::value_type& k) {
+          compile(k, ctx, t);
+        }, imu::seq(s));
+      t << instr::make_native<set_t> << imu::count(s);
+    }
     // TODO: handle other types of forms
     else {
       // push literals onto the stack
       t << instr::push << form;
     }
   }
-
+  
   void compile(const value_t::p& form, ctx_t& ctx) {
     compile(form, ctx, rt.code);
   }
