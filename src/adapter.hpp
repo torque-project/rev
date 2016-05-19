@@ -44,10 +44,17 @@ namespace rev {
   };
 
   template<typename T>
-  inline typename T::p nativize(const value_t::p& v) {
-    if (auto x = as_nt<T>(v)) { return x; }
-    auto s = rt_seq_t::seq(v);
-    return into(imu::nu<T>(), s);
+  inline typename T::p nativize(const value_t::p& coll) {
+    if (auto x = as_nt<T>(coll)) { return x; }
+    auto s = rt_seq_t::seq(coll);
+    return imu::into(imu::nu<T>(), s);
+  }
+
+  template<>
+  inline list_t::p nativize<list_t>(const value_t::p& coll) {
+    if (auto x = as_nt<list_t>(coll)) { return x; }
+    auto s = rt_seq_t::seq(coll);
+    return imu::into(imu::nu<list_t>(), imu::into(imu::nu<list_t>(), s));
   }
 
   struct rt_vec_t : public imu::no_mixin {

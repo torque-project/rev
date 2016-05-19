@@ -12,8 +12,8 @@ namespace rev {
   value_t::p read(const std::string&);
   value_t::p eval(const value_t::p&);
 
-  value_t::p call(const fn_t::p& f, const list_t::p& args);
-  value_t::p call(int64_t addr, int64_t to, uint32_t stack, value_t::p args[], uint32_t n);
+  value_t::p call(const value_t::p&, const list_t::p&);
+  value_t::p call(int64_t, int64_t, uint32_t, value_t::p args[], uint32_t);
 
   ns_t::p ns();
   ns_t::p ns(const sym_t::p& sym);

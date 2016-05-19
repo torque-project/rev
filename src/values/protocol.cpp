@@ -27,6 +27,7 @@ namespace rev {
     }
 
     if (auto self = (value_t::p) args[0]) {
+
       auto type = self->type;
 
       void* ret    = nullptr;

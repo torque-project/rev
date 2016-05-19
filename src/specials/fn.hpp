@@ -25,6 +25,7 @@ namespace rev {
 
       auto arg = imu::seq(args);
       while (!is_empty(arg)) {
+        auto val = *imu::first(arg);
         auto sym = as<sym_t>(imu::first(arg));
         if (sym->name() != "&") {
           locals = locals.local(sym);
@@ -88,8 +89,9 @@ namespace rev {
       int64_t off;
 
       try {
-        imu::for_each([&](const list_t::p& meth) {
-          std::tie(variadic, arity, off) = body(meth, fn_ctx, thread);
+        imu::for_each([&](const value_t::p& meth) {
+          auto meth_as_list = nativize<list_t>(meth);
+          std::tie(variadic, arity, off) = body(meth_as_list, fn_ctx, thread);
 
           // TODO: check for duplicate variadic bodies
           variadic_arity = variadic ? arity : variadic_arity;

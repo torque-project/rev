@@ -507,44 +507,62 @@ namespace rev {
     return ret;
   }
 
-  value_t::p call(const fn_t::p& f, const list_t::p& args) {
-    // save stack pointer for sanity checks and stack unwinding
-    stack_t sp = rt.sp;
-    // setup the frame for the runtime call
-    instr::stack::push(rt.sp, (int64_t) rt.ip);
-    instr::stack::push(rt.sp, (int64_t) rt.fp);
-    rt.fp = rt.sp;
-
-    instr::stack::push(rt.sp, f);
-
-    imu::for_each([&](const value_t::p& v) {
-      instr::stack::push(rt.sp, v);
-    },
-    args);
+  value_t::p call(const value_t::p& callable, const list_t::p& args) {
 
     auto arity = (int64_t) imu::count(args);
-    auto code  = rt.code.data() + f->code();
-    auto off   = *(code + arity);
 
-    if ((arity > f->max_arity()) && f->is_variadic()) {
+    if (auto f = as_nt<fn_t>(callable)) {
+      // save stack pointer for sanity checks and stack unwinding
+      stack_t sp = rt.sp;
+      // setup the frame for the runtime call
+      instr::stack::push(rt.sp, (int64_t) rt.ip);
+      instr::stack::push(rt.sp, (int64_t) rt.fp);
+      rt.fp = rt.sp;
 
-      off = *(code + f->variadic_arity() + 1);
-      if (off != -1) {
-        auto rest = list_t::p();
-        while(arity-- > f->variadic_arity()) {
-          rest = imu::conj(rest, instr::stack::pop<value_t::p>(rt.sp));
+      instr::stack::push(rt.sp, f);
+
+      imu::for_each([&](const value_t::p& v) {
+          instr::stack::push(rt.sp, v);
+        },
+        args);
+
+      auto code  = rt.code.data() + f->code();
+      auto off   = *(code + arity);
+
+      if ((arity > f->max_arity()) && f->is_variadic()) {
+
+        off = *(code + f->variadic_arity() + 1);
+        if (off != -1) {
+          auto rest = list_t::p();
+          while(arity-- > f->variadic_arity()) {
+            rest = imu::conj(rest, instr::stack::pop<value_t::p>(rt.sp));
+          }
+          instr::stack::push(rt.sp, rest);
+          arity = f->variadic_arity();
         }
-        instr::stack::push(rt.sp, rest);
-        arity = f->variadic_arity();
       }
-    }
 
-    if (off != -1) {
-      rt.sp += fn_t::stack_space(off, arity);
-      return run(f->code() + fn_t::offset(off), (rt.ip - rt.code.data()));
-      // verify_stack_integrity(sp);
+      if (off != -1) {
+        rt.sp += fn_t::stack_space(off, arity);
+        return run(f->code() + fn_t::offset(off), (rt.ip - rt.code.data()));
+        // verify_stack_integrity(sp);
+      }
+      throw std::runtime_error("Arity mismatch when calling fn: " + f->name());
     }
-    throw std::runtime_error("Arity mismatch when calling fn: " + f->name());
+    else if (protocol_t::satisfies(protocol_t::ifn, callable)) {
+      auto invoke_arity = arity + 1;
+      const void* ifn_args[invoke_arity];
+      int i=0;
+      ifn_args[i++] = callable;
+      imu::for_each([&](const value_t::p& v) {
+          ifn_args[i++] = v;
+        }, args);
+      return protocol_t::dispatch(protocol_t::ifn, 0, ifn_args, invoke_arity);
+    }
+    else {
+      std::stringstream ss; ss << "Object is not callable: " << callable;
+      throw std::runtime_error(ss.str());
+    }
   }
 
   value_t::p eval(const value_t::p& form) {
