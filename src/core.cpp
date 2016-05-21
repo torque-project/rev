@@ -103,6 +103,9 @@ namespace rev {
   ns_t::p ns(const sym_t::p& sym, const ns_t::p& ns) {
     rt.in_ns = ns;
     rt.namespaces.assoc(sym, ns);
+    if (auto core = rev::ns(sym_t::intern("torque.core"))) {
+      ns->map(core);
+    }
     return ns;
   }
 
@@ -180,6 +183,10 @@ namespace rev {
       return as<var_t>(*lookup);
     }
     return nullptr;
+  }
+
+  var_t::p resolve(const ns_t::p& ns, const sym_t::p& sym) {
+    return as<var_t>(rt.ns->with_binding(ns, [&](){ return resolve(sym); }));
   }
 
   sym_t::p qualify(const sym_t::p& sym) {
@@ -317,9 +324,10 @@ namespace rev {
         if (sym->name() == "make-array")  { return xmake<array_t>;    }
         if (sym->name() == "fnptr")       { return fnptr;             }
 
-        if (sym->name() == "print") { return print; }
-        if (sym->name() == "read")  { return read;  }
-        if (sym->name() == "load")  { return load;  }
+        if (sym->name() == "print")      { return print;   }
+        if (sym->name() == "read")       { return read;    }
+        if (sym->name() == "load")       { return load;    }
+        if (sym->name() == "ns-resolve") { return resolve; }
 
         throw std::runtime_error(sym->name() + " is not a builtin function");
       }
@@ -658,17 +666,19 @@ namespace rev {
 
   void boot(uint64_t stack, const std::string& s) {
     rt.fp = rt.sp = rt.stack = new int64_t[stack];
-
-    ns(sym_t::intern("user"), imu::nu<ns_t>("user"));
-    rt.ns = imu::nu<var_t>(); rt.ns->bind(rt.in_ns);
+    rt.ns = imu::nu<var_t>();
 
     if (parse_source_paths(s)) {
       // load core name space and make it visible in user name space
-      auto core = load_ns("torque.core");
+      auto core = ns(sym_t::intern("torque.core"),imu::nu<ns_t>("torque.core"));
       core->intern(sym_t::intern("*ns*"), rt.ns);
-      rt.in_ns->map(core);
+      load_ns("torque.core");
 
+      // load auxilliary core namespaces
       load_ns("torque.ffi");
     }
+
+    ns(sym_t::intern("user"), imu::nu<ns_t>("user"));
+    rt.ns->bind(rt.in_ns);
   }
 }

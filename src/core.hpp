@@ -27,6 +27,7 @@ namespace rev {
 
   var_t::p intern(const sym_t::p& sym, var_t::p var);
   var_t::p resolve(const sym_t::p& sym);
+  var_t::p resolve(const ns_t::p& ns, const sym_t::p& sym);
   sym_t::p qualify(const sym_t::p& sym);
 
   template<typename T>

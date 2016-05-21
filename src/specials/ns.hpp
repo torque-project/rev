@@ -29,10 +29,10 @@ namespace rev {
       std::cout << "Loading ns: " << name->name() << std::endl;
 #endif
 
-      auto ns = rev::ns(name, imu::nu<ns_t>(name->name()));
+      auto ns = rev::ns(name);
 
-      if (auto core = rev::ns(sym_t::intern("torque.core"))) {
-        ns->map(core);
+      if (!ns) {
+        ns = rev::ns(name, imu::nu<ns_t>(name->name()));
       }
 
       imu::for_each([&](const list_t::p& references) {

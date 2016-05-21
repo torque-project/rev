@@ -52,7 +52,6 @@ namespace rev {
 
     ~type_t();
 
-
     inline std::string name() const {
       return _name;
     }
@@ -171,6 +170,11 @@ namespace rev {
     inline void pop() {
       assert((_stack.size()) > 1 && "Push without pop");
       _stack.pop_back();
+    }
+
+    template<typename F>
+    inline value_t::p with_binding(const value_t::p& v, const F& f) {
+      push(v); auto r = f(); pop(); return r;
     }
   };
 
@@ -574,6 +578,7 @@ namespace rev {
       imap         = 10,
       mapentry     = 11,
       ivector      = 14,
+      deref        = 15,
       meta         = 17,
       withmeta     = 18,
       equiv        = 21,
@@ -583,7 +588,7 @@ namespace rev {
       ifn          = 43,
       istring      = 44,
       serializable = 45,
-      pointer      = 46
+      pointer      = 46,
     };
 
     typedef typename semantics<protocol_t>::p p;

@@ -120,5 +120,11 @@ namespace rev {
       }
       push(s, nullptr);
     }
+
+    void resolve(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto sym = as<sym_t>(pop<value_t::p>(s));
+      auto ns  = as<ns_t>(pop<value_t::p>(s));
+      push(s, resolve(ns, sym));
+    }
   }
 }

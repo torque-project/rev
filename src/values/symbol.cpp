@@ -17,7 +17,7 @@ namespace rev {
     auto x = as<T>(self);
     return x->meta;
   }
-  
+
   template<typename T>
   value_t::p Symbolic_WithMeta_withmeta(value_t::p self, value_t::p m) {
     auto x   = as<T>(self);
