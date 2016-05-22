@@ -61,14 +61,17 @@ namespace rev {
                           ns->map(referenced);
                         }
                         else {
-                          throw std::runtime_error("Only :all or a symbol vector is allowed in :refer");
+                          throw std::runtime_error(
+                            "Only :all or a symbol vector is allowed"
+                            "in :refer");
                         }
                       }
                       else if (auto v = as_nt<vector_t>(imu::second(x))) {
                         imu::for_each([&](const sym_t::p& sym) {
                             auto resolved = referenced->resolve(sym);
                             if (!resolved) {
-                              auto msg = "Symbol " + sym->name() + " not found in ns " + referenced->name();
+                              auto msg = "Symbol " + sym->name() +
+                                " not found in ns " + referenced->name();
                               throw std::runtime_error(msg);
                             }
                             auto var = as<var_t>(resolved);
@@ -76,7 +79,8 @@ namespace rev {
                           }, v);
                       }
                       else {
-                        throw std::runtime_error("Only :all or a symbol vector is allowed in :refer");
+                        throw std::runtime_error(
+                          "Only :all or a symbol vector is allowed in :refer");
                       }
                     }
                   }, opts);

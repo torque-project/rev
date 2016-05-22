@@ -328,6 +328,7 @@ namespace rev {
         if (sym->name() == "read")       { return read;    }
         if (sym->name() == "load")       { return load;    }
         if (sym->name() == "ns-resolve") { return resolve; }
+        if (sym->name() == "the-ns")     { return the_ns;  }
 
         throw std::runtime_error(sym->name() + " is not a builtin function");
       }

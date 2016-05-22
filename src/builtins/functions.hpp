@@ -126,5 +126,11 @@ namespace rev {
       auto ns  = as<ns_t>(pop<value_t::p>(s));
       push(s, resolve(ns, sym));
     }
+
+    void the_ns(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto x = pop<value_t::p>(s);
+      if (auto ns  = as_nt<ns_t>(x)) { push(s, ns); }
+      if (auto sym = as<sym_t>(x))   { push(s,ns(sym)); };
+    }
   }
 }

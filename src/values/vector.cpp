@@ -192,3 +192,11 @@ namespace rev {
   type_t value_base_t<seq_adapter_t<vector_t>>::prototype(
     "VectorSeq.0", VectorSeq_methods, seq_size);
 }
+
+extern "C" {
+
+  const rev::type_t* torque_lang_vector_PersistentVector =
+    &rev::vector_t::prototype;
+
+  rev::value_t::p torque_lang_vector_empty = imu::nu<rev::vector_t>();
+}
