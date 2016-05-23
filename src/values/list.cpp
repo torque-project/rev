@@ -1,3 +1,4 @@
+#include "../adapter.hpp"
 #include "../values.hpp"
 
 namespace rev {
@@ -44,6 +45,14 @@ namespace rev {
     return imu::nu<int_t>(as<list_t>(self)->count());
   }
 
+  value_t::p List_Equiv_equiv(value_t::p self, value_t::p other) {
+    equal_to eq;
+    return imu::seqs::equiv(imu::seq(as<list_t>(self)),
+                            rt_seq_t::seq(other), eq)
+      ? sym_t::true_
+      : sym_t::false_;
+  }
+
   struct type_t::impl_t List_coll[] = {
     {0, (intptr_t) List_Coll_conj, 0, 0, 0, 0, 0, 0}
   };
@@ -65,6 +74,10 @@ namespace rev {
     {0, (intptr_t) List_Counted_count, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t List_equiv[] = {
+    {0, 0, (intptr_t) List_Equiv_equiv, 0, 0, 0, 0, 0},
+  };
+
   struct type_t::ext_t List_methods[] = {
     {protocol_t::alist,   nullptr},
     {protocol_t::str,     List_printable},
@@ -72,7 +85,8 @@ namespace rev {
     {protocol_t::seqable, List_seqable},
     {protocol_t::seq,     List_seq},
     {protocol_t::next,    List_next},
-    {protocol_t::counted, List_counted}
+    {protocol_t::counted, List_counted},
+    {protocol_t::equiv,   List_equiv}
   };
 
   static const uint64_t size = sizeof(List_methods) / sizeof(List_methods[0]);
