@@ -736,8 +736,8 @@ namespace rev {
     return imu::seq(m);
   }
 
-  inline decltype(auto) set(const set_t::p& m) {
-    return imu::seq(m);
+  inline decltype(auto) seq(const set_t::p& s) {
+    return imu::seq(s);
   }
 
   inline decltype(auto) conj(const list_t::p& l, const value_t::p& x) {

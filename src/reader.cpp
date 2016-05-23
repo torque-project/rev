@@ -256,6 +256,17 @@ list_t::p expand_seq(const S& s) {
   return list_t::from_std(out);
 }
 
+vector_t::p flatten(const map_t::p& m) {
+  return imu::reduce([&](const vector_t::p& v, const map_t::value_type& kv) {
+      return imu::conj(imu::conj(v, imu::first(kv)), imu::second(kv));
+    },
+    imu::nu<vector_t>(), imu::seq(m));
+}
+
+list_t::p reconstruct(const sym_t::p& ctor, const list_t::p& expanded) {
+  return list_t::factory(APPLY, ctor, imu::conj(expanded, CONCAT));
+}
+
 value_t::p do_syntax_quote(const value_t::p& form) {
   if (auto sym = as_nt<sym_t>(form)) {
     auto mangled = sym;
@@ -274,13 +285,13 @@ value_t::p do_syntax_quote(const value_t::p& form) {
     }
   }
   else if (auto vec = as_nt<vector_t>(form)) {
-    return list_t::factory(APPLY, VECTOR, imu::conj(expand_seq(seq(vec)), CONCAT));
+    return reconstruct(VECTOR, expand_seq(seq(vec)));
   }
   else if (auto map = as_nt<map_t>(form)) {
-    return list_t::factory(APPLY, HMAP, imu::conj(expand_seq(seq(vec)), CONCAT));
+    return reconstruct(HMAP, expand_seq(seq(flatten(map))));
   }
-  else if (auto map = as_nt<set_t>(form)) {
-    return list_t::factory(APPLY, HSET, imu::conj(expand_seq(seq(vec)), CONCAT));
+  else if (auto set = as_nt<set_t>(form)) {
+    return reconstruct(HSET, expand_seq(seq(set)));
   }
   else if (is<int_t>(form) || is<string_t>(form)) {
     return form;
