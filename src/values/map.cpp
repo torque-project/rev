@@ -231,3 +231,11 @@ namespace rev {
   type_t value_base_t<seq_adapter_t<map_t>>::prototype(
     "MapSeq.0", MapSeq_methods, seq_size);
 }
+
+extern "C" {
+  const rev::type_t* torque_lang_map_PersistentArrayMap =
+    &rev::map_t::prototype;
+
+  rev::value_t::p torque_lang_map_empty = imu::nu<rev::map_t>();
+}
+

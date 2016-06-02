@@ -311,6 +311,7 @@ namespace rev {
         if (sym->name() == "var?")        { return builtins::is<var_t>; }
         if (sym->name() == "binary?")     { return builtins::is<binary_t>; }
         if (sym->name() == "array?")      { return builtins::is<array_t>;  }
+        if (sym->name() == "fn?")         { return builtins::is<fn_t>; }
         if (sym->name() == "binary")      { return binary;            }
         if (sym->name() == "make-binary") { return xmake<binary_t>;   }
         if (sym->name() == "bget")        { return xget<binary_t>;    }

@@ -103,11 +103,9 @@ namespace rev {
   }
 
   value_t::p Vector_Equiv_equiv(value_t::p self, value_t::p other) {
-    equal_to eq;
-    return imu::seqs::equiv(imu::seq(as<vector_t>(self)),
-                            rt_seq_t::seq(other), eq)
-      ? sym_t::true_
-      : sym_t::false_;
+    auto s = imu::seq(as<vector_t>(self));
+    return imu::seqs::equiv(s, rt_seq_t::seq(other), equal_to()) ?
+      sym_t::true_ : sym_t::false_;
   }
 
   struct type_t::impl_t Vector_printable[] = {
