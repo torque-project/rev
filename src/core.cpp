@@ -601,6 +601,18 @@ namespace rev {
     return ret;
   }
 
+  void stack_trace() {
+    if (rt.sp > rt.stack) {
+      std::cout << std::endl << "Stacktrace: " << std::endl;
+      int n=0;
+      while (rt.sp-- > rt.stack) {
+        if (auto f = as_nt<fn_t>(reinterpret_cast<value_t::p>(*rt.sp))) {
+          std::cout << "* " << (n++) << " : "<< f->name() << std::endl;
+        }
+      }
+    }
+  }
+
   value_t::p read(const std::string& s) {
     return rdr::read(s);
   }

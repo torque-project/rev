@@ -20,10 +20,12 @@ namespace rev {
       if (lookup) {
         auto declared = as<var_t>(*lookup);
         if (declared->ns() != ns()) {
+#ifdef _DEBUG
           std::cout
             << "redefining symbol " << name->name()
             << " originally defined in " << as<ns_t>(declared->ns())->name()
             << std::endl;
+#endif
         }
         else {
           var = declared;

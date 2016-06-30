@@ -44,7 +44,10 @@ namespace rev {
       auto x = as<T>(pop<value_t::p>(s));
 
       if (n->value >= x->size()) {
-        throw std::runtime_error("xget: Index out of bounds");
+        std::stringstream ss;
+        ss << "xget: Index out of bounds: "
+           << n->value << " >= " << x->size();
+        throw std::runtime_error(ss.str());
       }
       push(s, x->get(n->value));
     }

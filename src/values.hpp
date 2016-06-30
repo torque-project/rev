@@ -431,6 +431,7 @@ namespace rev {
     typedef typename semantics<ns_t>::p p;
 
     typedef imu::ty::basic_array_map<sym_t::p, value_t::p, equal_to> mappings_t;
+    typedef typename ns_t::mappings_t::value_type mapping_t;
 
     std::string _name;
 
@@ -472,6 +473,8 @@ namespace rev {
     }
 
     void reference(mappings_t& m, const ns_t::p& ns);
+
+    static bool is_public(const mapping_t& kv);
   };
 
   struct list_tag_t {};
@@ -807,8 +810,8 @@ namespace rev {
     return nullptr;
   }
 
-  inline bool has_meta(const value_t::p& v, const value_t::p& sym) {
-    return v->meta && ((bool) imu::get(as<map_t>(v->meta), sym));
+  inline bool has_meta(const value_t::p& v, const value_t::p& k) {
+    return v->meta && ((bool) imu::get(as<map_t>(v->meta), k));
   }
 
   inline std::string str(const value_t::p v) {
@@ -854,9 +857,10 @@ namespace rev {
   }
 
   inline void ns_t::reference(mappings_t& m, const ns_t::p& ns)  {
-    imu::for_each([&](const typename mappings_t::value_type& kv) {
+    imu::for_each([&](const mapping_t& kv) {
         m.assoc(imu::first(kv), imu::second(kv));
-      }, &ns->interned);
+      },
+      imu::filter(&ns_t::is_public, &ns->interned));
   }
 
   /**
@@ -882,7 +886,7 @@ namespace rev {
     const void* args[] = {(void*) a, (void*) b};
     auto res = protocol_t::dispatch(protocol_t::equiv, 0, args, 2);
     return res == sym_t::true_;
-  };
+  }
 }
 
 namespace imu {

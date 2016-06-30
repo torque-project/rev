@@ -30,6 +30,8 @@ namespace rev {
   var_t::p resolve(const ns_t::p& ns, const sym_t::p& sym);
   sym_t::p qualify(const sym_t::p& sym);
 
+  void stack_trace();
+
   template<typename T>
   inline bool is_true(const T& x) {
     return x == sym_t::true_;

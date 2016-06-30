@@ -238,4 +238,3 @@ extern "C" {
 
   rev::value_t::p torque_lang_map_empty = imu::nu<rev::map_t>();
 }
-

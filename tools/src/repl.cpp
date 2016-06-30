@@ -37,7 +37,7 @@ void start_repl() {
       auto form = rev::read(line);
 
       // save line in history once we've successfully read it
-      // this orevents copy/paste gobbledigook from bombing
+      // this prevents copy/paste gobbledigook from bombing
       // the history
       if (isatty(0)) {
         //auto hist = current_history();
@@ -55,6 +55,7 @@ void start_repl() {
     }
     catch(std::exception& e) {
       std::cerr << e.what() << std::endl;
+      rev::stack_trace();
 #ifdef _DEBUG
       throw;
 #endif
@@ -85,7 +86,17 @@ int main(int argc, char** argv) {
       std::string line;
       std::getline(file, line);
     }
-    rev::load_stream(file);
+    try {
+      rev::load_stream(file);
+    }
+    catch (std::exception& e) {
+      std::cerr << e.what() << std::endl;
+      rev::stack_trace();
+    }
+    catch (...) {
+      std::cerr << "Unhandled exeption: " << std::endl;
+      rev::stack_trace();
+    }
   }
   else {
     start_repl();

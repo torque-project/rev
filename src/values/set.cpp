@@ -76,3 +76,10 @@ namespace rev {
   type_t value_base_t<set_tag_t>::prototype(
     "PersistentHashSet.0", Set_methods, size);
 }
+
+extern "C" {
+  const rev::type_t* torque_lang_set_PersistentHashSet =
+    &rev::set_t::prototype;
+
+  rev::value_t::p torque_lang_set_empty = imu::nu<rev::set_t>();
+}

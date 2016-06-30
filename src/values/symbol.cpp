@@ -127,11 +127,11 @@ namespace rev {
   };
 
   struct type_t::ext_t Keyword_methods[] = {
+    {protocol_t::ifn,      Keyword_ifn},
     {protocol_t::str,      Keyword_printable},
     {protocol_t::meta,     Keyword_meta},
     {protocol_t::withmeta, Keyword_withmeta},
     {protocol_t::named,    Keyword_named},
-    {protocol_t::ifn,      Keyword_ifn},
     {protocol_t::equiv,    Keyword_equiv}
   };
 
