@@ -16,6 +16,14 @@ namespace rev {
     return imu::nu<string_t>(s);
   }
 
+  // value_t::p Set_Seqable_seq(value_t::p self) {
+  //   auto s = as<set_t>(self);
+  //   if (imu::count(s) > 0) {
+  //     return imu::nu<seq_adapter_t<set_t>>(s);
+  //   }
+  //   return nullptr;
+  // }
+
   value_t::p Set_Lookup_lookup2(value_t::p s, value_t::p k) {
     if (auto v = imu::get(as<set_t>(s), k)) {
       return *v;
@@ -43,6 +51,10 @@ namespace rev {
     {0, (intptr_t) Set_Printable_str, 0, 0, 0, 0, 0, 0}
   };
 
+  // struct type_t::impl_t Set_seqable[] = {
+  //   {0, (intptr_t) Set_Seqable_seq, 0, 0, 0, 0, 0, 0}
+  // };
+
   struct type_t::impl_t Set_lookup[] = {
     {0, 0,
      (intptr_t) Set_Lookup_lookup2,
@@ -63,6 +75,7 @@ namespace rev {
 
   struct type_t::ext_t Set_methods[] = {
     {protocol_t::str,         Set_printable},
+    // {protocol_t::seqable,     Set_seqable},
     {protocol_t::lookup,      Set_lookup},
     {protocol_t::ifn,         Set_ifn},
     //{protocol_t::withmeta,    Set_with_meta},

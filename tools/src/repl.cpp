@@ -16,7 +16,7 @@
 void start_repl() {
 
   if (isatty(0)) {
-    read_history(".repl_history");
+    read_history(".booti_history");
   }
 
   char* line = NULL;
@@ -43,7 +43,7 @@ void start_repl() {
         //auto hist = current_history();
         //if (!hist || strcmp(hist->line, line)) {
         add_history(line);
-        write_history(".repl_history");
+        write_history(".booti_history");
         //}
       }
 

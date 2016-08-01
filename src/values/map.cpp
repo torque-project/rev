@@ -51,6 +51,14 @@ namespace rev {
     return imu::get(as<map_t>(s), k, d);
   }
 
+  value_t::p Map_IFn_invoke2(value_t::p self, value_t::p m) {
+    return Map_Lookup_lookup3(self, m, nullptr);
+  }
+
+  value_t::p Map_IFn_invoke3(value_t::p self, value_t::p m, value_t::p d) {
+    return Map_Lookup_lookup3(self, m, d);
+  }
+
   value_t::p Map_Collection_conj(value_t::p self, value_t::p x) {
     if (x) {
       if (auto v = as_nt<vector_t>(x)) {
@@ -199,6 +207,13 @@ namespace rev {
     {0, (intptr_t) MapSeq_Next_next, 0, 0, 0, 0, 0, 0}
   };
 
+  struct type_t::impl_t Map_ifn[] = {
+    {0, 0,
+     (intptr_t) Map_IFn_invoke2,
+     (intptr_t) Map_IFn_invoke3,
+     0, 0, 0, 0}
+  };
+
   struct type_t::ext_t Map_methods[] = {
     {protocol_t::str,         Map_printable},
     {protocol_t::seqable,     Map_seqable},
@@ -206,6 +221,7 @@ namespace rev {
     {protocol_t::imap,        Map_imap},
     {protocol_t::coll,        Map_collection},
     {protocol_t::lookup,      Map_lookup},
+    {protocol_t::ifn,         Map_ifn},
     {protocol_t::withmeta,    Map_with_meta},
     {protocol_t::counted,     Map_counted},
     {protocol_t::equiv,       Map_equiv}
