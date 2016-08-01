@@ -96,6 +96,16 @@ namespace rev {
       push(s, r);
     }
 
+    void ne(stack_t& s, stack_t& fp, int64_t* &ip) {
+#ifdef _TRACE
+      std::cout << "ne" << std::endl;
+#endif
+      auto b = as<int_t>(pop<value_t::p>(s));
+      auto a = as<int_t>(pop<value_t::p>(s));
+      auto r = (a->value != b->value ? sym_t::true_ : sym_t::false_);
+      push(s, r);
+    }
+
     void bit_and(stack_t& s, stack_t& fp, int64_t* &ip) {
 #ifdef _TRACE
       std::cout << "bit-and" << std::endl;

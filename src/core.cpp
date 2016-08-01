@@ -291,6 +291,7 @@ namespace rev {
         if (sym->name() == "*")   { return mul;     }
         if (sym->name() == "/")   { return div;     }
         if (sym->name() == "==")  { return eq;      }
+        if (sym->name() == "!=")  { return ne;      }
         if (sym->name() == "<=")  { return lte;     }
         if (sym->name() == ">=")  { return gte;     }
         if (sym->name() == "<")   { return lt;      }
