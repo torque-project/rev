@@ -145,73 +145,73 @@ namespace rev {
   }
 
   struct type_t::impl_t Map_printable[] = {
-    {0, (intptr_t) Map_Printable_str, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Map_Printable_str, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Map_seqable[] = {
-    {0, (intptr_t) Map_Seqable_seq, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Map_Seqable_seq, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Map_collection[] = {
-    {0, 0,
+    {0,
      (intptr_t) Map_Collection_conj,
-     0, 0, 0, 0, 0}
+     0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Map_with_meta[] = {
-    {0, 0,
+    {0,
      (intptr_t) Map_WithMeta_with_meta,
-     0, 0, 0, 0}
-  };
-
-  struct type_t::impl_t Map_associative[] = {
-    {0, 0,
-     (intptr_t) Map_Associative_contains_key,
-     0, 0, 0, 0},
-    {0, 0, 0,
-     (intptr_t) Map_Associative_assoc,
-     0, 0, 0, 0}
-  };
-
-  struct type_t::impl_t Map_imap[] = {
-    {0, 0,
-     (intptr_t) Map_IMap_dissoc,
      0, 0, 0, 0, 0}
   };
 
-  struct type_t::impl_t Map_lookup[] = {
+  struct type_t::impl_t Map_associative[] = {
+    {0,
+     (intptr_t) Map_Associative_contains_key,
+     0, 0, 0, 0, 0},
     {0, 0,
+     (intptr_t) Map_Associative_assoc,
+     0, 0, 0, 0, 0}
+  };
+
+  struct type_t::impl_t Map_imap[] = {
+    {0,
+     (intptr_t) Map_IMap_dissoc,
+     0, 0, 0, 0, 0, 0}
+  };
+
+  struct type_t::impl_t Map_lookup[] = {
+    {0,
      (intptr_t) Map_Lookup_lookup2,
      (intptr_t) Map_Lookup_lookup3,
-     0, 0, 0, 0}
+     0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Map_counted[] = {
-    {0, (intptr_t) Map_Counted_count, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Map_Counted_count, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Map_equiv[] = {
-    {0, 0, (intptr_t) Map_Equiv_equiv, 0, 0, 0, 0, 0}
+    {0, (intptr_t) Map_Equiv_equiv, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t MapSeq_seqable[] = {
-    {0, (intptr_t) MapSeq_Seqable_seq, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) MapSeq_Seqable_seq, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t MapSeq_seq[] = {
-    {0, (intptr_t) MapSeq_Seq_first, 0, 0, 0, 0, 0, 0},
-    {0, (intptr_t) MapSeq_Seq_rest,  0, 0, 0, 0, 0, 0}
+    {(intptr_t) MapSeq_Seq_first, 0, 0, 0, 0, 0, 0, 0},
+    {(intptr_t) MapSeq_Seq_rest, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t MapSeq_next[] = {
-    {0, (intptr_t) MapSeq_Next_next, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) MapSeq_Next_next, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Map_ifn[] = {
-    {0, 0,
+    {0,
      (intptr_t) Map_IFn_invoke2,
      (intptr_t) Map_IFn_invoke3,
-     0, 0, 0, 0}
+     0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Map_methods[] = {

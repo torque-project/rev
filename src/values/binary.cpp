@@ -23,15 +23,15 @@ namespace rev {
   }
 
   struct type_t::impl_t Binary_printable[] = {
-    {0, (intptr_t) Binary_Printable_str, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Binary_Printable_str, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Binary_serializable[] = {
-   {0, (intptr_t) Binary_Serializable_binary, 0, 0, 0, 0, 0, 0}
+   {(intptr_t) Binary_Serializable_binary, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Binary_pointer[] = {
-    {0, (intptr_t) Binary_Pointer_intptr, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Binary_Pointer_intptr, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Binary_methods[] = {

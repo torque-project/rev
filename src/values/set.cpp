@@ -48,29 +48,29 @@ namespace rev {
   }
 
   struct type_t::impl_t Set_printable[] = {
-    {0, (intptr_t) Set_Printable_str, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Set_Printable_str, 0, 0, 0, 0, 0, 0}
   };
 
   // struct type_t::impl_t Set_seqable[] = {
-  //   {0, (intptr_t) Set_Seqable_seq, 0, 0, 0, 0, 0, 0}
+  //   {(intptr_t) Set_Seqable_seq, 0, 0, 0, 0, 0, 0}
   // };
 
   struct type_t::impl_t Set_lookup[] = {
-    {0, 0,
+    {0,
      (intptr_t) Set_Lookup_lookup2,
      (intptr_t) Set_Lookup_lookup3,
-     0, 0, 0, 0}
+     0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Set_ifn[] = {
-    {0, 0,
+    {0,
      (intptr_t) Set_IFn_invoke2,
      (intptr_t) Set_IFn_invoke3,
-     0, 0, 0, 0}
+     0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Set_counted[] = {
-    {0, (intptr_t) Set_Counted_count, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Set_Counted_count, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Set_methods[] = {

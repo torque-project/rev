@@ -70,24 +70,24 @@ namespace rev {
   }
 
   struct type_t::impl_t Symbol_printable[] = {
-    {0, (intptr_t) Symbol_Printable_str, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Symbol_Printable_str, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Symbol_named[] = {
-    {0, (intptr_t) Symbolic_Named_name<sym_t>, 0, 0, 0, 0, 0, 0},
-    {0, (intptr_t) Symbolic_Named_namespace<sym_t>, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Symbolic_Named_name<sym_t>, 0, 0, 0, 0, 0, 0, 0},
+    {(intptr_t) Symbolic_Named_namespace<sym_t>, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Symbol_withmeta[] = {
-    {0, 0, (intptr_t) Symbolic_WithMeta_withmeta<sym_t>, 0, 0, 0, 0, 0}
+    {0, (intptr_t) Symbolic_WithMeta_withmeta<sym_t>, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Symbol_meta[] = {
-    {0, (intptr_t) Symbolic_Meta_meta<sym_t>, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Symbolic_Meta_meta<sym_t>, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Symbol_equiv[] = {
-    {0, 0, (intptr_t) Symbolic_Equiv_equiv<sym_t>, 0, 0, 0, 0, 0}
+    {0, (intptr_t) Symbolic_Equiv_equiv<sym_t>, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Symbol_methods[] = {
@@ -99,31 +99,31 @@ namespace rev {
   };
 
   struct type_t::impl_t Keyword_printable[] = {
-    {0, (intptr_t) Keyword_Printable_str, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Keyword_Printable_str, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Keyword_named[] = {
-    {0, (intptr_t) Symbolic_Named_name<keyw_t>, 0, 0, 0, 0, 0, 0},
-    {0, (intptr_t) Symbolic_Named_namespace<keyw_t>, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Symbolic_Named_name<keyw_t>, 0, 0, 0, 0, 0, 0, 0},
+    {(intptr_t) Symbolic_Named_namespace<keyw_t>, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Keyword_meta[] = {
-    {0, (intptr_t) Symbolic_Meta_meta<keyw_t>, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Symbolic_Meta_meta<keyw_t>, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Keyword_withmeta[] = {
-    {0, 0, (intptr_t) Symbolic_WithMeta_withmeta<keyw_t>, 0, 0, 0, 0, 0}
+    {0, (intptr_t) Symbolic_WithMeta_withmeta<keyw_t>, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Keyword_ifn[] = {
-    {0, 0,
+    {0,
      (intptr_t) Keyword_IFn_invoke2,
      (intptr_t) Keyword_IFn_invoke3,
-     0, 0, 0, 0}
+     0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Keyword_equiv[] = {
-    {0, 0, (intptr_t) Symbolic_Equiv_equiv<keyw_t>, 0, 0, 0, 0, 0}
+    {0, (intptr_t) Symbolic_Equiv_equiv<keyw_t>, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Keyword_methods[] = {

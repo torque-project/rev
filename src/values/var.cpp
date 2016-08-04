@@ -23,15 +23,15 @@ namespace rev {
   }
 
   struct type_t::impl_t Var_deref[] = {
-    {0, (intptr_t) Var_Deref_deref, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Var_Deref_deref, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Var_withmeta[] = {
-    {0, 0, (intptr_t) Var_WithMeta_withmeta, 0, 0, 0, 0, 0}
+    {0, (intptr_t) Var_WithMeta_withmeta, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Var_meta[] = {
-    {0, (intptr_t) Var_Meta_meta, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Var_Meta_meta, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Var_methods[] = {

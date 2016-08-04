@@ -35,7 +35,7 @@ namespace rev {
 
       for (int i=0; i<type->_num_ext; ++i) {
         if (type->_methods[i].id == id) {
-          auto p = type->_methods[i].impls[m].arities[n];
+          auto p = type->_methods[i].impls[m].arities[n-1];
           f = reinterpret_cast<void (*)()>(p);
           break;
         }

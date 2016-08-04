@@ -98,7 +98,7 @@ namespace rev {
                   "Protocol methods can not be variadic");
               }
 
-              native.arities[arity] = t->prepare_closure(arity, off);
+              native.arities[arity-1] = t->prepare_closure(arity, off);
 
             }, arities);
           }

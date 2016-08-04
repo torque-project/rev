@@ -25,15 +25,15 @@ namespace rev {
   }
 
   struct type_t::impl_t Int_printable[] = {
-    {0, (intptr_t) Int_Printable_str, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Int_Printable_str, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Int_serializable[] = {
-    {0, (intptr_t) Box_Serializable_binary<int_t>, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Box_Serializable_binary<int_t>, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Int_equiv[] = {
-    {0, 0, (intptr_t) Int_Equiv_equiv, 0, 0, 0, 0, 0}
+    {0, (intptr_t) Int_Equiv_equiv, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Int_methods[] = {

@@ -18,7 +18,7 @@ namespace rev {
   }
 
   struct type_t::impl_t List_printable[] = {
-    {0, (intptr_t) List_Printable_str, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) List_Printable_str, 0, 0, 0, 0, 0, 0, 0}
   };
 
   value_t::p List_Coll_conj(value_t::p self, value_t::p x) {
@@ -52,28 +52,28 @@ namespace rev {
   }
 
   struct type_t::impl_t List_coll[] = {
-    {0, (intptr_t) List_Coll_conj, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) List_Coll_conj, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t List_seqable[] = {
-    {0, (intptr_t) List_Seqable_seq, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) List_Seqable_seq, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t List_seq[] = {
-    {0, (intptr_t) List_Seq_first, 0, 0, 0, 0, 0, 0},
-    {0, (intptr_t) List_Seq_rest,  0, 0, 0, 0, 0, 0}
+    {(intptr_t) List_Seq_first, 0, 0, 0, 0, 0, 0, 0},
+    {(intptr_t) List_Seq_rest, 0,  0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t List_next[] = {
-    {0, (intptr_t) List_Next_next, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) List_Next_next, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t List_counted[] = {
-    {0, (intptr_t) List_Counted_count, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) List_Counted_count, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t List_equiv[] = {
-    {0, 0, (intptr_t) List_Equiv_equiv, 0, 0, 0, 0, 0},
+    {0, (intptr_t) List_Equiv_equiv, 0, 0, 0, 0, 0, 0},
   };
 
   struct type_t::ext_t List_methods[] = {

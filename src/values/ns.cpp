@@ -12,7 +12,7 @@ namespace rev {
   }
 
   struct type_t::impl_t Namespace_printable[] = {
-    {0, (intptr_t) Namespace_Printable_str, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Namespace_Printable_str, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Namespace_methods[] = {

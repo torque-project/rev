@@ -35,23 +35,23 @@ namespace rev {
   }
 
   struct type_t::impl_t String_printable[] = {
-    {0, (intptr_t) String_Printable_str, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) String_Printable_str, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t String_serializable[] = {
-    {0, (intptr_t) String_Serializable_binary, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) String_Serializable_binary, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t String_pointer[] = {
-    {0, (intptr_t) String_Pointer_intptr, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) String_Pointer_intptr, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t String_equiv[] = {
-    {0, 0, (intptr_t) String_Equiv_equiv, 0, 0, 0, 0, 0}
+    {0, (intptr_t) String_Equiv_equiv, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t String_counted[] = {
-    {0, (intptr_t) String_Counted_count, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) String_Counted_count, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t String_methods[] = {

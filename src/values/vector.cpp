@@ -109,56 +109,56 @@ namespace rev {
   }
 
   struct type_t::impl_t Vector_printable[] = {
-    {0, (intptr_t) Vector_Printable_str, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Vector_Printable_str, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Vector_seqable[] = {
-    {0, (intptr_t) Vector_Seqable_seq, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) Vector_Seqable_seq, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Vector_coll[] = {
-    {0, 0, (intptr_t) Vector_Collection_conj, 0, 0, 0, 0, 0}
+    {0, (intptr_t) Vector_Collection_conj, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Vector_associative[] = {
-    {0, 0, (intptr_t) Vector_Associative_contains_key, 0, 0, 0, 0, 0},
-    {0, 0, 0, (intptr_t) Vector_Associative_assoc, 0, 0, 0, 0}
+    {0, (intptr_t) Vector_Associative_contains_key, 0, 0, 0, 0, 0, 0},
+    {0, 0, (intptr_t) Vector_Associative_assoc, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Vector_iindexed[] = {
-    {0, 0,
+    {0,
      (intptr_t) Vector_IIndexed_nth2,
      (intptr_t) Vector_IIndexed_nth3,
-     0, 0, 0, 0}
+     0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Vector_lookup[] = {
-    {0, 0,
+    {0,
      (intptr_t) Vector_Lookup_lookup2,
      (intptr_t) Vector_Lookup_lookup3,
-     0, 0, 0, 0}
+     0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Vector_mapentry[] = {
-    {0, (intptr_t) Vector_MapEntry_key, 0, 0, 0, 0, 0, 0},
-    {0, (intptr_t) Vector_MapEntry_val,  0, 0, 0, 0, 0, 0}
+    {(intptr_t) Vector_MapEntry_key, 0, 0, 0, 0, 0, 0, 0},
+    {(intptr_t) Vector_MapEntry_val,  0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t Vector_equiv[] = {
-    {0, 0, (intptr_t) Vector_Equiv_equiv, 0, 0, 0, 0, 0},
+    {0, (intptr_t) Vector_Equiv_equiv, 0, 0, 0, 0, 0, 0},
   };
 
   struct type_t::impl_t VectorSeq_seqable[] = {
-    {0, (intptr_t) VectorSeq_Seqable_seq, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) VectorSeq_Seqable_seq, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t VectorSeq_seq[] = {
-    {0, (intptr_t) VectorSeq_Seq_first, 0, 0, 0, 0, 0, 0},
-    {0, (intptr_t) VectorSeq_Seq_rest,  0, 0, 0, 0, 0, 0}
+    {(intptr_t) VectorSeq_Seq_first, 0, 0, 0, 0, 0, 0, 0},
+    {(intptr_t) VectorSeq_Seq_rest,  0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::impl_t VectorSeq_next[] = {
-    {0, (intptr_t) VectorSeq_Next_next, 0, 0, 0, 0, 0, 0}
+    {(intptr_t) VectorSeq_Next_next, 0, 0, 0, 0, 0, 0, 0}
   };
 
   struct type_t::ext_t Vector_methods[] = {
