@@ -18,6 +18,7 @@
 #include "specials/quote.hpp"
 #include "specials/ns.hpp"
 #include "specials/apply.hpp"
+#include "specials/exceptions.hpp"
 #include "specials/ffi.hpp"
 
 #include <cassert>
@@ -119,7 +120,7 @@ namespace rev {
     static std::set<std::string> specials = {
       "def", "do", "if", "let*", "binding*", "loop*", "quote", "ns", "fn*",
       "deftype", "defprotocol", "dispatch*", "recur", "new", "set!",
-      ".", "apply*", "so*", "import*", "invoke*"
+      ".", "apply*", "so*", "import*", "invoke*", "throw*"
     };
     return sym && (specials.count(sym->name()) == 1);
   }
@@ -267,6 +268,7 @@ namespace rev {
         if (sym->name() == "so*")         { return so;          }
         if (sym->name() == "import*")     { return import;      }
         if (sym->name() == "invoke*")     { return invoke;      }
+        if (sym->name() == "throw*")      { return throw_;      }
       }
       return nullptr;
     }
@@ -301,7 +303,6 @@ namespace rev {
         if (sym->name() == "bsl") { return bsl;     }
         if (sym->name() == "bsr") { return bsr;     }
 
-        if (sym->name() == "throw")       { return throw_;     }
         if (sym->name() == "identical?")  { return identical;  }
         if (sym->name() == "satisfies?")  { return satisfies;  }
         if (sym->name() == "type")        { return type;       }

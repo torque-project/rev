@@ -107,12 +107,6 @@ namespace rev {
       push(s, imu::nu<array_t>(dst));
     }
 
-    void throw_(stack_t& s, stack_t& fp, int64_t* &ip) {
-      auto x   = pop<value_t::p>(s);
-      auto msg = str(x);
-      throw std::runtime_error(msg);
-    }
-
     void print(stack_t& s, stack_t& fp, int64_t* &ip) {
       auto v = pop<value_t::p>(s);
       if (!v) {

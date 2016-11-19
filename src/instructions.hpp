@@ -344,5 +344,11 @@ namespace rev {
 
       stack::push(s, proto->dispatch(meth, args, arity));
     }
+
+    void throw_(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto x   = stack::pop<value_t::p>(s);
+      auto msg = str(x);
+      throw std::runtime_error(msg);
+    }
   }
 }

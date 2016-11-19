@@ -294,6 +294,9 @@ extern "C" {
         }
 #endif
         handle = dlopen(sysname.c_str(), RTLD_LAZY | RTLD_LOCAL);
+        if (!handle) {
+          std::cout << "Failed to load library: " << dlerror() << std::endl;
+        }
       }
       else {
         handle = RTLD_DEFAULT;
