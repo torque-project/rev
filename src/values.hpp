@@ -133,6 +133,9 @@ namespace rev {
     {}
   };
 
+  template<typename T>
+  type_t value_base_t<T>::prototype;
+
   struct var_t : public value_base_t<var_t> {
 
     typedef typename semantics<var_t>::p p;
