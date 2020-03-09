@@ -292,6 +292,11 @@ namespace rev {
     inline value_t::p get(int64_t n) const {
       return imu::nu<int_t>(_data[n]);
     }
+
+    inline binary_t::p set(int64_t n, uint8_t v) {
+      const_cast<uint8_t*>(_data)[n] = v;
+      return this;
+    }
   };
 
   struct string_t : public value_base_t<string_t> {

@@ -317,6 +317,7 @@ namespace rev {
         if (sym->name() == "binary")      { return binary;            }
         if (sym->name() == "make-binary") { return xmake<binary_t>;   }
         if (sym->name() == "bget")        { return xget<binary_t>;    }
+        if (sym->name() == "bset")        { return bset;              }
         if (sym->name() == "blength")     { return xlength<binary_t>; }
         if (sym->name() == "aget")        { return xget<array_t>;     }
         if (sym->name() == "aset")        { return aset;              }

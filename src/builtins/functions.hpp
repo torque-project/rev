@@ -41,7 +41,8 @@ namespace rev {
     template<typename T>
     void xget(stack_t& s, stack_t& fp, int64_t* &ip) {
       auto n = as<int_t>(pop<value_t::p>(s));
-      auto x = as<T>(pop<value_t::p>(s));
+      auto y = pop<value_t::p>(s);
+      auto x = as<T>(y);
 
       if (n->value >= x->size()) {
         std::stringstream ss;
@@ -50,6 +51,17 @@ namespace rev {
         throw std::runtime_error(ss.str());
       }
       push(s, x->get(n->value));
+    }
+
+    void bset(stack_t& s, stack_t& fp, int64_t* &ip) {
+      auto v = pop<int_t>(s);
+      auto n = as<int_t>(pop<value_t::p>(s));
+      auto b = as<binary_t>(pop<value_t::p>(s));
+
+      if (n->value >= b->size()) {
+        throw std::runtime_error("Binary index out of bounds");
+      }
+      push(s, b->set(n->value, (uint8_t) v.value));
     }
 
     void aset(stack_t& s, stack_t& fp, int64_t* &ip) {

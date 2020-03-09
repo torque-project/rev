@@ -92,3 +92,7 @@ namespace rev {
   template<>
   type_t value_base_t<list_tag_t>::prototype("List.0", List_methods, size);
 }
+
+extern "C" {
+  rev::value_t::p torque_lang_list_empty = imu::nu<rev::list_t>();
+}
