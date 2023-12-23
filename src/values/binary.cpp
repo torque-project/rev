@@ -46,6 +46,11 @@ namespace rev {
   template<>
   type_t value_base_t<binary_t>::prototype("Binary.0", Binary_methods, size);
 
+  template<>
+  type_t* prototype<binary_t>() {
+    return & value_base_t<binary_t>::prototype;
+  }
+
   binary_t::binary_t(const value_t::p& xs) {
 
     auto bins = as<list_t>(xs);

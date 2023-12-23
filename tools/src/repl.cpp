@@ -77,7 +77,13 @@ int main(int argc, char** argv) {
   }
   // TODO: make source path configurable via parameter too
 
-  rev::boot(1 << 16, sources);
+  try {
+    rev::boot(1 << 16, sources);
+  }
+  catch (std::runtime_error& e) {
+    std::cout << "Error while booting REPL: " << e.what() << std::endl;
+    rev::stack_trace();
+  }
 
   // load script if provided
   if (argc > 1) {

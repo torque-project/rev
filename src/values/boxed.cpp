@@ -46,6 +46,11 @@ namespace rev {
 
   template<>
   type_t value_base_t<int_t>::prototype("Integer.0", Int_methods, size);
+
+  template<>
+  type_t* prototype<int_t>() {
+    return & value_base_t<int_t>::prototype;
+  }
 }
 
 extern "C" {

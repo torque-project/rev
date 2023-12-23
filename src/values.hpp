@@ -10,6 +10,8 @@
 #include <memory>
 #include <sstream>
 
+#include <cxxabi.h>
+
 namespace rev {
 
   struct type_t {
@@ -764,14 +766,20 @@ namespace rev {
   }
   // end ADL
 
+  // we need an accessor function for prototypes to always use the
+  // one from the VMs shared object, and not the client applications
+  // pointer
+  template<typename T>
+  type_t* prototype();
+
   template<typename T>
   inline bool is(const value_t::p& x) {
-    return x && (x->type == &T::prototype);
+    return x && (x->type == prototype<T>());
   }
 
   template<typename T>
   inline bool is(const maybe<value_t* const&>& x) {
-    return x && *x && ((*x)->type == &T::prototype);
+    return x && *x && ((*x)->type == prototype<T>());
   }
 
   template<typename T>
@@ -797,7 +805,7 @@ namespace rev {
 
     throw std::runtime_error(
       "Can't cast type " + x->type->name() + " to " +
-      T::prototype.name());
+     prototype<T>()->name());
   }
 
   template<typename T, typename S>
@@ -807,7 +815,7 @@ namespace rev {
     }
     throw std::runtime_error(
       "Can't cast unset reference to type " +
-      T::prototype.name());
+      prototype<T>()->name());
   }
 
   template<typename T, typename S>

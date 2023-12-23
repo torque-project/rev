@@ -147,6 +147,16 @@ namespace rev {
   type_t value_base_t<keyw_t>::prototype("Keyword.0", Keyword_methods, kw_size);
 
   template<>
+  type_t* prototype<sym_t>() {
+    return & value_base_t<sym_t>::prototype;
+  }
+
+  template<>
+  type_t* prototype<keyw_t>() {
+    return & value_base_t<keyw_t>::prototype;
+  }
+
+  template<>
   sym_base_t<sym_t>::p sym_base_t<sym_t>::intern(const std::string& fqn) {
 
     static std::unordered_map<std::string, sym_t::p> cache;

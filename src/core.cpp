@@ -629,9 +629,20 @@ namespace rev {
     }
 
     while (is.good()) {
-      if (auto o = rdr::read(is)) {
-        eval(o);
-      }
+      value_t::p o;
+      // try {
+        o = rdr::read(is);
+        if (o) {
+          eval(o);
+        }
+      // }
+      // catch (std::runtime_error& e) {
+      //   std::cout 
+      //     << "Error while loading top level form: "
+      //     << o->str()
+      //     << std::endl;
+      //   throw e;
+      // }
     }
 
     if (cur) {
@@ -640,13 +651,18 @@ namespace rev {
   }
 
   void load_file(const std::string& source) {
-
     std::fstream file(source);
     if (!file.good()) {
       throw std::runtime_error("Can't open source file: " + source);
     }
 
-    load_stream(file);
+    // try {
+      load_stream(file);
+    // }
+    // catch (std::runtime_error& e) {
+    //   std::cout << "Failed in file: " << source << std::endl;
+    //   throw e;
+    // }
   }
 
   ns_t::p load_ns(const sym_t::p& name) {

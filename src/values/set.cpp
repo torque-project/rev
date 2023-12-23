@@ -88,6 +88,11 @@ namespace rev {
   template<>
   type_t value_base_t<set_tag_t>::prototype(
     "PersistentHashSet.0", Set_methods, size);
+
+  template<>
+  type_t* prototype<set_t>() {
+    return & value_base_t<set_tag_t>::prototype;
+  }
 }
 
 extern "C" {

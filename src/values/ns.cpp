@@ -23,4 +23,9 @@ namespace rev {
 
   template<>
   type_t value_base_t<ns_t>::prototype("Namespace.0", Namespace_methods, size);
+
+  template<>
+  type_t* prototype<ns_t>() {
+    return & value_base_t<ns_t>::prototype;
+  }
 }

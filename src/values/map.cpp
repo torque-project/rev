@@ -246,6 +246,16 @@ namespace rev {
   template<>
   type_t value_base_t<seq_adapter_t<map_t>>::prototype(
     "MapSeq.0", MapSeq_methods, seq_size);
+
+  template<>
+  type_t* prototype<map_t>() {
+    return & value_base_t<map_tag_t>::prototype;
+  }
+
+  template<>
+  type_t* prototype<seq_adapter_t<map_t>>() {
+    return & value_base_t<seq_adapter_t<map_t>>::prototype;
+  }
 }
 
 extern "C" {

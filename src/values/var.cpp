@@ -44,4 +44,9 @@ namespace rev {
 
   template<>
   type_t value_base_t<var_t>::prototype("Var.0", Var_methods, size);
+
+  template<>
+  type_t* prototype<var_t>() {
+    return & value_base_t<var_t>::prototype;
+  }
 }

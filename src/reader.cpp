@@ -513,7 +513,9 @@ result_t try_number(std::istream& in) {
     s += in.get();
   } while (isalnum(in.peek()));
 
-  return pass(imu::nu<int_t>(std::stoll(s, nullptr, 0)));
+  auto out = imu::nu<int_t>(std::stoll(s, nullptr, 0));
+
+  return pass(out);
 }
 
 void skip_white_space(std::istream& in) {
@@ -538,6 +540,8 @@ void skip_comment(std::istream& in) {
 
 result_t read_or_skip(std::istream& in) {
 
+  // std::cout << "read or skip" << std::endl;
+
   skip_white_space(in);
   skip_comment(in);
 
@@ -556,12 +560,15 @@ result_t read_or_skip(std::istream& in) {
     res = x(in);
     if(std::get<0>(res) != parse_state_t::fail) {
       break;
-    }
+     }
   }
 
   if (std::get<0>(res) == parse_state_t::fail) {
     throw std::runtime_error("Unable to parse form");
   }
+
+//  std::cout << "READER: " << &value_base_t<int_t>::prototype << std::endl;
+//  std::cout << "read: " << std::get<1>(res)->str() << std::endl;
 
   return res;
 }
@@ -569,6 +576,7 @@ result_t read_or_skip(std::istream& in) {
 value_t::p rev::rdr::read(std::istream& in) {
   auto result = read_or_skip(in);
   if (std::get<0>(result) == parse_state_t::pass) {
+//    std::cout << "done reading" << std::endl;
     return std::get<1>(result);
   }
   return nullptr;

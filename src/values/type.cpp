@@ -11,6 +11,11 @@ namespace rev {
   template<>
   type_t value_base_t<type_value_t>::prototype("Type");
 
+  template<>
+  type_t* prototype<type_value_t>() {
+    return & value_base_t<type_value_t>::prototype;
+  }
+
   struct type_t::native_handle_t {
     ffi_cif*     cif;
     ffi_closure* closure;

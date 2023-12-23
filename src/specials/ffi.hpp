@@ -334,6 +334,7 @@ extern "C" {
       t << instr::native << ret << types;
     }
   }
+  
   namespace builtins {
     void fnptr(stack_t& s, stack_t& fp, int64_t* &ip) {
       using namespace instr::stack;

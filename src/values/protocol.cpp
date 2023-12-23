@@ -12,6 +12,11 @@ namespace rev {
   template<>
   type_t value_base_t<protocol_t>::prototype("Protocol");
 
+  template<>
+  type_t* prototype<protocol_t>() {
+    return & value_base_t<protocol_t>::prototype;
+  }
+
   value_t::p protocol_t::dispatch(
     uint32_t id, uint32_t m, const void* args[], uint32_t n) {
 

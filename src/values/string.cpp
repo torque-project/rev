@@ -69,6 +69,11 @@ namespace rev {
   template<>
   type_t value_base_t<string_t>::prototype("String.0", String_methods, size);
 
+  template<>
+  type_t* prototype<string_t>() {
+    return & value_base_t<string_t>::prototype;
+  }
+
   string_t::string_t(const std::string& s)
     : _data(s), _width(1)
   {}

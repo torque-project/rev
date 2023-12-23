@@ -91,6 +91,11 @@ namespace rev {
 
   template<>
   type_t value_base_t<list_tag_t>::prototype("List.0", List_methods, size);
+
+  template<>
+  type_t* prototype<list_t>() {
+    return & value_base_t<list_tag_t>::prototype;
+  }
 }
 
 extern "C" {

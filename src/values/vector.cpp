@@ -192,6 +192,16 @@ namespace rev {
   template<>
   type_t value_base_t<seq_adapter_t<vector_t>>::prototype(
     "VectorSeq.0", VectorSeq_methods, seq_size);
+
+  template<>
+  type_t* prototype<vector_t>() {
+    return &value_base_t<vector_tag_t>::prototype;
+  }
+
+  template<>
+  type_t* prototype<seq_adapter_t<vector_t>>() {
+    return &value_base_t<seq_adapter_t<vector_t>>::prototype;
+  }
 }
 
 extern "C" {
