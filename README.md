@@ -50,4 +50,4 @@ improvement.
 * The interpreter has no memory management/garbage collection, so will overflow
 with time. This is again due to it mainly being used as a bootstrapping tool. I
 would ultimately like to have some sort of garbage colleciton in the interpreter though.
-
+* No support for the #() reader macro
