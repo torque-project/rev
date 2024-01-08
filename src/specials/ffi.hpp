@@ -123,14 +123,14 @@ extern "C" {
         _types = new ffi_type*[imu::count(args)];
         convert_types(args, _types);
 	
-	if (ffi_prep_cif(&_cif, FFI_DEFAULT_ABI, imu::count(args), _ret, _types) != FFI_OK) {
-  	  std::cout << "error while creating cif" << std::endl;
+	      if (ffi_prep_cif(&_cif, FFI_DEFAULT_ABI, imu::count(args), _ret, _types) != FFI_OK) {
+  	      std::cout << "error while creating cif" << std::endl;
         }
         if (ffi_prep_closure_loc(_closure, &_cif, delegate, this, out) != FFI_OK) {
           std::cout << "error while prepping closure" << std::endl;
         }
  
-	value = reinterpret_cast<int64_t>(out);
+	      value = reinterpret_cast<int64_t>(out);
      }
 
       ~fn_ptr_t() {
@@ -150,6 +150,9 @@ extern "C" {
           if (keyw_t::equiv(k, PTR)) {
             if (auto i = as_nt<int_t>(arg)) {
               return new marshalled_t((void*) &(i->value));
+            }
+            else if (protocol_t::satisfies(protocol_t::pointer, arg)) {
+              return marshal(protocol_t::dispatch_(protocol_t::pointer, 0, arg), type);
             }
             return new marshalled_t((void*) &arg);
           }
@@ -209,6 +212,7 @@ extern "C" {
     }
 extern "C" {
     void delegate(ffi_cif* cif, void* ret, void* args[], void* x) {
+      std::cout << "DELEGATE" << std::endl;
       auto handle = reinterpret_cast<fn_ptr_t*>(x);
 
       auto ret_type  = imu::nth(handle->_sig, 0);
@@ -314,7 +318,8 @@ extern "C" {
 
       auto loaded = dlsym((void*) so->value, sym->name().c_str());
       if (!loaded) {
-        throw std::runtime_error("Failed to import: " + sym->name());
+        std::cerr << "Failed to import: " + sym->name() << std::endl;
+        abort();
       }
 
       auto call = imu::nu<int_t>((int64_t) loaded);
@@ -331,6 +336,7 @@ extern "C" {
 
       compile_all(args, ctx, t);
       compile(ptr, ctx, t);
+
       t << instr::native << ret << types;
     }
   }

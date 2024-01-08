@@ -122,7 +122,12 @@ macro_t list_reader(char until, const from_list_t& ctor) {
       char c = in.peek();
 
       if (c == std::char_traits<char>::eof()) {
-        throw eos();
+        std::stringstream ss;
+        for (auto o : objs) {
+          ss << o->str();
+        }
+
+        throw eos(ss.str());
       }
       else if (c == until) {
         in.get();
@@ -320,7 +325,7 @@ result_t unquote(std::istream& in) {
 char escape(std::istream& in) {
 
   if (in.eof()) {
-    throw eos();
+    throw eos("Escape sequence");
   }
 
   char out;

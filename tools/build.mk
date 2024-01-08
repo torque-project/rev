@@ -2,7 +2,7 @@ include $(TOP)/build/header.mk
 
 products_$(d) := booti
 
-booti_needs_$(s)       := lib/libvm.$(so)
+booti_needs_$(d)      := lib/libvm.$(so)
 booti_sources_$(d)     := repl.cpp
 booti_precompiled_$(d) :=
 booti_target_dir_$(d)  := bin

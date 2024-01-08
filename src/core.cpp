@@ -176,7 +176,9 @@ namespace rev {
     if (is_special(sym)) {
       return {ctx_t::scope_t::global, nullptr};
     }
-    throw std::runtime_error(sym->name() + " is not bound");
+   
+    auto ns = as<ns_t>(rt.ns->deref());
+    throw std::runtime_error(sym->fqn() + " is not bound in ns: " + ns->name());
   }
 
   var_t::p resolve(const sym_t::p& sym) {

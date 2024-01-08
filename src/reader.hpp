@@ -18,11 +18,15 @@ namespace rev {
      *
      */
     struct eos : public reader_exception {
+      std::string msg;
+
+      eos(const std::string &form) 
+        : msg("The reader reached the end of input "  \
+        "while reading an unfinished object: " + form) 
+      {}
 
       const char* what() const noexcept {
-        return
-          "The reader reached the end of input "  \
-          "while reading an unfinished object";
+        return msg.c_str();
       }
     };
 
