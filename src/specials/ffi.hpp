@@ -96,9 +96,11 @@ namespace rev {
         : marshalled_t((void*) &ref->_arg), _ref(ref)
       {}
     };
+
 extern "C" {
     void delegate(ffi_cif* cif, void* ret, void* args[], void* x);
 }
+
     struct fn_ptr_t : public rev::int_t {
 
       ffi_cif      _cif;
@@ -122,14 +124,14 @@ extern "C" {
         _ret   = convert_type[ret->name()];
         _types = new ffi_type*[imu::count(args)];
         convert_types(args, _types);
-	
+
 	      if (ffi_prep_cif(&_cif, FFI_DEFAULT_ABI, imu::count(args), _ret, _types) != FFI_OK) {
   	      std::cout << "error while creating cif" << std::endl;
         }
         if (ffi_prep_closure_loc(_closure, &_cif, delegate, this, out) != FFI_OK) {
           std::cout << "error while prepping closure" << std::endl;
         }
- 
+
 	      value = reinterpret_cast<int64_t>(out);
      }
 
@@ -212,7 +214,6 @@ extern "C" {
     }
 extern "C" {
     void delegate(ffi_cif* cif, void* ret, void* args[], void* x) {
-      std::cout << "DELEGATE" << std::endl;
       auto handle = reinterpret_cast<fn_ptr_t*>(x);
 
       auto ret_type  = imu::nth(handle->_sig, 0);
@@ -266,6 +267,7 @@ extern "C" {
           ffi::marshal(
             stack::pop<value_t::p>(s),
             imu::nth(arg_types, i)));
+
         values[i] = marshalled[i]->arg();
       }
 
